@@ -19,3 +19,5 @@ How to install the SNH on Ubuntu server v.14.04.4:
 4. run the server in dev-mode:
   - cd Social-Network-Harvester-v1.0/Social-Network-Harvester-v1.0
   - python manage.py runserver 
+
+TEST
