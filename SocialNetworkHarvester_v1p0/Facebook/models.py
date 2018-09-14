@@ -1,10 +1,15 @@
-from django.db import models
-import requests, time, re
 from SocialNetworkHarvester_v1p0.models import *
-from SocialNetworkHarvester_v1p0.settings import facebookLogger, DEBUG, FACEBOOK_APP_PARAMS
+from SocialNetworkHarvester_v1p0.settings import facebookLogger, DEBUG
 
 from datetime import datetime
 from django.utils.timezone import utc
+from datetime import datetime
+
+from django.utils.timezone import utc
+
+from SocialNetworkHarvester_v1p0.models import *
+from SocialNetworkHarvester_v1p0.settings import facebookLogger, DEBUG
+
 today = lambda: datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=utc)
 
 log = lambda s: facebookLogger.log(s) if DEBUG else 0
@@ -100,7 +105,7 @@ class FBPage(models.Model):
     #display_subtext = models.CharField(max_length=1024, null=True) useless, redundant information
     #displayed_message_response_time = models.CharField(max_length=128, null=True) useless
     emails = models.CharField(max_length=2048, null=True)
-    featured_video = models.ForeignKey(FBVideo,null=True, related_name='featured_on_pages')
+    featured_video = models.ForeignKey(FBVideo,null=True, related_name='featured_on_pages', on_delete=models.PROTECT)
     general_info = models.TextField( null=True)
     #impressum = models.CharField(max_length=128, null=True)
     link = models.CharField(max_length=4096, null=True)
@@ -108,8 +113,8 @@ class FBPage(models.Model):
     is_community_page = models.BooleanField(default=False)
     is_unclaimed = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
-    location = models.ForeignKey(FBLocation, null=True)
-    parent_page = models.ForeignKey('self', null=True)
+    location = models.ForeignKey(FBLocation, null=True, on_delete=models.PROTECT)
+    parent_page = models.ForeignKey('self', null=True, on_delete=models.PROTECT)
     phone = models.CharField(max_length=256, null=True)
     verification_status = models.CharField(max_length=64, null=True)
     website = models.CharField(max_length=512, null=True)
@@ -723,17 +728,17 @@ class FBPage(models.Model):
 
 
 class checkins_count(Integer_time_label):
-    fbPage = models.ForeignKey(FBPage, related_name="checkins_counts")
+    fbPage = models.ForeignKey(FBPage, related_name="checkins_counts", on_delete=models.CASCADE)
 class fan_count(Integer_time_label):
-    fbPage = models.ForeignKey(FBPage, related_name="fan_counts")
+    fbPage = models.ForeignKey(FBPage, related_name="fan_counts", on_delete=models.CASCADE)
 class overall_star_rating_count(Float_time_label):
-    fbPage = models.ForeignKey(FBPage, related_name="overall_star_rating_counts")
+    fbPage = models.ForeignKey(FBPage, related_name="overall_star_rating_counts", on_delete=models.CASCADE)
 class rating_count(Integer_time_label):
-    fbPage = models.ForeignKey(FBPage, related_name="rating_counts")
+    fbPage = models.ForeignKey(FBPage, related_name="rating_counts", on_delete=models.CASCADE)
 class talking_about_count(Integer_time_label):
-    fbPage = models.ForeignKey(FBPage, related_name="talking_about_counts")
+    fbPage = models.ForeignKey(FBPage, related_name="talking_about_counts", on_delete=models.CASCADE)
 class were_here_count(Integer_time_label):
-    fbPage = models.ForeignKey(FBPage, related_name="were_here_counts")
+    fbPage = models.ForeignKey(FBPage, related_name="were_here_counts", on_delete=models.CASCADE)
 
 class FBGroup(models.Model):
     _ident = models.CharField(max_length=255, unique=True)
@@ -754,13 +759,13 @@ class FBProfile(models.Model):
     deleted_at = models.DateTimeField(null=True)
 
     ### A single one of the following fields is non-null ###
-    fbUser = models.OneToOneField(FBUser, null=True, related_name='fbProfile')
-    fbPage = models.OneToOneField(FBPage, null=True, related_name='fbProfile')
-    fbGroup = models.OneToOneField(FBGroup, null=True, related_name='fbProfile')
-    fbEvent = models.OneToOneField(FBEvent, null=True, related_name='fbProfile')
-    fbApplication = models.OneToOneField(FBApplication, null=True, related_name='fbProfile')
-    fbVideo = models.OneToOneField(FBVideo, null=True, related_name='fbProfile')
-    fbPhoto = models.OneToOneField(FBPhoto, null=True, related_name='fbProfile')
+    fbUser = models.OneToOneField(FBUser, null=True, related_name='fbProfile', on_delete=models.CASCADE)
+    fbPage = models.OneToOneField(FBPage, null=True, related_name='fbProfile', on_delete=models.CASCADE)
+    fbGroup = models.OneToOneField(FBGroup, null=True, related_name='fbProfile', on_delete=models.CASCADE)
+    fbEvent = models.OneToOneField(FBEvent, null=True, related_name='fbProfile', on_delete=models.CASCADE)
+    fbApplication = models.OneToOneField(FBApplication, null=True, related_name='fbProfile', on_delete=models.CASCADE)
+    fbVideo = models.OneToOneField(FBVideo, null=True, related_name='fbProfile', on_delete=models.CASCADE)
+    fbPhoto = models.OneToOneField(FBPhoto, null=True, related_name='fbProfile', on_delete=models.CASCADE)
 
     def __str__(self):
         if self.type:
@@ -860,7 +865,7 @@ class FBPost(models.Model):
     created_time = models.DateTimeField(null=True)
     deleted_time = models.DateTimeField(null=True)
     description = models.TextField(null=True)
-    from_profile = models.ForeignKey(FBProfile, related_name="postedStatuses", null=True)
+    from_profile = models.ForeignKey(FBProfile, related_name="postedStatuses", null=True, on_delete=models.PROTECT)
     to_profiles = models.ManyToManyField(FBProfile, related_name="targetedByStatuses")
     is_hidden = models.BooleanField(default=False)
     is_instagram_eligible = models.BooleanField(default=False)
@@ -871,7 +876,7 @@ class FBPost(models.Model):
     #story_tags = models.ManyToManyField(FBProfile, related_name="taggedInPostStories")
     name = models.CharField(max_length=256, null=True)
     object_id = models.CharField(max_length=128, null=True)
-    parent_post = models.ForeignKey("self",related_name="child_posts",null=True)
+    parent_post = models.ForeignKey("self",related_name="child_posts",null=True, on_delete=models.PROTECT)
     permalink_url = models.CharField(max_length=256, null=True)
     picture = models.CharField(max_length=2048, null=True)
     source = models.CharField(max_length=1024, null=True)
@@ -1169,7 +1174,7 @@ class FBPost(models.Model):
 
 
 class share_count(Integer_time_label):
-    fbPost = models.ForeignKey(FBPost, related_name="share_counts")
+    fbPost = models.ForeignKey(FBPost, related_name="share_counts", on_delete=models.CASCADE)
 
 class FBAttachment(models.Model):
     description = models.TextField(null=True)
@@ -1201,14 +1206,14 @@ class FBComment(GenericModel):
     reference_name = 'fbComment'
 
     _ident = models.CharField(max_length=255, unique=True)
-    from_profile = models.ForeignKey(FBProfile,related_name="posted_comments", null=True)
-    attachment = models.OneToOneField(FBAttachment, related_name="fbComments", null=True)
+    from_profile = models.ForeignKey(FBProfile,related_name="posted_comments", null=True, on_delete=models.PROTECT)
+    attachment = models.OneToOneField(FBAttachment, related_name="fbComments", null=True, on_delete=models.PROTECT)
     created_time = models.DateTimeField(null=True)
     deleted_time = models.DateTimeField(null=True)
     message = models.TextField(null=True)
     permalink_url = models.CharField(max_length=1024,null=True)
-    parentPost = models.ForeignKey(FBPost,related_name="fbComments", null=True)
-    parentComment = models.ForeignKey("self",related_name="fbReplies", null=True)
+    parentPost = models.ForeignKey(FBPost,related_name="fbComments", null=True, on_delete=models.PROTECT)
+    parentComment = models.ForeignKey("self",related_name="fbReplies", null=True, on_delete=models.PROTECT)
 
     ### Statistics fields ###
     comment_count = models.IntegerField(null=True)
@@ -1328,17 +1333,17 @@ class FBComment(GenericModel):
 
 
 class like_count(Integer_time_label):
-    fbPost = models.ForeignKey(FBPost, related_name="like_counts",null=True)
-    fbComment = models.ForeignKey(FBComment, related_name="like_counts",null=True)
+    fbPost = models.ForeignKey(FBPost, related_name="like_counts",null=True, on_delete=models.CASCADE)
+    fbComment = models.ForeignKey(FBComment, related_name="like_counts",null=True, on_delete=models.CASCADE)
 class comment_count(Integer_time_label):
-    fbPost = models.ForeignKey(FBPost, related_name="comment_counts",null=True)
-    fbComment = models.ForeignKey(FBComment, related_name="comment_counts",null=True)
+    fbPost = models.ForeignKey(FBPost, related_name="comment_counts",null=True, on_delete=models.CASCADE)
+    fbComment = models.ForeignKey(FBComment, related_name="comment_counts",null=True, on_delete=models.CASCADE)
 
 
 class FBReaction(GenericModel):
-    from_profile = models.ForeignKey(FBProfile, related_name="reacted_to")
-    to_post = models.ForeignKey(FBPost, related_name="reactions",null=True)
-    to_comment = models.ForeignKey(FBComment, related_name="reactions", null=True)
+    from_profile = models.ForeignKey(FBProfile, related_name="reacted_to", on_delete=models.PROTECT)
+    to_post = models.ForeignKey(FBPost, related_name="reactions",null=True, on_delete=models.PROTECT)
+    to_comment = models.ForeignKey(FBComment, related_name="reactions", null=True, on_delete=models.PROTECT)
     type = models.CharField(max_length=10, default="LIKE")
     from_time = models.DateTimeField(default=djangoNow)
     until_time = models.DateTimeField(null=True)

@@ -20,14 +20,14 @@ from .views.forms import formBase
 
 urlpatterns = [
     url(r'^$', facebookBase),
-    url(r'^(?i)user/(?P<FBUserId>[\w\.]+)$', fbUserView),
-    url(r'^(?i)page/(?P<FBPageId>\w+)$', fbPageView),
-    url(r'^(?i)post/(?P<FBPostId>[\w\.]+)$', fbPostView),
-    url(r'^(?i)comment/(?P<fbCommentId>\w+)$', fbCommentView),
+    url(r'^user/(?P<FBUserId>[\w\.]+)$', fbUserView),
+    url(r'^page/(?P<FBPageId>\w+)$', fbPageView),
+    url(r'^post/(?P<FBPostId>[\w\.]+)$', fbPostView),
+    url(r'^comment/(?P<fbCommentId>\w+)$', fbCommentView),
 
-    url(r'^(?i)apilogin/?$', APILoginPage),
-    #url(r'^(?i)ajax/?$', ajaxBase),
-    url(r'(?i)forms/(?P<formName>[\w\.]+)', formBase),
+    url(r'^apilogin/?$', APILoginPage),
+    #url(r'^ajax/?$', ajaxBase),
+    url(r'forms/(?P<formName>[\w\.]+)', formBase),
 
 
     # ajax

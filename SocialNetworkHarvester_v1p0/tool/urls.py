@@ -19,13 +19,13 @@ from .views.downloads import *
 from .views.ajaxTables import *
 
 urlpatterns = [
-    url(r'(?i)linechart/?$', lineChart),
-    url(r'(?i)piechart/?$', pieChart),
-    url(r'(?i)geographic/?$', geoChart),
-    url(r'(?i)bubblechart/?$', bubbleChart),
-    url(r'(?i)distributionchart/?$', distributionChart),
-    url(r'(?i)download/?$', downloadMedia),
-    url(r'(?i)table/downloadProgress/?$', downloadProgress),
-    url(r'(?i)table/ajax/?$', ajaxBase),
-    url(r'(?i)table/selection/?$', setUserSelection),
+    url(r'linechart/?$', lineChart),
+    url(r'piechart/?$', pieChart),
+    url(r'geographic/?$', geoChart),
+    url(r'bubblechart/?$', bubbleChart),
+    url(r'distributionchart/?$', distributionChart),
+    url(r'download/?$', downloadMedia),
+    url(r'table/downloadProgress/?$', downloadProgress),
+    url(r'table/ajax/?$', ajaxBase),
+    url(r'table/selection/?$', setUserSelection),
 ]
