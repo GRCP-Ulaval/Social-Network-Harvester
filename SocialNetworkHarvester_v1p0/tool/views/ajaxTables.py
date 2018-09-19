@@ -1,33 +1,44 @@
-from django.shortcuts import *
-from django.http import StreamingHttpResponse
+import re
 from datetime import datetime
-from django.contrib.auth.decorators import login_required
-import re, json, emoji
-from django.db.models.query import QuerySet
-from SocialNetworkHarvester_v1p0.jsonResponses import *
-from AspiraUser.models import getUserSelection, resetUserSelection, UserProfile
-from Twitter.models import TWUser, Tweet, Hashtag, follower, HashtagHarvester, favorite_tweet, follower
-from Facebook.models import FBPost, FBPage,FBComment,FBReaction,FBUser
-from Youtube.models import YTChannel, YTVideo, YTPlaylist, Subscription, YTComment, YTPlaylistItem
 from functools import reduce
 
+import emoji
+from django.contrib.auth.decorators import login_required
+from django.db.models.query import QuerySet
+from django.http import StreamingHttpResponse
+from django.shortcuts import *
+
+from AspiraUser.models import getUserSelection
+from Facebook.models import FBPage, FBPost, FBComment, FBReaction
+from SocialNetworkHarvester_v1p0.jsonResponses import *
 from SocialNetworkHarvester_v1p0.settings import viewsLogger, DEBUG
+from Twitter.models import TWUser, Tweet, HashtagHarvester, follower, favorite_tweet, Hashtag
+from Youtube.models import YTChannel, YTVideo, YTPlaylist, Subscription, YTComment, YTPlaylistItem
 
 log = lambda s: viewsLogger.log(s) if DEBUG else 0
 pretty = lambda s: viewsLogger.pretty(s) if DEBUG else 0
 logerror = lambda s: viewsLogger.exception(s) if DEBUG else 0
 
-MODEL_WHITELIST = ['FBPage', 'FBPost','FBComment','FBReaction',
-                   'Tweet','TWUser',"HashtagHarvester","Hashtag","favorite_tweet","follower",
-                   'YTChannel','YTVideo','YTPlaylist','Subscription','YTComment','YTPlaylistItem']
+MODEL_WHITELIST = ['FBPage', 'FBPost', 'FBComment', 'FBReaction',
+                   'Tweet', 'TWUser', "HashtagHarvester", "Hashtag", "favorite_tweet", "follower",
+                   'YTChannel', 'YTVideo', 'YTPlaylist', 'Subscription', 'YTComment', 'YTPlaylistItem']
+
+
+def getModel(modelName):
+    return {model.__name__: model for model in [
+        TWUser, Tweet, HashtagHarvester, follower, favorite_tweet, Hashtag,
+        FBPage, FBPost, FBComment, FBReaction,
+        YTChannel, YTVideo, YTPlaylist, Subscription, YTComment, YTPlaylistItem
+    ]}[modelName]
+
 
 @login_required()
 def ajaxBase(request):
     try:
-        if not request.user.is_authenticated(): return jsonUnauthorizedError()
-        if not 'tableId' in request.GET: return missingParam('tableId')
-        if not 'modelName' in request.GET: return missingParam('modelName')
-        if not 'srcs' in request.GET: return missingParam('srcs')
+        if not request.user.is_authenticated: return jsonUnauthorizedError()
+        if 'tableId' not in request.GET: return missingParam('tableId')
+        if 'modelName' not in request.GET: return missingParam('modelName')
+        if 'srcs' not in request.GET: return missingParam('srcs')
         tableId = request.GET['tableId']
         modelName = request.GET['modelName']
         if modelName not in MODEL_WHITELIST: return jsonForbiddenError()
@@ -43,11 +54,11 @@ def ajaxBase(request):
             response = generateAjaxTableResponse(queryset, request, selecteds)
             return HttpResponse(json.dumps(response), content_type='application/json')
     except EmojiiSearchException:
-        return  jResponse({
-            "status":"exception",
-            "error":{
-                "code":400,
-                "reason":"La recherche par emojii n'est pas supportée."
+        return jResponse({
+            "status": "exception",
+            "error": {
+                "code": 400,
+                "reason": "La recherche par emojii n'est pas supportée."
             }
         })
     except:
@@ -58,7 +69,7 @@ def ajaxBase(request):
 def getQueryset(request):
     updateQueryOptions(request)
     modelName = request.GET['modelName']
-    queryset = globals()[modelName].objects.none()
+    queryset = getModel(modelName).objects.none()
     srcs = request.GET['srcs']
     userSelection = getUserSelection(request)
     for src in json.loads(srcs):
@@ -87,7 +98,7 @@ def getQueryset(request):
     if "exclude_retweets" in options.keys() and options['exclude_retweets']:
         queryset = queryset.filter(retweet_of__isnull=True)
     if 'search_term' in options.keys() and options['search_term'] != "":
-        if re.match(emoji.get_emoji_regexp(),options['search_term']):
+        if re.match(emoji.get_emoji_regexp(), options['search_term']):
             raise EmojiiSearchException
         queryset = filterQuerySet(queryset, options['search_fields'].split(','), options['search_term'])
     if 'ord_field' in options.keys():
@@ -95,11 +106,12 @@ def getQueryset(request):
     queryset.recordsTotal = recordsTotal
     return queryset
 
+
 class EmojiiSearchException(Exception):
     pass
 
 
-def querySearch(user,modelName, query):
+def querySearch(user, modelName, query):
     terms = []
     rawQuery = ""
     resultLists = {}
@@ -123,13 +135,15 @@ def digestQuery(rawQuery):
     for explicit in explicits_terms:
         rawQuery = re.sub(explicit, "", rawQuery)
 
-    return [re.sub("(^( +)|( +)$)", "", ex_t) for ex_t in explicits_terms] +\
+    return [re.sub("(^( +)|( +)$)", "", ex_t) for ex_t in explicits_terms] + \
            [w for w in rawQuery.split(" ") if w != '']
+
 
 def cleanQuery(rawQuery):
     cleanQuery = re.sub("'", "\"", rawQuery)
-    cleanQuery = re.sub("[\<\>/;:,\.^]", "",cleanQuery)
+    cleanQuery = re.sub("[\<\>/;:,\.^]", "", cleanQuery)
     return cleanQuery
+
 
 def updateQueryOptions(request):
     params = request.GET
@@ -146,12 +160,11 @@ def updateQueryOptions(request):
                     selecteds = orderQueryset(selecteds, fields[ordering_column], params['sSortDir_0'])
                     userSelection.saveQuerySet(selecteds, params['tableId'])
 
-        if 'sSearch' in params: # and params['sSearch'] != '':
+        if 'sSearch' in params:  # and params['sSearch'] != '':
             searchables_keys = [value for key, value in sorted(params.items()) if key.startswith("bSearchable_")][1:]
             search_fields = [pair[0] for pair in zip(fields, searchables_keys) if pair[1] == 'true']
             userSelection.setQueryOption(request.GET['tableId'], 'search_fields', ",".join(search_fields))
             userSelection.setQueryOption(request.GET['tableId'], "search_term", params['sSearch'])
-
 
 
 def generateAjaxTableResponse(queryset, request, selecteds):
@@ -159,10 +172,10 @@ def generateAjaxTableResponse(queryset, request, selecteds):
     recordsTotal = queryset.count()
     if hasattr(queryset, 'recordsTotal'):
         recordsTotal = queryset.recordsTotal
-    queryset = queryset.distinct() #| selecteds.distinct() # Necessary to insure both are "querysets"
+    queryset = queryset.distinct()  # | selecteds.distinct() # Necessary to insure both are "querysets"
     response = {
         "recordsTotal": recordsTotal,
-        "recordsFiltered": queryset.count(), # TODO: Optimize this
+        "recordsFiltered": queryset.count(),  # TODO: Optimize this
         'fullURL': request.get_full_path(),
     }
     fields = []
@@ -182,7 +195,7 @@ def generateAjaxTableResponse(queryset, request, selecteds):
 def orderQueryset(queryset, field, order):
     if order == 'desc':
         field = '-' + field
-    ret = queryset.order_by(field)#.exclude(**{field + "__isnull": True})
+    ret = queryset.order_by(field)  # .exclude(**{field + "__isnull": True})
 
     return ret
 
@@ -242,33 +255,34 @@ def getValuesAsList(obj, fields):
     return ret
 
 
-#@viewsLogger.debug(showArgs=True)
+# @viewsLogger.debug(showArgs=True)
 def getColumnsDescriptions(model, fields, infoType):
     columns = []
     fieldsDescription = model.get_fields_description()
-    #pretty(fieldsDescription)
+    # pretty(fieldsDescription)
     for field in fields:
         if '__' not in field:
-            columns.append("%s"%fieldsDescription[field][infoType])
+            columns.append("%s" % fieldsDescription[field][infoType])
         else:
             subfields = field.split('__')
             submodel = getattr(model, subfields[0])
             for subfield in subfields[1:-1]:
                 submodel = getattr(submodel, subfield)
             fieldsDescription = submodel.get_fields_description()
-            columns.append("%s"%fieldsDescription[subfields[-1]][infoType])
+            columns.append("%s" % fieldsDescription[subfields[-1]][infoType])
     return columns
 
 
 ################### TABLE STREAMS ###################
-import io, csv, types, binascii, codecs
+import io, csv
 
 
-#@viewsLogger.debug(showArgs=True)
+# @viewsLogger.debug(showArgs=True)
 def generateCSVDownload(request, queryset, userSelection):
     tableId = request.GET['tableId']
     userSelection.setQueryOption(tableId, 'downloadProgress', 0)
     userSelection.setQueryOption(tableId, 'linesTransfered', 0)
+
     def dataStream():
         sent = 0
         lastPercent = 0
@@ -293,7 +307,7 @@ def generateCSVDownload(request, queryset, userSelection):
                 lastPercent = percent
                 userSelection.setQueryOption(tableId, 'downloadProgress', percent)
                 userSelection.setQueryOption(tableId, 'linesTransfered', sent)
-                #log("sent: %s lines. (%i %%)"%(sent, percent))
+                # log("sent: %s lines. (%i %%)"%(sent, percent))
             csvwriter.writerow(getValuesAsList(obj, fields))
             csvfile.seek(0)
             data = csvfile.read()
@@ -304,9 +318,10 @@ def generateCSVDownload(request, queryset, userSelection):
                 yield data
             except:
                 logerror("Error occured in generateCSVDownload")
-        #log('completed download')
+        # log('completed download')
         userSelection.setQueryOption(tableId, 'downloadProgress', 100)
         userSelection.setQueryOption(tableId, 'linesTransfered', 1)
+
     try:
         response = StreamingHttpResponse(dataStream(), content_type="text/csv")
         response["Content-Disposition"] = "attachment; filename=%s" % request.GET['filename'] + '.csv'
@@ -333,10 +348,8 @@ def readLinesFromCSV(request):
             decodedRow = re.sub('[\\r\\n]', '', decodedRow)
             rows.append(decodedRow)
         except UnicodeDecodeError:
-            errors.append("Invalid statement on line %i of the file"%i)
+            errors.append("Invalid statement on line %i of the file" % i)
     return [row for row in rows if row != ""], errors
-
-
 
 
 ######### TABLE ROWS SELECTION MANAGEMENT ##########
@@ -389,4 +402,3 @@ def selectUnselectAll(request):
     if 'selected' in request.GET:
         queryset = getQueryset(request)
     getUserSelection(request).saveQuerySet(queryset, request.GET['tableId'])
-

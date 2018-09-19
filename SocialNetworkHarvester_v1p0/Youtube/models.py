@@ -783,7 +783,9 @@ class YTPlaylist(models.Model):
         return self.items.count()
 
     def get_embedded(self):
-        return '<iframe width="100%" height="172px" src="https://www.youtube.com/embed/' + self.videos()[0]._ident + \
+        if not self.videos().first():
+            return ""
+        return '<iframe width="100%" height="172px" src="https://www.youtube.com/embed/' + self.videos().first()._ident + \
                '?list=' + self._ident + ' "frameborder="0" allowFullScreen></iframe>'
 
     def get_fields_description(self):

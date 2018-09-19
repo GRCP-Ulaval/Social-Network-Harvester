@@ -25,7 +25,7 @@ DATABASE_PARAMS = {
     'ENGINE': 'django.db.backends.mysql',
     'NAME': 'snh_2016_schema',
     'USER': 'root',
-    'PASSWORD': '12345678',
+    'PASSWORD': 'grcp2014',
     'HOST': '127.0.0.1',
-    'PORT': '3306',
+    'PORT': '3333',
 }

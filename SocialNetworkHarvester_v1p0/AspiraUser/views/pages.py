@@ -208,7 +208,7 @@ def userSettings(request):
 
 
 def resetPWPage(request, token):
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         return HttpResponseRedirect("/")
     profile = UserProfile.objects.filter(passwordResetToken__exact=token).first()
     if not profile:

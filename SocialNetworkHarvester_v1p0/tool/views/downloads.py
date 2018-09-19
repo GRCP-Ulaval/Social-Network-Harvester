@@ -13,7 +13,7 @@ pretty = lambda s: viewsLogger.pretty(s) if DEBUG else 0
 
 @login_required
 def downloadMedia(request):
-    if not 'file' in request.GET: return jsonBadRequest(request, 'You must specify a filename')
+    if not 'file' in request.GET: return jsonBadRequest('You must specify a filename')
     fileName = request.GET['file']
     if '..' in fileName: raise Http404()
     if DEBUG:

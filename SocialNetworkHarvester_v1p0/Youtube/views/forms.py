@@ -1,31 +1,27 @@
-from django.shortcuts import *
 from django.contrib.auth.decorators import login_required
+
 from SocialNetworkHarvester_v1p0.jsonResponses import *
-from AspiraUser.models import getUserSelection, resetUserSelection
-import re
+from SocialNetworkHarvester_v1p0.settings import viewsLogger
 from Youtube.models import *
 from tool.views.ajaxTables import readLinesFromCSV
 
-from SocialNetworkHarvester_v1p0.settings import viewsLogger, DEBUG
 log = lambda s: viewsLogger.log(s) if DEBUG else 0
 pretty = lambda s: viewsLogger.pretty(s) if DEBUG else 0
 
-
-plurial = lambda i: 's' if int(i)>1 else ''
-
+plurial = lambda i: 's' if int(i) > 1 else ''
 
 validFormNames = [
-        'YTAddChannel',
-        'YTRemoveChannel',
-        'YTAddPlaylist',
-        'YTRemovePlaylist',
-    ]
+    'YTAddChannel',
+    'YTRemoveChannel',
+    'YTAddPlaylist',
+    'YTRemovePlaylist',
+]
 
 
 @login_required()
 def formBase(request, formName):
-    if not request.user.is_authenticated(): return jsonUnauthorizedError(request)
-    if not formName in validFormNames: return jsonBadRequest(request, 'Specified form does not exists')
+    if not request.user.is_authenticated: return jsonUnauthorizedError(request)
+    if not formName in validFormNames: return jsonBadRequest('Specified form does not exists')
     try:
         return globals()[formName](request)
     except:
@@ -34,7 +30,8 @@ def formBase(request, formName):
 
 
 def YTAddChannel(request):
-    if not 'channelURL' in request.POST and not 'Browse' in request.FILES : return jsonBadRequest(request, 'No channel url specified')
+    if not 'channelURL' in request.POST and not 'Browse' in request.FILES:
+        return jsonBadRequest('No channel url specified')
     limit = request.user.userProfile.ytChannelsToHarvestLimit
     currentCount = request.user.userProfile.ytChannelsToHarvest.count()
     if limit <= currentCount:
@@ -48,35 +45,37 @@ def YTAddChannel(request):
         fileUrls, errors = readLinesFromCSV(request)
         channelUrls += fileUrls
         invalids += errors
-    if limit <= currentCount+len(channelUrls):
-        channelUrls = channelUrls[:limit-currentCount]
+    if limit <= currentCount + len(channelUrls):
+        channelUrls = channelUrls[:limit - currentCount]
     invalids += addChannels(request, channelUrls)
 
     numChannelAdded = len(channelUrls) - len(invalids)
     if not numChannelAdded:
         return jResponse({
             'status': 'exception',
-            'errors': ['"%s" n\'est pas une URL de chaîne valide'%url for url in invalids],
+            'errors': ['"%s" n\'est pas une URL de chaîne valide' % url for url in invalids],
         })
     return jResponse({
-        'status':'ok',
-        'messages': ['%s chaînes%s ont été ajoutées à votre liste (%i erreurs%s)'%(numChannelAdded, plurial(numChannelAdded),
+        'status': 'ok',
+        'messages': [
+            '%s chaînes%s ont été ajoutées à votre liste (%i erreurs%s)' % (numChannelAdded, plurial(numChannelAdded),
                                                                             len(invalids), plurial(len(invalids)))]
     })
 
-#@viewsLogger.debug(showArgs=True)
-def addChannels(request,channelUrls):
+
+# @viewsLogger.debug(showArgs=True)
+def addChannels(request, channelUrls):
     profile = request.user.userProfile
     invalids = []
     for url in channelUrls:
         newChannel = None
-        match = re.match(r'https?://www.youtube.com/user/(?P<username>[\w\.-]+)/?.*',url)
+        match = re.match(r'https?://www.youtube.com/user/(?P<username>[\w\.-]+)/?.*', url)
         if match:
-            newChannel,new = YTChannel.objects.get_or_create(userName=match.group('username'))
+            newChannel, new = YTChannel.objects.get_or_create(userName=match.group('username'))
         else:
             match = re.match(r'https?://www.youtube.com/channel/(?P<channelId>[\w\.-]+)/?.*', url)
             if match:
-                newChannel,new = YTChannel.objects.get_or_create(_ident=match.group('channelId'))
+                newChannel, new = YTChannel.objects.get_or_create(_ident=match.group('channelId'))
             else:
                 invalids.append(url)
         if newChannel:
@@ -89,10 +88,10 @@ def YTRemoveChannel(request):
     return jsonNotImplementedError(request)
 
 
-#@viewsLogger.debug(showArgs=True)
+# @viewsLogger.debug(showArgs=True)
 def YTAddPlaylist(request):
-    if not 'playlistURL' in request.POST and not 'Browse' in request.FILES: return jsonBadRequest(request,
-                                                                                                 'No playlist url specified')
+    if not 'playlistURL' in request.POST and not 'Browse' in request.FILES:
+        return jsonBadRequest('No playlist url specified')
     limit = request.user.userProfile.ytPlaylistsToHarvestLimit
     currentCount = request.user.userProfile.ytPlaylistsToHarvest.count()
     if limit <= currentCount:
@@ -119,7 +118,7 @@ def YTAddPlaylist(request):
     return jResponse({
         'status': 'ok',
         'messages': ['%s playlists%s ont été ajoutées à votre liste (%i erreurs%s)' % (
-            numPlaylistAdded, plurial(numPlaylistAdded),len(invalids), plurial(len(invalids)))]
+            numPlaylistAdded, plurial(numPlaylistAdded), len(invalids), plurial(len(invalids)))]
     })
 
 
@@ -140,6 +139,7 @@ def addPlaylists(request, playlistURLs):
         else:
             invalids.append(url)
     return invalids
+
 
 def YTRemovePlaylist(request):
     return jsonNotImplementedError(request)

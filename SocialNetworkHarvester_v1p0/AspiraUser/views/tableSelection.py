@@ -11,7 +11,7 @@ from Facebook.models import *
 
 log = lambda s: viewsLogger.log(s) if DEBUG else 0
 pretty = lambda s: viewsLogger.pretty(s) if DEBUG else 0
-
+logError = lambda s: viewsLogger.exception(s) if DEBUG else 0
 
 
 
@@ -29,7 +29,8 @@ def removeSelectedItems(request):
             listToRemovefrom.remove(item)
             successNum += 1
         except:
-            aspiraErrors.append('Something weird has happened while removing %s' % item)
+            logError('Une erreur est survenue lors du retrait de %s' % item)
+            aspiraErrors.append('Une erreur est survenue lors du retrait de %s' % item)
     if aspiraErrors == []:
         response = {'status': 'ok', 'messages': [
             'Retiré %i élément%s de votre liste de collecte' % (successNum, 's' if successNum > 1 else '')]}
