@@ -7,7 +7,7 @@ def get_from_env(variable_name, default=None, prefix=None):
 
 
 SECRET_KEY = get_from_env('DJANGO_SECRET_KEY', default='123abc')
-DEBUG = get_from_env('DJANGO_DEBUG', default=True)
+DEBUG = get_from_env('DJANGO_DEBUG', default=True) not in ['0', 'false', 'False']
 FACEBOOK_APP_PARAMS = {
     'app_id': get_from_env('DJANGO_FB_APP_ID'),
     'version': get_from_env('DJANGO_FB_APP_VERSION'),
