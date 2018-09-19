@@ -5,3 +5,5 @@ Tests/
 *.log
 SocialNetworkHarvester.iml
 db
+scripts/prod_database_tunnel.ssh
+scripts/prod_server.ssh
