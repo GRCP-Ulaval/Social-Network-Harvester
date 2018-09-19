@@ -215,7 +215,7 @@ def updatePW(request):
 
 
 def requestResetPW(request):
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         return jsonErrors('Vous devez être déconnecté pour réinitialiser votre mot de passe')
     if 'email' not in request.POST:
         return missingParam('email')

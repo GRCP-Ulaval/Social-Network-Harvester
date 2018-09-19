@@ -21,7 +21,7 @@ class UserProfile(models.Model):
     def __str__(self):
         return "%s's user profile" % self.user
 
-    user = models.OneToOneField(User, related_name="userProfile", null=False)
+    user = models.OneToOneField(User, related_name="userProfile", null=False, on_delete=models.CASCADE)
 
     twitterApp_consumerKey = models.CharField(max_length=255, null=True, blank=True)
     twitterApp_consumer_secret = models.CharField(max_length=255, null=True, blank=True)
@@ -88,7 +88,7 @@ class FBAccessToken(models.Model):
     _token = models.CharField(max_length=255)
     expires = models.IntegerField(blank=True, null=True)
     # expires gives the "epoch date" of expiration of the token. Compare to time.time() to know if still valid.
-    userProfile = models.OneToOneField(UserProfile, related_name="fbAccessToken", null=True)
+    userProfile = models.OneToOneField(UserProfile, related_name="fbAccessToken", null=True, on_delete=models.CASCADE)
 
     def is_expired(self):
         if not self.expires: return True

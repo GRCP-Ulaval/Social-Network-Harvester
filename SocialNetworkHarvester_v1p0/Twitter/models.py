@@ -1,14 +1,22 @@
-from django.db import models
 from django.db.utils import IntegrityError
 from django.core.exceptions import MultipleObjectsReturned
-import _mysql_exceptions
 from SocialNetworkHarvester_v1p0.models import *
 from django.utils.timezone import utc
-import json
 from datetime import datetime
 import re, time
 
 from SocialNetworkHarvester_v1p0.settings import twitterLogger, DEBUG
+import re
+import time
+from datetime import datetime
+
+from django.core.exceptions import MultipleObjectsReturned
+from django.db.utils import IntegrityError
+from django.utils.timezone import utc
+
+from SocialNetworkHarvester_v1p0.models import *
+from SocialNetworkHarvester_v1p0.settings import twitterLogger, DEBUG
+
 log = lambda s : twitterLogger.log(s) if DEBUG else 0
 pretty = lambda s : twitterLogger.pretty(s) if DEBUG else 0
 today = lambda : datetime.utcnow().replace(hour=0,minute=0,second=0,microsecond=0,tzinfo=utc)
@@ -130,7 +138,7 @@ class HashtagHarvester(models.Model):
     class Meta:
         app_label = "Twitter"
 
-    hashtag = models.ForeignKey(Hashtag, related_name="harvesters")
+    hashtag = models.ForeignKey(Hashtag, related_name="harvesters", on_delete=models.CASCADE)
     _harvest_since = models.DateTimeField(null=True, blank=True)
     _harvest_until = models.DateTimeField(null=True, blank=True)
     _has_reached_begining = models.BooleanField(default=False)
@@ -549,28 +557,28 @@ class TWUser(models.Model):
                     lastItem.save()
 
 class screen_name(Text_time_label):
-    twuser = models.ForeignKey(TWUser, related_name="screen_names")
+    twuser = models.ForeignKey(TWUser, related_name="screen_names", on_delete=models.CASCADE)
 class name(Text_time_label):
-    twuser = models.ForeignKey(TWUser, related_name="names")
+    twuser = models.ForeignKey(TWUser, related_name="names", on_delete=models.CASCADE)
 class time_zone(Text_time_label):
-    twuser = models.ForeignKey(TWUser, related_name="time_zones")
+    twuser = models.ForeignKey(TWUser, related_name="time_zones", on_delete=models.CASCADE)
 class TWUrl(Text_time_label):
-    twuser = models.ForeignKey(TWUser, related_name="urls")
+    twuser = models.ForeignKey(TWUser, related_name="urls", on_delete=models.CASCADE)
 class description(Text_time_label):
-    twuser = models.ForeignKey(TWUser, related_name="descriptions")
+    twuser = models.ForeignKey(TWUser, related_name="descriptions", on_delete=models.CASCADE)
 class statuses_count(Integer_time_label):
-    twuser = models.ForeignKey(TWUser, related_name="statuses_counts")
+    twuser = models.ForeignKey(TWUser, related_name="statuses_counts", on_delete=models.CASCADE)
 class favourites_count(Integer_time_label):
-    twuser = models.ForeignKey(TWUser, related_name="favourites_counts")
+    twuser = models.ForeignKey(TWUser, related_name="favourites_counts", on_delete=models.CASCADE)
 class followers_count(Integer_time_label):
-    twuser = models.ForeignKey(TWUser, related_name="followers_counts")
+    twuser = models.ForeignKey(TWUser, related_name="followers_counts", on_delete=models.CASCADE)
 class friends_count(Integer_time_label):
-    twuser = models.ForeignKey(TWUser, related_name="friends_counts")
+    twuser = models.ForeignKey(TWUser, related_name="friends_counts", on_delete=models.CASCADE)
 class listed_count(Integer_time_label):
-    twuser = models.ForeignKey(TWUser, related_name="listed_counts")
+    twuser = models.ForeignKey(TWUser, related_name="listed_counts", on_delete=models.CASCADE)
 class follower(time_label):
-    twuser = models.ForeignKey(TWUser, related_name="followers")
-    value = models.ForeignKey(TWUser, related_name='friends') # "value" user is following "twuser", calls it it's "friend"
+    twuser = models.ForeignKey(TWUser, related_name="followers", on_delete=models.CASCADE)
+    value = models.ForeignKey(TWUser, related_name='friends', on_delete=models.CASCADE) # "value" user is following "twuser", calls it it's "friend"
     ended = models.DateTimeField(null=True)
     def get_fields_description(self):
         val = super(follower, self).get_fields_description()
@@ -608,17 +616,17 @@ class Tweet(models.Model):
     text = models.TextField(max_length=255, null=True)
     retweet_count = models.IntegerField(null=True)
     possibly_sensitive = models.BooleanField(default=False)
-    place = models.ForeignKey(TWPlace, null=True)
+    place = models.ForeignKey(TWPlace, null=True, on_delete=models.PROTECT)
     source = models.CharField(max_length=255, null=True)
     lang = models.CharField(max_length=128)
     withheld_copyright = models.BooleanField(default=False)
     withheld_in_countries = models.CharField(max_length=255)
     withheld_scope = models.CharField(max_length=32) #either “status” or “user”.
-    user = models.ForeignKey(TWUser, related_name="tweets", null=True)
-    in_reply_to_user = models.ForeignKey(TWUser, null=True, related_name="replied_by")
-    in_reply_to_status = models.ForeignKey('self', null=True, related_name="replied_by")
-    quoted_status = models.ForeignKey('self', null=True, related_name="quoted_by")
-    retweet_of = models.ForeignKey('self', null=True, related_name="retweets")
+    user = models.ForeignKey(TWUser, related_name="tweets", null=True, on_delete=models.PROTECT)
+    in_reply_to_user = models.ForeignKey(TWUser, null=True, related_name="replied_by", on_delete=models.PROTECT)
+    in_reply_to_status = models.ForeignKey('self', null=True, related_name="replied_by", on_delete=models.PROTECT)
+    quoted_status = models.ForeignKey('self', null=True, related_name="quoted_by", on_delete=models.PROTECT)
+    retweet_of = models.ForeignKey('self', null=True, related_name="retweets", on_delete=models.PROTECT)
     user_mentions = models.ManyToManyField(TWUser, related_name="mentions")
 
     hashtags = models.ManyToManyField(Hashtag, related_name='tweets')
@@ -924,11 +932,11 @@ class Tweet(models.Model):
                 self.hashtags.add(hashtagObj)
 
 class retweet_count(Integer_time_label):
-    tweet = models.ForeignKey(Tweet, related_name="retweet_counts")
+    tweet = models.ForeignKey(Tweet, related_name="retweet_counts", on_delete=models.CASCADE)
 
 class favorite_tweet(time_label):
-    twuser = models.ForeignKey(TWUser, related_name="favorite_tweets")
-    value = models.ForeignKey(Tweet, related_name='favorited_by')
+    twuser = models.ForeignKey(TWUser, related_name="favorite_tweets", on_delete=models.CASCADE)
+    value = models.ForeignKey(Tweet, related_name='favorited_by', on_delete=models.CASCADE)
     ended = models.DateTimeField(null=True)
 
     def get_fields_description(self):
@@ -999,7 +1007,7 @@ def joinTWUsers(user1, user2):
         'listed_counts',
     ]:
         log('transfering all %s from %s to %s'%(label,user2,user1))
-        for item in getattr(user, label).all():
+        for item in getattr(user2, label).all():
             item.twuser = user1
             item.save()
     user1.save()

@@ -19,9 +19,9 @@ from .views.forms import formBase
 
 urlpatterns = [
     url(r'^$', youtubeBase),
-    url(r'(?i)channel/(?P<identifier>[\w\.-]+)?', channelBase),
-    url(r'(?i)video/(?P<identifier>[\w\.-]+)?', videoBase),
-    url(r'(?i)comment/(?P<identifier>[\w\.-]+)?', commentBase),
-    url(r'(?i)playlist/(?P<identifier>[\w\.-]+)?', playlistBase),
-    url(r'(?i)forms/(?P<formName>[\w\.]+)', formBase),
+    url(r'channel/(?P<identifier>[\w\.-]+)?', channelBase),
+    url(r'video/(?P<identifier>[\w\.-]+)?', videoBase),
+    url(r'comment/(?P<identifier>[\w\.-]+)?', commentBase),
+    url(r'playlist/(?P<identifier>[\w\.-]+)?', playlistBase),
+    url(r'forms/(?P<formName>[\w\.]+)', formBase),
 ]

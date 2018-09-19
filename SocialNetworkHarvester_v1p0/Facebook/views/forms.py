@@ -1,15 +1,11 @@
-from django.shortcuts import *
-from django.contrib.auth.decorators import login_required
-from SocialNetworkHarvester_v1p0.jsonResponses import *
-from SocialNetworkHarvester_v1p0.settings import FACEBOOK_APP_PARAMS
-from AspiraUser.models import getUserSelection, resetUserSelection, FBAccessToken
-import re
-from Facebook.models import *
-from Facebook.fbClient import FBClient
 import facebook
-from tool.views.ajaxTables import readLinesFromCSV
+from django.contrib.auth.decorators import login_required
 
+from AspiraUser.models import FBAccessToken
+from Facebook.models import *
+from SocialNetworkHarvester_v1p0.jsonResponses import *
 from SocialNetworkHarvester_v1p0.settings import viewsLogger, DEBUG
+from tool.views.ajaxTables import readLinesFromCSV
 
 log = lambda s: viewsLogger.log(s) if DEBUG else 0
 pretty = lambda s: viewsLogger.pretty(s) if DEBUG else 0
@@ -23,8 +19,8 @@ validFormNames = [
 
 @login_required()
 def formBase(request, formName):
-    if not request.user.is_authenticated(): return jsonUnauthorizedError(request)
-    if not formName in validFormNames: return jsonBadRequest(request, 'Specified form does not exists')
+    if not request.user.is_authenticated: return jsonUnauthorizedError(request)
+    if not formName in validFormNames: return jsonBadRequest('Specified form does not exists')
     try:
         return globals()[formName](request)
     except:
@@ -34,8 +30,8 @@ def formBase(request, formName):
 
 #@viewsLogger.debug()
 def FBAddPage(request):
-    if not 'pageUrl' in request.POST and not 'Browse' in request.FILES: return jsonBadRequest(request,
-                                                                                                 'No page url specified')
+    if not 'pageUrl' in request.POST and not 'Browse' in request.FILES:
+        return jsonBadRequest('No page url specified')
     limit = request.user.userProfile.facebookPagesToHarvestLimit
     currentCount = request.user.userProfile.facebookPagesToHarvest.count()
     if limit <= currentCount:
@@ -113,7 +109,7 @@ class FacebookAccessTokenExpiredException(FacebookAccessTokenException):pass
 
 
 def setFacebookToken(request):
-    if not 'fbToken' in request.POST: return jsonBadRequest(request, "'fbToken' is required")
+    if not 'fbToken' in request.POST: return jsonBadRequest("'fbToken' is required")
     profile = request.user.userProfile
     if not hasattr( profile, 'fbAccessToken') :
         profile.fbAccessToken = FBAccessToken.objects.create()
