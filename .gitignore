@@ -3,5 +3,5 @@ Tests/
 .idea/
 *.bat
 *.log
-SocialNetworkHarvester_v1p0.iml
+SocialNetworkHarvester.iml
 db
