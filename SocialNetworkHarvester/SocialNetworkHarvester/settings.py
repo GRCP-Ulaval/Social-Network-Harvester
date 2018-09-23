@@ -14,9 +14,12 @@ import logging
 import os
 import socket
 
-from .environment_dev import *
-if os.environ.get('DJANGO_PRODUCTION') is not None:
-    from .environment_prod import *
+try:
+    from .environment import *
+except ModuleNotFoundError:
+    raise Exception(('You must create an environment file! Copy the file "environment_clean.py"'
+                     ' into "environment.py" and populate it\'s values.'))
+
 
 from .logger import Logger
 
