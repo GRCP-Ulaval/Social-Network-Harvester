@@ -14,16 +14,10 @@ import logging
 import os
 import socket
 
-from .environment import (
-    SECRET_KEY,
-    DEBUG,
-    FACEBOOK_APP_PARAMS,
-    EMAIL_HOST,
-    EMAIL_HOST_USER,
-    EMAIL_HOST_PASSWORD,
-    EMAIL_USE_SSL,
-    EMAIL_PORT,
-    DATABASE_PARAMS)
+from .environment_dev import *
+if os.environ.get('DJANGO_PRODUCTION') is not None:
+    from .environment_prod import *
+
 from .logger import Logger
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
