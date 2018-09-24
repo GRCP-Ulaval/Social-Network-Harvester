@@ -9,6 +9,7 @@ from tool.views.ajaxTables import readLinesFromCSV
 
 log = lambda s: viewsLogger.log(s) if DEBUG else 0
 pretty = lambda s: viewsLogger.pretty(s) if DEBUG else 0
+logerror = lambda s: viewsLogger.exception(s) if DEBUG else 0
 
 plurial = lambda i: 's' if int(i) > 1 else ''
 
@@ -17,6 +18,7 @@ validFormNames = [
     'setFacebookToken'
 ]
 
+
 @login_required()
 def formBase(request, formName):
     if not request.user.is_authenticated: return jsonUnauthorizedError(request)
@@ -24,11 +26,11 @@ def formBase(request, formName):
     try:
         return globals()[formName](request)
     except:
-        viewsLogger.exception("ERROR OCCURED IN %s AJAX WITH FORM NAME '%s':" % (__name__,formName))
+        viewsLogger.exception("ERROR OCCURED IN %s AJAX WITH FORM NAME '%s':" % (__name__, formName))
         return jsonUnknownError(request)
 
 
-#@viewsLogger.debug()
+# @viewsLogger.debug()
 def FBAddPage(request):
     if not 'pageUrl' in request.POST and not 'Browse' in request.FILES:
         return jsonBadRequest('No page url specified')
@@ -47,14 +49,16 @@ def FBAddPage(request):
         pageUrls += fileUrls
         invalids += errors
     if limit <= currentCount + len(pageUrls):
-        pageUrls = pageUrls[:limit-currentCount]
+        pageUrls = pageUrls[:limit - currentCount]
     try:
         invalids += addFbPages(request, pageUrls)
     except FacebookAccessTokenException:
+        logerror('Error while adding FBPages to harvest:')
         return jResponse({
             'status': 'exception',
             'errors': ["Vous devez d'abord vous connecter à Facebook à l'aide d'un compte.",
-                       "Veuillez vous connecter via votre page de <a class='classic' href='/user/settings'>paramètres</a>"],
+                       "Veuillez vous connecter via votre page de <a class='classic' "
+                       "href='/user/settings'>paramètres</a>"],
         })
     numAddedPages = len(pageUrls) - len(invalids)
     if not numAddedPages:
@@ -66,14 +70,16 @@ def FBAddPage(request):
     return jResponse({
         'status': 'ok',
         'messages': [
-            '%s pages publiques %s ont été ajoutées à votre liste (%i erreur%s)' % (numAddedPages, plurial(numAddedPages),
-                                                                            len(invalids), plurial(len(invalids)))]
+            '%s pages publiques %s ont été ajoutées à votre liste (%i erreur%s)' % (
+                numAddedPages, plurial(numAddedPages),
+                len(invalids), plurial(len(invalids)))]
     })
 
-#@viewsLogger.debug(showArgs=True)
+
+@viewsLogger.debug(showArgs=True)
 def addFbPages(request, pageUrls):
     aspiraProfile = request.user.userProfile
-    if not hasattr(aspiraProfile,"fbAccessToken"): raise FacebookAccessTokenNotSetException()
+    if not hasattr(aspiraProfile, "fbAccessToken"): raise FacebookAccessTokenNotSetException()
     if aspiraProfile.fbAccessToken.is_expired(): raise FacebookAccessTokenExpiredException()
     graph = facebook.GraphAPI(aspiraProfile.fbAccessToken._token)
     invalids = []
@@ -102,16 +108,22 @@ def addFbPages(request, pageUrls):
     return invalids
 
 
-class FacebookAccessTokenException(Exception):pass
-class FacebookAccessTokenNotSetException(FacebookAccessTokenException):pass
-class FacebookAccessTokenExpiredException(FacebookAccessTokenException):pass
+class FacebookAccessTokenException(Exception): pass
 
 
+class FacebookAccessTokenNotSetException(FacebookAccessTokenException):
+    pass
 
+
+class FacebookAccessTokenExpiredException(FacebookAccessTokenException):
+    pass
+
+
+@viewsLogger.debug()
 def setFacebookToken(request):
     if not 'fbToken' in request.POST: return jsonBadRequest("'fbToken' is required")
     profile = request.user.userProfile
-    if not hasattr( profile, 'fbAccessToken') :
+    if not hasattr(profile, 'fbAccessToken'):
         profile.fbAccessToken = FBAccessToken.objects.create()
         profile.save()
     fbAccessToken = profile.fbAccessToken
@@ -124,4 +136,3 @@ def setFacebookToken(request):
     profile.facebookApp_parameters_error = False
     profile.save()
     return HttpResponse("ok")
-

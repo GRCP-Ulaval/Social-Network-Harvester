@@ -5,281 +5,299 @@
 {% block extendHead %}
 <link rel="stylesheet" href='{% static "css/settings_page.css" %}?v={{ STATICFILES_VERSION }}' name="style">
 <script src='{% static "js/settings_page.js" %}?v={{ STATICFILES_VERSION }}'></script>
-<script type="text/javascript" src='{% static "js/script_facebook.js" %}?v={{ STATICFILES_VERSION }}'></script>
 <script>
-    var facebookAppId       =    '{{ FACEBOOK_APP_PARAMS.app_id }}';
-    var facebookAppVersion  =    '{{ FACEBOOK_APP_PARAMS.version }}';
-    var csrf_token          =    '{{ csrf_token }}';
-    var fbAccessToken       =    '{{ fbAccessToken }}';
+  var facebookAppId = '{{ FACEBOOK_APP_PARAMS.app_id }}';
+  var facebookAppVersion = '{{ FACEBOOK_APP_PARAMS.version }}';
+  var csrf_token = '{{ csrf_token }}';
+  var fbAccessToken = '{{ fbAccessToken }}';
 </script>
+<script type="text/javascript" src='{% static "js/script_facebook.js" %}?v={{ STATICFILES_VERSION }}'></script>
+
 {% endblock %}
 {% block content %}
 <div id="content">
-    <form id="settings_form" action="/user/edit_user_settings" method="post">{% csrf_token %}
-        <!-- GENERAL SETTINGS -->
-        <div class="settings_box" id="general">
-            <div class="section_menu">
-                <div class="category_title">
-                    <a class="category_opener"><b>Paramètres de {{ user.userProfile }}</b></a>
-                </div>
-            </div>
-            <table style="padding:8px;">
-                <tr style="height:26px;">
-                    <td>Prénom: </td>
-                    <td>
-                        <input class="prettyInput settingsInput" type="text" name="u_first_name" value="{{ user.first_name }}" placeholder="Entrez une valeur"/>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Nom: </td>
-                    <td>
-                        <input class="prettyInput settingsInput" type="text" name="u_last_name" value="{{ user.last_name }}"placeholder="Entrez une valeur"/>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Adresse email: </td>
-                    <td>
-                        <input class=prettyInput settingsInput type="text" name="u_email" value="{{ user.email }}"placeholder="Entrez une valeur"/>
-                    </td>
-                </tr>
-                <div style="float:right; margin:8px; bottom:0px; pos;">
-                    <a class="TableToolLink" onclick=displayCenterPopup("passwordChanger")>
-                        Changer mon mot de passe
-                    </a>
-                </div>
-            </table>
+  <form id="settings_form" action="/user/edit_user_settings" method="post">{% csrf_token %}
+    <!-- GENERAL SETTINGS -->
+    <div class="settings_box" id="general">
+      <div class="section_menu">
+        <div class="category_title">
+          <a class="category_opener"><b>Paramètres de {{ user.userProfile }}</b></a>
+        </div>
+      </div>
+      <table style="padding:8px;">
+        <tr style="height:26px;">
+          <td>Prénom:</td>
+          <td>
+            <input class="prettyInput settingsInput" type="text" name="u_first_name" value="{{ user.first_name }}"
+                   placeholder="Entrez une valeur"/>
+          </td>
+        </tr>
+        <tr>
+          <td>Nom:</td>
+          <td>
+            <input class="prettyInput settingsInput" type="text" name="u_last_name" value="{{ user.last_name }}"
+                   placeholder="Entrez une valeur"/>
+          </td>
+        </tr>
+        <tr>
+          <td>Adresse email:</td>
+          <td>
+            <input class=prettyInput settingsInput type="text" name="u_email" value="{{ user.email }}"
+                   placeholder="Entrez une valeur"/>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <a class="TableToolLink" onclick=displayCenterPopup("passwordChanger") style="padding-top:20px;">
+              Changer mon mot de passe
+            </a>
             <div class="popup" id="passwordChanger">
-                <div id="title">Changer mon mot de passe</div>
-                <div id="help">
-                    Utilisez ce formulaire pour réinitialiser votre mot de passe
-                </div>
-                <div id="content">
-                    <table>
-                        <tr>
-                            <td>Nouveau mot de passe:</td>
-                            <td><input class="prettyInput settingsInput" type="password" id="pass1" name="pw_new"
-                                       onkeyup="checkPass();"
-                                       style="width:200px;"
-                                       placeholder="Mot de passe"></td>
-                            <td id="pass1_status" style="cursor: pointer">&nbsp&nbsp</td>
-                        </tr>
-                        <tr>
-                            <td>Confirmez votre nouveau mot de passe:</td>
-                            <td><input class="prettyInput settingsInput" type="password" id="pass2" name="pw_new_confirm"
-                                       style="width:180px;"
-                                       onkeyup="checkPass();"
-                                       placeholder="Confirmez le mot de passe"></td>
-                            <td id="pass2_status" style="cursor: pointer"></td>
-                        </tr>
-                        <tr>
-                            <td>Mot de passe actuel:</td>
-                            <td><input class="prettyInput settingsInput" type="password" id="pass0" name="pw_old"
-                                       onkeyup="checkPass();"
-                                       style="width:180px;"
-                                       placeholder="Mot de passe actuel"></td>
-                            <td id="pass0_status" style="cursor: pointer"></td>
-                        </tr>
-                    </table>
-                    <br>
-                    <center>
-                        <input type="submit" value="Soumettre" disabled
-                               onclick=submitForm()
-                               id="submitFormButton">
-                    </center>
-                </div>
-                <script id="functions">
-                    function checkPass() {
-                        var pass0 = $("#centerPopupContent").find('#pass0');
-                        var pass1 = $("#centerPopupContent").find('#pass1');
-                        var pass2 = $("#centerPopupContent").find('#pass2');
-                        var pass0_status = $("#centerPopupContent").find('#pass0_status');
-                        var pass1_status = $("#centerPopupContent").find('#pass1_status');
-                        var pass2_status = $("#centerPopupContent").find('#pass2_status');
-                        var submitButton = $("#centerPopupContent").find('#submitFormButton');
-                        if (pass1.prop('value').length<6){
-                            pass1_status.html('<span style="color:#ff6666" ' +
-                                    'title="Minimum de 6 caractères">&#10007</span>');
-                            submitButton.prop('disabled', true);
-                        } else {
-                            pass1_status.html('<span style="color:#66cc66">&#10003</span>');
-                            if (pass1.prop('value') != pass2.prop('value')) {
-                                pass2.css('border', "solid 1px #ff6666"); //dont match
-                                pass2_status.html('<span style="color:#ff6666"' +
-                                        'title="Les mots de passe ne concordent pas!">&#10007</span>');
-                                submitButton.prop('disabled', true);
-                            } else {
-                                pass2.css('border', "solid 1px #66cc66"); //match
-                                pass2_status.html('<span style="color:#66cc66">&#10003</span>');
-                                if (pass0.prop('value') == ""){
-                                    pass0.css('border', "solid 1px #ff6666");
-                                    submitButton.prop('disabled',true);
-                                    pass0_status.html('<span style="color:#ff6666"' +
-                                            'title="Veuillez entrer votre mot de passe actuel">&#10007</span>');
-                                } else {
-                                    submitButton.prop('disabled', false);
-                                    pass0_status.html('');
-                                    pass0.css('border',"");
-                                }
-                            }
-                        }
-                    };
-                    function submitForm(){
-                        var pass0 = $("#centerPopupContent").find('#pass0');
-                        var pass1 = $("#centerPopupContent").find('#pass1');
-                        var pass2 = $("#centerPopupContent").find('#pass2');
-                        $.post('/user/forms/updatePW',{
-                                'pass0':pass0.prop('value'),
-                                'pass1':pass1.prop('value'),
-                                'pass2':pass2.prop('value'),
-                                'csrfmiddlewaretoken': '{{ csrf_token }}'
-                            },
-                            function(response){
-                                if (response['status'] == 'ok'){
-                                    displayNewMessages(['Changement du mot de passe complété!'],4000);
-                                } else {
-                                    displayNewErrors(response['errors'],4000)
-                                }
-                                closeCenterPopup();
-                            }
-                        );
-                    }
-                </script>
-            </div>
-        </div>
-        <!-- TWITTER SETTINGS -->
-        <div class="settings_box" id="twitter">
-            <div class="section_menu">
-                <div class="category_title">
-                    <b>Application Twitter</b>
-                </div>
-                {% if user.userProfile.twitterApp_parameters_error %}
-                <span title="Une erreur est survenue avec votre application Twitter! Veuillez réviser vos paramètres.">
-                    {% include "tool/icons.html" with x=3 y=5 className="mediumErrorIcon" %}
-                </span>
-                {% endif %}
-                {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
-            </div>
-            <div class="category_content">
-                <a class="helpLink" onclick="displayCenterPopup('twitterAppHelp')"> Clickez ici pour de l'aide! </a>
-                <!-- TWITTER SETTINGS HELP POPUP -->
-                <div class="popup" id="twitterAppHelp">
-                    <div id="title">Création d'une application Twitter</div>
-                    <div id="help">
-                        Suivez ces instructions pour paramètrer votre application Twitter correctement.
-                    </div>
-                    <div id="content">
-                        <embed src="/tools/download?file=Twitter_app_creation_helper_french.pdf" width="1000px"
-                               height="800px"/>
-                    </div>
-                    <script id="functions"></script>
-                </div>
+              <div id="title">Changer mon mot de passe</div>
+              <div id="help">
+                Utilisez ce formulaire pour réinitialiser votre mot de passe
+              </div>
+              <div id="content">
                 <table>
-                    <tr>
-                        <td>"Consumer key": </td>
-                        <td>
-                            <input class="prettyInput settingsInput" type="text" name="p_twitterApp_consumerKey" value="{{ user.userProfile.twitterApp_consumerKey }}" placeholder="Entrez une valeur">
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>"Consumer secret":</td>
-                        <td>
-                            <input class="prettyInput settingsInput" type="text" name="p_twitterApp_consumer_secret" value="{{ user.userProfile.twitterApp_consumer_secret }}" placeholder="Entrez une valeur">
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>"Access token key":</td>
-                        <td>
-                            <input class="prettyInput settingsInput" type="text" name="p_twitterApp_access_token_key" value="{{ user.userProfile.twitterApp_access_token_key }}" placeholder="Entrez une valeur">
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>"Access token secret":</td>
-                        <td>
-                            <input class="prettyInput settingsInput" type="text" name="p_twitterApp_access_token_secret" value="{{ user.userProfile.twitterApp_access_token_secret }}" placeholder="Entrez une valeur">
-                        </td>
-                    </tr>
+                  <tr>
+                    <td>Nouveau mot de passe:</td>
+                    <td><input class="prettyInput settingsInput" type="password" id="pass1" name="pw_new"
+                               onkeyup="checkPass();"
+                               style="width:200px;"
+                               placeholder="Mot de passe"></td>
+                    <td id="pass1_status" style="cursor: pointer">&nbsp&nbsp</td>
+                  </tr>
+                  <tr>
+                    <td>Confirmez votre nouveau mot de passe:</td>
+                    <td><input class="prettyInput settingsInput" type="password" id="pass2" name="pw_new_confirm"
+                               style="width:180px;"
+                               onkeyup="checkPass();"
+                               placeholder="Confirmez le mot de passe"></td>
+                    <td id="pass2_status" style="cursor: pointer"></td>
+                  </tr>
+                  <tr>
+                    <td>Mot de passe actuel:</td>
+                    <td><input class="prettyInput settingsInput" type="password" id="pass0" name="pw_old"
+                               onkeyup="checkPass();"
+                               style="width:180px;"
+                               placeholder="Mot de passe actuel"></td>
+                    <td id="pass0_status" style="cursor: pointer"></td>
+                  </tr>
                 </table>
-            </div>
-        </div>
-        <!-- YOUTUBE SETTINGS -->
-        <div class="settings_box" id="youtube">
-            <div class="section_menu">
-                <div class="category_title">
-                    <b>Application Youtube</b>
-                </div>
-                {% if user.userProfile.youtubeApp_parameters_error %}
-                <span title="Une erreur est survenue avec votre application Youtube! Veuillez réviser vos paramètres.">
-                    {% include "tool/icons.html" with x=3 y=5 className="mediumErrorIcon" %}
-                </span>
-                {% endif %}
-                {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
-            </div>
-            <div class="category_content">
-                <a class="helpLink" onclick="displayCenterPopup('youtubeAppHelp')"> Clickez ici pour de l'aide!</a>
-                <!-- YOUTUBE SETTINGS HELP POPUP -->
-                <div class="popup" id="youtubeAppHelp">
-                    <div id="title">Création d'une application Youtube</div>
-                    <div id="help">
-                        Suivez ce tutoriel pour paramètrer votre application Youtube correctement.
-                    </div>
-                    <div id="content">
-                        <embed src="/tools/download?file=Youtube_app_creation_help_french.pdf" width="1000px"
-                               height="800px">
-                    </div>
-                    <script id="functions"></script>
-                </div>
-                <table>
-                    <tr>
-                        <td>Clé API:</td>
-                        <td>
-                            <input class="prettyInput settingsInput" type="text" name="p_youtubeApp_dev_key"
-                                   value="{{ user.userProfile.youtubeApp_dev_key }}" placeholder="Entrez une valeur">
-                        </td>
-                    </tr>
-                </table>
-            </div>
-        </div>
-        <!-- FACEBOOK SETTINGS -->
-        <div class="settings_box toggleableSection" id="facebook">
-            <div class="section_menu">
-                <div class="category_title">
-                    <a class="category_opener"><b>Connexion Facebook</b></a>
-                </div>
-                {% if user.userProfile.facebookApp_parameters_error %}
-                <span title="Une erreur est survenue avec votre accès à Facebook! Veuillez vous reconnecter.">
-                    {% include "tool/icons.html" with x=3 y=5 className="mediumErrorIcon" %}
-                </span>
-                {% endif %}
-                {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
-            </div>
-            <div class="category_content" style="min-height:150px;">
-                Connectez-vous à Facebook (préférablement avec un compte non-personnel) pour permettre au SNH
-                d'accéder à du contenu accessible par le grand public.<br><br>
+                <br>
                 <center>
-                    <div id="tokenErrorMarker">
-                        {% include "tool/icons.html" with x=3 y=5 style="width:30px;heigh:30px; vertical-align:middle"%}
-                        Une erreur est survenue avec votre jeton d'accès Facebook!<br>
-                        Veuillez vous reconnecter.
-                    </div>
-                    <div id="notLoggedInMessage" style="color: red;display:none;"><br><br><i>non-connecté</i><br><br><br></div>
-                    <div id="custom_login_button" class="facebook_login_logout" onclick=facebookLogIn()
-                    style="display:none;">Connexion</div>
-                    <div id="login_infos_container" style="display:none;">
-                        Connecté en tant que : <br><br>
-                        <span><img src="" id="userImg"></span>
-                        <span><b><div id="user_name" ></div></b></span>
-                        <br>
-                    </div>
-                    <div id="custom_logout_button" class="facebook_login_logout" onclick=facebookLogout()
-                           style="display:none;">Déconnexion</div>
+                  <input type="submit" value="Soumettre" disabled
+                         onclick=submitForm()
+                         id="submitFormButton">
                 </center>
+              </div>
+              <script id="functions">
+                function checkPass() {
+                  var pass0 = $('#centerPopupContent').find('#pass0');
+                  var pass1 = $('#centerPopupContent').find('#pass1');
+                  var pass2 = $('#centerPopupContent').find('#pass2');
+                  var pass0_status = $('#centerPopupContent').find('#pass0_status');
+                  var pass1_status = $('#centerPopupContent').find('#pass1_status');
+                  var pass2_status = $('#centerPopupContent').find('#pass2_status');
+                  var submitButton = $('#centerPopupContent').find('#submitFormButton');
+                  if (pass1.prop('value').length < 6) {
+                    pass1_status.html('<span style="color:#ff6666" ' +
+                      'title="Minimum de 6 caractères">&#10007</span>');
+                    submitButton.prop('disabled', true);
+                  } else {
+                    pass1_status.html('<span style="color:#66cc66">&#10003</span>');
+                    if (pass1.prop('value') != pass2.prop('value')) {
+                      pass2.css('border', 'solid 1px #ff6666'); //dont match
+                      pass2_status.html('<span style="color:#ff6666"' +
+                        'title="Les mots de passe ne concordent pas!">&#10007</span>');
+                      submitButton.prop('disabled', true);
+                    } else {
+                      pass2.css('border', 'solid 1px #66cc66'); //match
+                      pass2_status.html('<span style="color:#66cc66">&#10003</span>');
+                      if (pass0.prop('value') == '') {
+                        pass0.css('border', 'solid 1px #ff6666');
+                        submitButton.prop('disabled', true);
+                        pass0_status.html('<span style="color:#ff6666"' +
+                          'title="Veuillez entrer votre mot de passe actuel">&#10007</span>');
+                      } else {
+                        submitButton.prop('disabled', false);
+                        pass0_status.html('');
+                        pass0.css('border', '');
+                      }
+                    }
+                  }
+                };
+
+                function submitForm() {
+                  var pass0 = $('#centerPopupContent').find('#pass0');
+                  var pass1 = $('#centerPopupContent').find('#pass1');
+                  var pass2 = $('#centerPopupContent').find('#pass2');
+                  $.post('/user/forms/updatePW', {
+                      'pass0': pass0.prop('value'),
+                      'pass1': pass1.prop('value'),
+                      'pass2': pass2.prop('value'),
+                      'csrfmiddlewaretoken': '{{ csrf_token }}',
+                    },
+                    function (response) {
+                      if (response['status'] == 'ok') {
+                        displayNewMessages(['Changement du mot de passe complété!'], 4000);
+                      } else {
+                        displayNewErrors(response['errors'], 4000);
+                      }
+                      closeCenterPopup();
+                    },
+                  );
+                }
+              </script>
             </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <!-- TWITTER SETTINGS -->
+    <div class="settings_box" id="twitter">
+      <div class="section_menu">
+        <div class="category_title">
+          <b>Application Twitter</b>
         </div>
-        <a href="#">
-            <div id="save_button">
-                Soumettre les changements
-            </div>
-        </a>
-    </form>
+        {% if user.userProfile.twitterApp_parameters_error %}
+        <span title="Une erreur est survenue avec votre application Twitter! Veuillez réviser vos paramètres.">
+          {% include "tool/icons.html" with x=3 y=5 className="mediumErrorIcon" %}
+        </span>
+        {% endif %}
+        {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+      </div>
+      <div class="category_content">
+        <a class="helpLink" onclick="displayCenterPopup('twitterAppHelp')"> Clickez ici pour de l'aide! </a>
+        <!-- TWITTER SETTINGS HELP POPUP -->
+        <div class="popup" id="twitterAppHelp">
+          <div id="title">Création d'une application Twitter</div>
+          <div id="help">
+            Suivez ces instructions pour paramètrer votre application Twitter correctement.
+          </div>
+          <div id="content">
+            <embed src="/tools/download?file=Twitter_app_creation_helper_french.pdf" width="1000px"
+                   height="800px"/>
+          </div>
+          <script id="functions"></script>
+        </div>
+        <table>
+          <tr>
+            <td>"Consumer key":</td>
+            <td>
+              <input class="prettyInput settingsInput" type="text" name="p_twitterApp_consumerKey"
+                     value="{{ user.userProfile.twitterApp_consumerKey }}" placeholder="Entrez une valeur">
+            </td>
+          </tr>
+          <tr>
+            <td>"Consumer secret":</td>
+            <td>
+              <input class="prettyInput settingsInput" type="text" name="p_twitterApp_consumer_secret"
+                     value="{{ user.userProfile.twitterApp_consumer_secret }}" placeholder="Entrez une valeur">
+            </td>
+          </tr>
+          <tr>
+            <td>"Access token key":</td>
+            <td>
+              <input class="prettyInput settingsInput" type="text" name="p_twitterApp_access_token_key"
+                     value="{{ user.userProfile.twitterApp_access_token_key }}" placeholder="Entrez une valeur">
+            </td>
+          </tr>
+          <tr>
+            <td>"Access token secret":</td>
+            <td>
+              <input class="prettyInput settingsInput" type="text" name="p_twitterApp_access_token_secret"
+                     value="{{ user.userProfile.twitterApp_access_token_secret }}" placeholder="Entrez une valeur">
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <!-- YOUTUBE SETTINGS -->
+    <div class="settings_box" id="youtube">
+      <div class="section_menu">
+        <div class="category_title">
+          <b>Application Youtube</b>
+        </div>
+        {% if user.userProfile.youtubeApp_parameters_error %}
+        <span title="Une erreur est survenue avec votre application Youtube! Veuillez réviser vos paramètres.">
+          {% include "tool/icons.html" with x=3 y=5 className="mediumErrorIcon" %}
+        </span>
+        {% endif %}
+        {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+      </div>
+      <div class="category_content">
+        <a class="helpLink" onclick="displayCenterPopup('youtubeAppHelp')"> Clickez ici pour de l'aide!</a>
+        <!-- YOUTUBE SETTINGS HELP POPUP -->
+        <div class="popup" id="youtubeAppHelp">
+          <div id="title">Création d'une application Youtube</div>
+          <div id="help">
+            Suivez ce tutoriel pour paramètrer votre application Youtube correctement.
+          </div>
+          <div id="content">
+            <embed src="/tools/download?file=Youtube_app_creation_help_french.pdf" width="1000px"
+                   height="800px">
+          </div>
+          <script id="functions"></script>
+        </div>
+        <table>
+          <tr>
+            <td>Clé API:</td>
+            <td>
+              <input class="prettyInput settingsInput" type="text" name="p_youtubeApp_dev_key"
+                     value="{{ user.userProfile.youtubeApp_dev_key }}" placeholder="Entrez une valeur">
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <!-- FACEBOOK SETTINGS -->
+    <div class="settings_box toggleableSection" id="facebook">
+      <div class="section_menu">
+        <div class="category_title">
+          <a class="category_opener"><b>Connexion Facebook</b></a>
+        </div>
+        {% if user.userProfile.facebookApp_parameters_error %}
+        <span title="Une erreur est survenue avec votre accès à Facebook! Veuillez vous reconnecter.">
+          {% include "tool/icons.html" with x=3 y=5 className="mediumErrorIcon" %}
+        </span>
+        {% endif %}
+        {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+      </div>
+      <div class="category_content" style="min-height:150px; align-content: center;">
+        Connectez-vous à Facebook (préférablement avec un compte non-personnel) pour permettre au SNH
+        d'accéder à du contenu accessible par le grand public.<br><br>
+        <center>
+          <div id="tokenErrorMarker">
+            {% include "tool/icons.html" with x=3 y=5 style="width:30px;heigh:30px; vertical-align:middle"%}
+            Une erreur est survenue avec votre jeton d'accès Facebook!<br>
+            Veuillez vous reconnecter.
+          </div>
+          <div id="notLoggedInMessage" style="color: red;display:none;"><br><br><i>non-connecté</i><br><br><br></div>
+          <div id="login_infos_container" style="display:none;">
+            Connecté en tant que : <br><br>
+            <span><img src="" id="userImg"></span>
+            <span><b><div id="user_name"></div></b></span>
+            <br>
+          </div>
+          <div
+              class="fb-login-button"
+              data-max-rows="1"
+              data-size="large"
+              data-button-type="continue_with"
+              data-show-faces="false"
+              data-auto-logout-link="true"
+              data-use-continue-as="true"
+              onlogin="checkLoginState();"
+              onlogout="checkLoginState();"
+          ></div>
+        </center>
+      </div>
+    </div>
+    <a href="#">
+      <div id="save_button">
+        Soumettre les changements
+      </div>
+    </a>
+  </form>
 </div>
 {% endblock %}
