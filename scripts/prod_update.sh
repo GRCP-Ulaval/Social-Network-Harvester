@@ -3,4 +3,4 @@
 source env.sh
 
 sshpass -p ${PROD_PASSWORD} ssh -tt ${PROD_USER}@${PROD_HOST} \
-    'cd '${PROD_SCRIPT_LOCATION}'&& sudo ./restart_apache.sh'
+    'cd '${PROD_SCRIPT_LOCATION}'&& sudo ./update_site.sh'
