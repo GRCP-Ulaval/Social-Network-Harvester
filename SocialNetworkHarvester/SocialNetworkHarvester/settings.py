@@ -33,7 +33,7 @@ LOGIN_URL = '/login_page'
 DISPLAY_YET_TO_COMES = False
 
 # Change this value in production (can be wathever number) to force clients to clear their cached content
-STATICFILES_VERSION = 2
+STATICFILES_VERSION = 1
 
 # Application definition
 INSTALLED_APPS = [
