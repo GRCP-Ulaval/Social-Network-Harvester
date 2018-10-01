@@ -1,16 +1,16 @@
-from django.shortcuts import *
-from django.contrib.auth.decorators import login_required
-import json
-from Twitter.models import TWUser, Tweet, Hashtag, follower, HashtagHarvester
-import re
-from django.db.models import Count, Max, Min
-from AspiraUser.models import getUserSelection, resetUserSelection
 import datetime
+import json
 import operator
+import re
 
-from SocialNetworkHarvester.settings import viewsLogger, DEBUG
-log = lambda s : viewsLogger.log(s) if DEBUG else 0
-pretty = lambda s : viewsLogger.pretty(s) if DEBUG else 0
+from django.contrib.auth.decorators import login_required
+from django.db.models import Count
+from django.shortcuts import *
+
+from AspiraUser.models import getUserSelection, resetUserSelection
+from SocialNetworkHarvester.loggers.viewsLogger import logError
+from Twitter.models import Tweet, follower
+
 
 #########################  LINECHART  #########################
 class LinechartGenerator:
@@ -60,20 +60,22 @@ class LinechartGenerator:
                 self.table['rows'].append({'c': row})
         return self.table
 
+
 @login_required()
 def lineChart(request):
-    if 'ajax' in request.GET and request.GET['ajax']=='true': return ajax_lineChart(request)
+    if 'ajax' in request.GET and request.GET['ajax'] == 'true': return ajax_lineChart(request)
     context = {
         'user': request.user,
         'navigator': [
             ("Analytique", "#"),
             ("Temporel", "#"),
-            (re.sub('_',' ',request.GET['chart_type']), '#')
+            (re.sub('_', ' ', request.GET['chart_type']), '#')
         ],
         'chart_type': request.GET['chart_type'],
     }
     resetUserSelection(request)
-    return render(request,'tool/lineChartTool.html', context)
+    return render(request, 'tool/lineChartTool.html', context)
+
 
 def ajax_lineChart(request):
     reqId = None
@@ -82,25 +84,26 @@ def ajax_lineChart(request):
     try:
         response = {
             "status": 'ok',
-            'reqId':reqId,
+            'reqId': reqId,
             "table": generateLineChartTable(request),
         }
     except Exception as e:
-        viewsLogger.exception('An error occured while creating a Linechart')
+        logError('An error occured while creating a Linechart')
         response = {
-            'status':'error',
-            'message':e.args[0],
-            'reqId':reqId,
+            'status': 'error',
+            'message': e.args[0],
+            'reqId': reqId,
         }
-    return HttpResponse("google.visualization.Query.setResponse(%s)"%json.dumps(response),
+    return HttpResponse("google.visualization.Query.setResponse(%s)" % json.dumps(response),
                         content_type='application/json')
+
 
 def generateLineChartTable(request):
     table = {}
     if request.GET['chart_type'] == 'activite_en_ligne':
-        table =  linechart_userActivity(request)
+        table = linechart_userActivity(request)
     elif request.GET['chart_type'] == 'popularite_en_ligne':
-        table =  linechart_userPopularity(request)
+        table = linechart_userPopularity(request)
     else:
         raise Exception('Invalid chart_type value')
     if len(table['cols']) == 1:
@@ -108,6 +111,7 @@ def generateLineChartTable(request):
                           {'label': 'Sélectionnez des éléments dans les tables ci-dessous (max 10)', 'type': 'number'}],
                  'rows': [{'c': [{'v': 0}, {'v': 0}]}]}
     return table
+
 
 def linechart_userActivity(request):
     chartGen = LinechartGenerator()
@@ -120,7 +124,7 @@ def linechart_userActivity(request):
 
     for source in selectedTWUsers:
         chartGen.addColum({'label': '%s (Tweets)' %
-                    (source.name if source.name else source.screen_name),'type': 'number'})
+                                    (source.name if source.name else source.screen_name), 'type': 'number'})
         tweets = source.tweets.exclude(created_at__isnull=True)
         chartGen.insertValues(tweets.extra({'date_created': "date(created_at)"}) \
                               .values('date_created') \
@@ -134,23 +138,26 @@ def linechart_userActivity(request):
                               .annotate(date_count=Count('id')))
     return chartGen.generate()
 
+
 def linechart_userPopularity(request):
     chartGen = LinechartGenerator()
     tableSelection = getUserSelection(request)
     selectedTWUsers = tableSelection.getSavedQueryset('TWUser', 'TWUserTable')
-    selectedFBPages =tableSelection.getSavedQueryset('FBPage','FacebookPages')
+    selectedFBPages = tableSelection.getSavedQueryset('FBPage', 'FacebookPages')
     for source in selectedTWUsers:
         chartGen.addColum({'label': '%s (Abonnés)' % (source.name if source.name else source.screen_name),
                            'type': 'number'})
-        chartGen.insertValues(source.followers_counts.extra({'date_created': "date(recorded_time)",'date_count':'value'}) \
-                              .values('date_created', 'date_count'))
+        chartGen.insertValues(
+            source.followers_counts.extra({'date_created': "date(recorded_time)", 'date_count': 'value'}) \
+            .values('date_created', 'date_count'))
     for source in selectedFBPages:
         chartGen.addColum({'label': '%s (Nombre de fans)' % source,
                            'type': 'number'})
-        chartGen.insertValues(source.fan_counts.extra({'date_created': "date(recorded_time)",'date_count':'value'}) \
+        chartGen.insertValues(source.fan_counts.extra({'date_created': "date(recorded_time)", 'date_count': 'value'}) \
                               .values('date_created', 'date_count'))
 
     return chartGen.generate()
+
 
 ''' Linechart response table example:
 "table": {
@@ -169,6 +176,7 @@ def linechart_userPopularity(request):
     ]
 }
 '''
+
 
 #####################  PIECHART  #############################
 class PieChartGenerator:
@@ -189,6 +197,7 @@ class PieChartGenerator:
             self.table['rows'].append({'c': [{'v': key}, {'v': val}]})
         return self.table
 
+
 @login_required()
 def pieChart(request):
     if 'ajax' in request.GET and request.GET['ajax'] == 'true': return ajax_pieChart(request)
@@ -197,12 +206,13 @@ def pieChart(request):
         'user': request.user,
         'chart_type': chart_type,
         'navigator': [
-             ("Analytique","#"),
-             ("Proportion", "#"),(chart_type,'#')
+            ("Analytique", "#"),
+            ("Proportion", "#"), (chart_type, '#')
         ],
     }
     resetUserSelection(request)
-    return render(request,'tool/pieChartTool.html', context)
+    return render(request, 'tool/pieChartTool.html', context)
+
 
 def ajax_pieChart(request):
     reqId = None
@@ -215,13 +225,13 @@ def ajax_pieChart(request):
             "table": generatepieChartTable(request),
         }
     except Exception as e:
-        viewsLogger.exception('An error has occured while creating a PieChart')
+        logError('An error has occured while creating a PieChart')
         response = {
             'status': 'error',
             'reqId': reqId,
-            'errors':[
+            'errors': [
                 {
-                    'reason':'internal_error',
+                    'reason': 'internal_error',
                     'message': str(e),
                 }
             ],
@@ -229,6 +239,7 @@ def ajax_pieChart(request):
         }
     return HttpResponse("google.visualization.Query.setResponse(%s)" % json.dumps(response),
                         content_type='application/json')
+
 
 def generatepieChartTable(request):
     table = {}
@@ -238,9 +249,10 @@ def generatepieChartTable(request):
         raise Exception('Invalid chart_type value')
     if len(table['rows']) == 0:
         table = {'cols': [{"id": "", "label": "Location", "pattern": "", "type": "string"},
-                 {"id": "", "label": "Occurence", "pattern": "", "type": "number"}],
+                          {"id": "", "label": "Occurence", "pattern": "", "type": "number"}],
                  'rows': [{'c': [{'v': 'Sélectionnez des éléments dans les tables ci-dessous (max 10)'}, {'v': 1}]}]}
     return table
+
 
 def piechart_location(request):
     threshold = 1
@@ -256,11 +268,11 @@ def piechart_location(request):
     followers = follower.objects.none()
     for source in twUserFollowerLoc:
         followers = followers | source.followers.filter(ended__isnull=True)
-    locations = followers\
-        .values('value__location')\
-        .annotate(c=Count('id'))\
+    locations = followers \
+        .values('value__location') \
+        .annotate(c=Count('id')) \
         .filter(c__gte=threshold)
-    for location in locations: #TODO: This can take an awful long time. Optimise this.
+    for location in locations:  # TODO: This can take an awful long time. Optimise this.
         if location['value__location']:
             cleanKey = location['value__location'].split(',')[0]
             cleanKey = cleanKey.title()
@@ -270,9 +282,9 @@ def piechart_location(request):
     for harv in selectedTWHashHarvs:
         tweets = tweets | harv.hashtag.tweets.filter(deleted_at__isnull=True)
     posters_locations = \
-        tweets.distinct()\
-            .values('user__location')\
-            .annotate(c=Count('id'))\
+        tweets.distinct() \
+            .values('user__location') \
+            .annotate(c=Count('id')) \
             .filter(c__gte=threshold)
     for location in posters_locations:
         if location['user__location']:
@@ -307,5 +319,3 @@ def distributionChart(request):
         'user': request.user
     }
     return HttpResponse('distributionChart', context)
-
-

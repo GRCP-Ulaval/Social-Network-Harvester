@@ -1,20 +1,17 @@
-from django.db import models
-from django.contrib.auth.models import User
-from django.conf import settings
-from Twitter.models import *
-from Youtube.models import YTChannel, YTVideo, YTPlaylist, YTPlaylistItem, YTComment, Subscription
-from Facebook.models import FBPage, FBPost, FBComment, FBReaction
-import re, time, pickle, facebook, random
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericForeignKey
+import pickle
+import random
 
-from SocialNetworkHarvester.settings import viewsLogger, DEBUG, FACEBOOK_APP_PARAMS
-log = lambda s: viewsLogger.log(s) if DEBUG else 0
-pretty = lambda s: viewsLogger.pretty(s) if DEBUG else 0
+import facebook
+from django.contrib.auth.models import User
+
+from Facebook.models import FBPage, FBPost, FBComment, FBReaction, FBUser
+from SocialNetworkHarvester.loggers.viewsLogger import logError
+from SocialNetworkHarvester.settings import FACEBOOK_APP_PARAMS
+from Twitter.models import *
+from Youtube.models import YTChannel, YTPlaylist, Subscription, YTVideo, YTComment, YTPlaylistItem
 
 
 class UserProfile(models.Model):
-
     class Meta:
         app_label = "AspiraUser"
 
@@ -44,7 +41,7 @@ class UserProfile(models.Model):
     ytPlaylistsToHarvest = models.ManyToManyField(YTPlaylist, related_name="harvested_by", blank=True)
     ytPlaylistsToHarvestLimit = models.IntegerField(default=5, blank=True)
 
-    passwordResetToken = models.CharField(max_length=255,null=True,blank=True,unique=True)
+    passwordResetToken = models.CharField(max_length=255, null=True, blank=True, unique=True)
     passwordResetDateLimit = models.DateTimeField(null=True)
 
     def twitter_app_valid(self):
@@ -63,15 +60,14 @@ class UserProfile(models.Model):
             token = getRandomString()
         return token
 
-
     @staticmethod
     def getHarvestables():
         return {
-            'TWUser':'twitterUsersToHarvest',
-            'HashtagHarvester':'twitterHashtagsToHarvest',
-            'FBPage':'facebookPagesToHarvest',
-            'YTChannel':'ytChannelsToHarvest',
-            'YTPlaylist':'ytPlaylistsToHarvest',
+            'TWUser': 'twitterUsersToHarvest',
+            'HashtagHarvester': 'twitterHashtagsToHarvest',
+            'FBPage': 'facebookPagesToHarvest',
+            'YTChannel': 'ytChannelsToHarvest',
+            'YTPlaylist': 'ytPlaylistsToHarvest',
         }
 
     def getHarvested(self, modelName, kwargs={}):
@@ -98,21 +94,27 @@ class FBAccessToken(models.Model):
         return self.expires != None
 
     def __str__(self):
-        return "%s's facebook access token"%self.userProfile.user
+        return "%s's facebook access token" % self.userProfile.user
 
     def extend(self):
-        graph = facebook.GraphAPI(self._token)
-        response = graph.extend_access_token(FACEBOOK_APP_PARAMS['app_id'], FACEBOOK_APP_PARAMS['secret_key'])
-        if not 'access_token' in response:
-            raise Exception("failed to extend access token: %s" % self)
-        self._token = response['access_token']
-        self.expires = time.time() + int(response['expires_in'])
-        self.save()
-        log("%s expires in %s seconds"%(self,self.expires-time.time()))
+        try:
+            graph = facebook.GraphAPI(self._token)
+            response = graph.extend_access_token(FACEBOOK_APP_PARAMS['app_id'], FACEBOOK_APP_PARAMS['app_secret'])
+            pretty(response)
+            if not 'access_token' in response:
+                raise Exception("failed to extend access token: %s" % self)
+            self._token = response['access_token']
+            self.expires = time.time() + int(response['expires_in'])
+            self.save()
+            log("%s expires in %s seconds" % (self, self.expires - time.time()))
+        except Exception as e:
+            logError("An error occured while extending the token!")
+            self.userProfile.facebookApp_parameters_error = True
+            self.userProfile.save()
+            raise
 
 
 class TableRowsSelection(models.Model):
-
     class Meta:
         app_label = "AspiraUser"
 
@@ -120,22 +122,21 @@ class TableRowsSelection(models.Model):
     pageUrl = models.CharField(max_length=100)
 
     def __str__(self):
-        return "%s's selection on %s"%(self.user, self.pageUrl)
+        return "%s's selection on %s" % (self.user, self.pageUrl)
 
-    #@viewsLogger.debug(showArgs=True)
+    # @viewsLogger.debug(showArgs=True)
     def selectRow(self, table_id, queryset):
         oldQueryset = self.getSavedQueryset(queryset.model._meta.object_name, table_id)
         newQueryset = oldQueryset | queryset
         self.saveQuerySet(newQueryset, table_id)
 
-
-    #@viewsLogger.debug(showArgs=True)
+    # @viewsLogger.debug(showArgs=True)
     def unselectRow(self, table_id, queryset):
         oldQueryset = self.getSavedQueryset(queryset.model._meta.object_name, table_id)
         newQueryset = oldQueryset.exclude(pk__in=queryset)
         self.saveQuerySet(newQueryset, table_id)
 
-    #@viewsLogger.debug(showArgs=True)
+    # @viewsLogger.debug(showArgs=True)
     def saveQuerySet(self, queryset, table_id):
         selectQuery = self.queries.filter(table_id=table_id)
         if not selectQuery.exists():
@@ -148,13 +149,12 @@ class TableRowsSelection(models.Model):
             selectQuery = selectQuery[0]
             selectQuery.setQueryset(queryset)
 
-
-    #@viewsLogger.debug(showArgs=True)
+    # @viewsLogger.debug(showArgs=True)
     def getSavedQueryset(self, modelName, table_id):
         selectQuery = self.queries.filter(table_id=table_id)
         if not selectQuery.exists():
             if not modelName: raise Exception('Must have a modelName argument to create a new query!')
-            newQueryset = globals()[modelName].objects.none()
+            newQueryset = getModel(modelName).objects.none()
             selectQuery = selectionQuery.objects.create(
                 selection_group=self,
                 query=pickle.dumps(newQueryset.query),
@@ -170,7 +170,7 @@ class TableRowsSelection(models.Model):
             counts[query.table_id] = query.getQueryset().distinct().count()
         return counts
 
-    #@viewsLogger.debug(showArgs=True)
+    # @viewsLogger.debug(showArgs=True)
     def getQueryOptions(self, tableId):
         query = self.queries.filter(table_id=tableId)
         cleanOptions = {}
@@ -178,21 +178,22 @@ class TableRowsSelection(models.Model):
             options = query[0].miscOptions
             for option in options.split(';'):
                 if option != '':
-                    key,value = option.split('=')
-                    if value == 'True': value = True
-                    elif value == 'False': value = False
+                    key, value = option.split('=')
+                    if value == 'True':
+                        value = True
+                    elif value == 'False':
+                        value = False
                     cleanOptions[key] = value
         return cleanOptions
 
-    #@viewsLogger.debug(showArgs=True)
-    def setQueryOption(self, tableId, optionName,optionValue):
+    # @viewsLogger.debug(showArgs=True)
+    def setQueryOption(self, tableId, optionName, optionValue):
         query = self.queries.filter(table_id=tableId)
         if query.exists():
             if not optionValue:
                 query[0].removeOption(optionName)
             else:
-                query[0].addOption(optionName,optionValue)
-
+                query[0].addOption(optionName, optionValue)
 
 
 class selectionQuery(models.Model):
@@ -205,24 +206,24 @@ class selectionQuery(models.Model):
     miscOptions = models.CharField(max_length=1000, default="")
 
     def __str__(self):
-        return '%s\'s selectionQuery'%self.model
+        return '%s\'s selectionQuery' % self.model
 
-    #@viewsLogger.debug(showArgs=True)
+    # @viewsLogger.debug(showArgs=True)
     def getQueryset(self):
         query = pickle.loads(self.query)
-        queryset = globals()[self.model].objects.none()
+        queryset = getModel(self.model).objects.none()
         queryset.query = query
         return queryset
 
-    #@viewsLogger.debug(showArgs=True)
-    def setQueryset(self,queryset):
+    # @viewsLogger.debug(showArgs=True)
+    def setQueryset(self, queryset):
         self.query = pickle.dumps(queryset.all().query)
         self.save()
 
     def addOption(self, optionName, optionValue=True):
         currentOptions = self.miscOptions
         if optionName in currentOptions:
-            currentOptions = re.sub(r"%s=[^;]+;"%optionName, "", currentOptions)
+            currentOptions = re.sub(r"%s=[^;]+;" % optionName, "", currentOptions)
         currentOptions += "%s=%s;" % (optionName, optionValue)
         self.miscOptions = currentOptions
         self.save()
@@ -241,7 +242,7 @@ class selectionQuery(models.Model):
         return re.match(r'%s=(?:[^;]+);' % optionName, currentOptions)
 
 
-#@viewsLogger.debug(showArgs=True)
+# @viewsLogger.debug(showArgs=True)
 def getUserSelection(request):
     user = request.user
     pageURL = request.path
@@ -250,7 +251,7 @@ def getUserSelection(request):
     selection = TableRowsSelection.objects.filter(user=user, pageUrl=pageURL)
     if not selection.exists():
         selection = TableRowsSelection.objects.create(user=user, pageUrl=pageURL)
-    return user.tableRowsSelections.get(pageUrl=pageURL)
+    return user.tableRowsSelections.filter(pageUrl=pageURL).first()
 
 
 # @viewsLogger.debug(showArgs=False)
@@ -269,6 +270,21 @@ def getRandomString(length=255):
     if length < 0: length = 255
     s = '%s%s%s' % (random.randint(0, 99999),
                     ''.join(random.choice(
-                            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for i in
+                        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for i in
                             range(length)), int(time.time()))
     return "".join(random.sample(s, length))
+
+
+MODEL_WHITELIST = ['FBPage', 'FBPost', 'FBComment', 'FBReaction', 'FBUser',
+                   'Tweet', 'TWUser', "HashtagHarvester", "Hashtag", "favorite_tweet", "follower",
+                   'YTChannel', 'YTVideo', 'YTPlaylist', 'Subscription', 'YTComment', 'YTPlaylistItem']
+
+
+def getModel(modelName):
+    if modelName not in MODEL_WHITELIST:
+        raise Exception('Invalid or forbidden model name: %s'%modelName)
+    return {model.__name__: model for model in [
+        TWUser, Tweet, HashtagHarvester, follower, favorite_tweet, Hashtag,
+        FBPage, FBPost, FBComment, FBReaction, FBUser,
+        YTChannel, YTVideo, YTPlaylist, Subscription, YTComment, YTPlaylistItem
+    ]}[modelName]

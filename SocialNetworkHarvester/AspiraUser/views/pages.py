@@ -1,35 +1,23 @@
 from django.contrib.auth.decorators import login_required
-from AspiraUser.models import UserProfile, getUserSelection, resetUserSelection
 from django.db.models import Count
 from django.shortcuts import render, HttpResponseRedirect, Http404
-from django.template.loader import render_to_string
-from datetime import datetime, timedelta
-from django.utils.timezone import utc
 
-
+from AspiraUser.models import UserProfile, resetUserSelection
+from Facebook.models import FBPost, FBPage
+from SocialNetworkHarvester.jsonResponses import *
 from Twitter.models import *
 from Youtube.models import *
-from Facebook.models import *
 from tool.views.ajaxTables import digestQuery, cleanQuery
-from SocialNetworkHarvester.jsonResponses import *
-
-
-
-
-from SocialNetworkHarvester.settings import viewsLogger, DEBUG
-log = lambda s: viewsLogger.log(s) if DEBUG else 0
-pretty = lambda s: viewsLogger.pretty(s) if DEBUG else 0
-
-
 
 
 def lastUrlOrHome(request):
     if 'next' in request.GET:
         return HttpResponseRedirect(request.GET['next'])
-    #if request.META.get('HTTP_REFERER'):
+    # if request.META.get('HTTP_REFERER'):
     #    referer = request.META.get('HTTP_REFERER')
     #    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
     return HttpResponseRedirect('/')
+
 
 def addMessagesToContext(request, context):
     if 'aspiraErrors' in request.session:
@@ -83,7 +71,7 @@ def getTwitterStats(aspiraUser):
     if twitterHashtagUsage > 0:
         mostActiveHashtag = \
             aspiraUser.twitterHashtagsToHarvest.annotate(harvested_count=Count('harvested_tweets')).order_by(
-                    "-harvested_count")[0].hashtag
+                "-harvested_count")[0].hashtag
     return {
         'twitterUserUsage': twitterUserUsage,
         'twitterUserLimit': twitterUserLimit,
@@ -198,7 +186,7 @@ def userSettings(request):
         "navigator": [
             ("Paramètres", "/settings"),
         ],
-        "fbAccessToken": None,
+        "fbAccessToken": '',
     }
     if hasattr(request.user.userProfile, 'fbAccessToken') and \
             request.user.userProfile.fbAccessToken._token:
@@ -236,10 +224,10 @@ def search(request):
     if "query" in request.GET:
         query = request.GET['query']
     terms = digestQuery(query)
-    return render(request, "AspiraUser/search_results.html",{
+    return render(request, "AspiraUser/search_results.html", {
         'user': request.user,
         "navigator": [
-            ("Recherche: \"%s\""%"\"+\"".join(terms), "#"),
+            ("Recherche: \"%s\"" % "\"+\"".join(terms), "#"),
         ],
         "query": cleanQuery(query),
     })

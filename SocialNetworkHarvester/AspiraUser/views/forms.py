@@ -1,26 +1,21 @@
+from datetime import timedelta
 
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
-from django.template.loader import render_to_string
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import validate_email
-from datetime import datetime, timedelta
-from django.utils.timezone import utc
-from django.shortcuts import render, HttpResponseRedirect
+from django.shortcuts import render
+from django.template.loader import render_to_string
 
-from SocialNetworkHarvester.jsonResponses import *
-from Twitter.models import *
-from Youtube.models import *
-from Facebook.models import *
-from .pages import userSettings, lastUrlOrHome
-from AspiraUser.views.pages import addMessagesToContext
 from AspiraUser.models import UserProfile
-
-from SocialNetworkHarvester.settings import viewsLogger, DEBUG
-log = lambda s : viewsLogger.log(s) if DEBUG else 0
-pretty = lambda s : viewsLogger.pretty(s) if DEBUG else 0
+from AspiraUser.views.pages import addMessagesToContext
+from SocialNetworkHarvester.jsonResponses import *
+from SocialNetworkHarvester.loggers.viewsLogger import logError
+from SocialNetworkHarvester.settings import DEBUG
+from Youtube.models import *
+from .pages import userSettings, lastUrlOrHome
 
 
 def userLogin(request):
@@ -31,11 +26,14 @@ def userLogin(request):
         if user.is_active:
             login(request, user)
         else:
-            request.session['aspiraErrors'] = ['Ce nom d\'utilisateur existe, mais le compte est présentement inactif. Est-ce que le webmaster vous a contacté?']
+            request.session['aspiraErrors'] = [
+                'Ce nom d\'utilisateur existe, mais le compte est présentement inactif. Est-ce que le webmaster vous '
+                'a contacté?']
     else:
         request.session['aspiraErrors'] = ['Invalid login information']
 
     return lastUrlOrHome(request)
+
 
 @login_required()
 def userLogout(request):
@@ -45,11 +43,11 @@ def userLogout(request):
     return lastUrlOrHome(request)
 
 
-#@viewsLogger.debug()
+# @viewsLogger.debug()
 @login_required()
 def editUserSettings(request):
     user = request.user
-    #pretty(request.POST)
+    # pretty(request.POST)
     for atr in request.POST:
         if atr not in [
             'u_first_name',
@@ -81,7 +79,7 @@ def userRegister(request):
     aspiraErrors = []
     masterAddrs = [user.email for user in User.objects.filter(is_superuser=True, email__isnull=False) if
                    user.email != '']
-    required_fields = {'username':'Username',
+    required_fields = {'username': 'Username',
                        'email': 'Email address',
                        'pw': 'Password'}
     context = {
@@ -93,7 +91,7 @@ def userRegister(request):
 
     for field in required_fields.keys():
         if field not in data or data[field] == '':
-            aspiraErrors.append('Le champ "%s" est vide! Veuillez y insérer une valeur.'% required_fields[field])
+            aspiraErrors.append('Le champ "%s" est vide! Veuillez y insérer une valeur.' % required_fields[field])
 
     if not aspiraErrors and data['pw'] != data['pw_confirm']:
         aspiraErrors.append('Les mots de passe ne coincident pas!')
@@ -126,36 +124,36 @@ def userRegister(request):
             'webmasters': masterAddrs,
         })
         send_mail('SNH - Account creation instructions', 'message',
-              'doNotReplyMail', [data['email']], html_message=message)
+                  'doNotReplyMail', [data['email']], html_message=message)
 
     if not aspiraErrors:
         try:
-            newUser = User.objects.create_user(data['username'],data['email'],data['pw'],
-                first_name=data['fname'],
-                last_name=data['lname'],
-                is_active=False
-            )
+            newUser = User.objects.create_user(data['username'], data['email'], data['pw'],
+                                               first_name=data['fname'],
+                                               last_name=data['lname'],
+                                               is_active=False
+                                               )
             newProfile = UserProfile.objects.create(user=newUser)
         except:
-            viewsLogger.exception('An error occured while creating a new AspiraUser!')
+            logError('An error occured while creating a new AspiraUser!')
             aspiraErrors.append('An error occured! Please contact the webmaster directly to create your account.')
 
     if not aspiraErrors:
         message = render_to_string('AspiraUser/emails/validateNewAccount.html', {
-            'email':data['email'],
-            'username':data['username'],
-            'fname':data['fname'],
-            'lname':data['lname'],
-            'org':data['org'],
-            'usageText':data['usageText'],
-            'adminAuth': "https://%s/adminauth/user/%s/change/"%(request.get_host(), newUser.pk)
+            'email': data['email'],
+            'username': data['username'],
+            'fname': data['fname'],
+            'lname': data['lname'],
+            'org': data['org'],
+            'usageText': data['usageText'],
+            'adminAuth': "https://%s/adminauth/user/%s/change/" % (request.get_host(), newUser.pk)
         })
 
         try:
             send_mail('SNH - New account creation request', 'message',
-                  'doNotReplyMail', masterAddrs, html_message=message)
+                      'doNotReplyMail', masterAddrs, html_message=message)
         except:
-            viewsLogger.exception('An error occured while sending an email to %s'% masterAddrs)
+            logError('An error occured while sending an email to %s' % masterAddrs)
 
     if aspiraErrors:
         request.session['aspiraErrors'] = aspiraErrors
@@ -176,18 +174,20 @@ def userRegister(request):
 def validate_userName(userName):
     return re.match(r'^[_a-zA-Z0-9]+$', userName)
 
+
 def confAgreement(request):
-    return render(request, 'AspiraUser/confidentPol.html',{})
+    return render(request, 'AspiraUser/confidentPol.html', {})
 
 
 def browserList(request):
-    return render(request, "AspiraUser/browserList.html",{})
+    return render(request, "AspiraUser/browserList.html", {})
+
 
 @login_required()
 def updatePW(request):
     user = request.user
     if not all(
-        ['pass0' in request.POST, 'pass1' in request.POST, 'pass2' in request.POST]):
+            ['pass0' in request.POST, 'pass1' in request.POST, 'pass2' in request.POST]):
         return jResponse({'status': 'error',
                           'errors': ['Requête invalide']})
 
@@ -197,10 +197,10 @@ def updatePW(request):
     if user.check_password(request.POST['pass1']):
         return jsonErrors('Le nouveau mot de passe doit être différent du mot de passe actuel')
 
-    if len(request.POST['pass1'])<6:
+    if len(request.POST['pass1']) < 6:
         return jsonErrors('Le mot de passe doit contenir au moins 6 caractères.')
 
-    if request.POST['pass1'] != request.POST['pass2'] :
+    if request.POST['pass1'] != request.POST['pass2']:
         return jsonErrors('Les mots de passe de concordent pas.')
 
     try:
@@ -211,7 +211,7 @@ def updatePW(request):
         return jResponse({'status': 'error',
                           'errors': [str(e)]})
 
-    return jResponse({'status':'ok'})
+    return jResponse({'status': 'ok'})
 
 
 def requestResetPW(request):
@@ -222,11 +222,12 @@ def requestResetPW(request):
 
     aspiraUser = User.objects.filter(email=request.POST['email']).first()
     if not aspiraUser:
-        return jsonErrors("L'adresse email '%s' n'existe pas."%request.POST['email'])
+        return jsonErrors("L'adresse email '%s' n'existe pas." % request.POST['email'])
 
     aspiraUser.userProfile.passwordResetToken = UserProfile.getUniquePasswordResetToken()
-    aspiraUser.userProfile.passwordResetDateLimit = datetime.utcnow()\
-        .replace(second=0, microsecond=0, tzinfo=utc) + timedelta(days=1)
+    aspiraUser.userProfile.passwordResetDateLimit = datetime.utcnow() \
+                                                        .replace(second=0, microsecond=0, tzinfo=utc) + timedelta(
+        days=1)
     aspiraUser.userProfile.save()
 
     if DEBUG:
@@ -236,7 +237,7 @@ def requestResetPW(request):
 
     message = render_to_string('AspiraUser/emails/resetPassword.html', {
         'aspiraUser': aspiraUser,
-        'link': url+aspiraUser.userProfile.passwordResetToken,
+        'link': url + aspiraUser.userProfile.passwordResetToken,
         'webmasters': [user.email for user in User.objects.filter(is_superuser=True, email__isnull=False) if
                        user.email != ''],
     })

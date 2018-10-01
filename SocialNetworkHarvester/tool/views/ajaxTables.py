@@ -8,28 +8,10 @@ from django.db.models.query import QuerySet
 from django.http import StreamingHttpResponse
 from django.shortcuts import *
 
-from AspiraUser.models import getUserSelection
-from Facebook.models import FBPage, FBPost, FBComment, FBReaction
+from AspiraUser.models import getUserSelection, getModel, MODEL_WHITELIST
 from SocialNetworkHarvester.jsonResponses import *
-from SocialNetworkHarvester.settings import viewsLogger, DEBUG
-from Twitter.models import TWUser, Tweet, HashtagHarvester, follower, favorite_tweet, Hashtag
-from Youtube.models import YTChannel, YTVideo, YTPlaylist, Subscription, YTComment, YTPlaylistItem
-
-log = lambda s: viewsLogger.log(s) if DEBUG else 0
-pretty = lambda s: viewsLogger.pretty(s) if DEBUG else 0
-logerror = lambda s: viewsLogger.exception(s) if DEBUG else 0
-
-MODEL_WHITELIST = ['FBPage', 'FBPost', 'FBComment', 'FBReaction',
-                   'Tweet', 'TWUser', "HashtagHarvester", "Hashtag", "favorite_tweet", "follower",
-                   'YTChannel', 'YTVideo', 'YTPlaylist', 'Subscription', 'YTComment', 'YTPlaylistItem']
-
-
-def getModel(modelName):
-    return {model.__name__: model for model in [
-        TWUser, Tweet, HashtagHarvester, follower, favorite_tweet, Hashtag,
-        FBPage, FBPost, FBComment, FBReaction,
-        YTChannel, YTVideo, YTPlaylist, Subscription, YTComment, YTPlaylistItem
-    ]}[modelName]
+from SocialNetworkHarvester.loggers.viewsLogger import logError, viewsLogger
+from Twitter.models import TWUser
 
 
 @login_required()
@@ -61,8 +43,8 @@ def ajaxBase(request):
                 "reason": "La recherche par emojii n'est pas supportée."
             }
         })
-    except:
-        logerror("Exception occured in tool/views/ajaxTables:ajaxBase")
+    except Exception as e:
+        logError("Exception occured in tool/views/ajaxTables:ajaxBase")
         return jsonBadRequest("Bad arguments")
 
 
@@ -89,7 +71,7 @@ def getQueryset(request):
                             subqueryset = subqueryset()
                         queryset = queryset | subqueryset.all()
                 else:
-                    srcModel = get_object_or_404(globals()[srcModelName], pk=src['id'])
+                    srcModel = get_object_or_404(getModel(srcModelName), pk=src['id'])
                     queryset = queryset | reduce(getattr, attrs, srcModel).all()
             else:
                 queryset = queryset | reduce(getattr, attrs, srcModel)
@@ -115,7 +97,7 @@ def querySearch(user, modelName, query):
     terms = []
     rawQuery = ""
     resultLists = {}
-    model = globals()[modelName]
+    model = getModel(modelName)
     terms = digestQuery(query)
     if terms == ["***all***"] and user.is_superuser:
         return model.objects.all()
@@ -317,7 +299,7 @@ def generateCSVDownload(request, queryset, userSelection):
             try:
                 yield data
             except:
-                logerror("Error occured in generateCSVDownload")
+                logError("Error occured in generateCSVDownload")
         # log('completed download')
         userSelection.setQueryOption(tableId, 'downloadProgress', 100)
         userSelection.setQueryOption(tableId, 'linesTransfered', 1)
@@ -327,7 +309,7 @@ def generateCSVDownload(request, queryset, userSelection):
         response["Content-Disposition"] = "attachment; filename=%s" % request.GET['filename'] + '.csv'
         return response
     except:
-        logerror("Error occured in generateCSVDownload")
+        logError("Error occured in generateCSVDownload")
 
 
 # @viewsLogger.debug(showArgs=True)
@@ -384,13 +366,13 @@ def setUserSelection(request):
 
 def getItemFromRowId(rowId):
     className, itemPk = rowId.split('_')
-    type = globals()[className]
+    type = getModel(className)
     return get_object_or_404(type, pk=itemPk)
 
 
 def getItemQueryset(rowId):
     className, itemPk = rowId.split('__')
-    return globals()[className].objects.filter(pk=itemPk)
+    return getModel(className).objects.filter(pk=itemPk)
 
 
 # @viewsLogger.debug(showArgs=True)
@@ -398,7 +380,7 @@ def selectUnselectAll(request):
     if not 'modelName' in request.GET: return missingParam('modelName')
     modelName = request.GET['modelName']
     if modelName not in MODEL_WHITELIST: return jsonForbiddenError()
-    queryset = globals()[request.GET['modelName']].objects.none()
+    queryset = getModel(request.GET['modelName']).objects.none()
     if 'selected' in request.GET:
         queryset = getQueryset(request)
     getUserSelection(request).saveQuerySet(queryset, request.GET['tableId'])

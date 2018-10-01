@@ -1,14 +1,11 @@
-from django.shortcuts import *
-import json
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import *
 from django.views.decorators.csrf import csrf_exempt
-from SocialNetworkHarvester.settings import FACEBOOK_APP_PARAMS
-from AspiraUser.models import resetUserSelection
-from Facebook.models import FBPage, FBUser, FBProfile, FBComment, FBPost
 
-from SocialNetworkHarvester.settings import viewsLogger, DEBUG
-log = lambda s: viewsLogger.log(s) if DEBUG else 0
-pretty = lambda s: viewsLogger.pretty(s) if DEBUG else 0
+from AspiraUser.models import resetUserSelection
+from Facebook.models import FBPage, FBUser, FBComment, FBPost
+from SocialNetworkHarvester.loggers.viewsLogger import log
+from SocialNetworkHarvester.settings import FACEBOOK_APP_PARAMS
 
 
 @login_required()
@@ -20,7 +17,7 @@ def facebookBase(request):
         ],
     }
     resetUserSelection(request)
-    return render(request,'Facebook/FacebookBase.html', context)
+    return render(request, 'Facebook/FacebookBase.html', context)
 
 
 @login_required()
@@ -30,17 +27,19 @@ def fbUserView(request, FBUserId):
         fbUser = FBUser.objects.filter(_ident=FBUserId)
     if not fbUser:
         raise Http404
-    else: fbUser = fbUser[0]
+    else:
+        fbUser = fbUser[0]
     context = {
         'user': request.user,
-        'fbUser':fbUser,
+        'fbUser': fbUser,
         "navigator": [
             ("Facebook", "/facebook"),
-            (fbUser, "/facebook/user/%s"%FBUserId),
+            (fbUser, "/facebook/user/%s" % FBUserId),
         ],
     }
     resetUserSelection(request)
-    return render(request,'Facebook/FacebookUser.html', context)
+    return render(request, 'Facebook/FacebookUser.html', context)
+
 
 @login_required()
 def fbPageView(request, FBPageId):
@@ -49,18 +48,19 @@ def fbPageView(request, FBPageId):
         fbPage = FBPage.objects.filter(_ident=FBPageId)
     if not fbPage:
         raise Http404
-    else: fbPage = fbPage[0]
+    else:
+        fbPage = fbPage[0]
     context = {
-        'user':request.user,
+        'user': request.user,
         'page': fbPage,
-        'FBPageId':FBPageId,
+        'FBPageId': FBPageId,
         "navigator": [
             ("Facebook", "/facebook"),
-            (fbPage, "/facebook/page/%s"%FBPageId),
+            (fbPage, "/facebook/page/%s" % FBPageId),
         ],
     }
     resetUserSelection(request)
-    return render(request,'Facebook/FacebookPage.html', context)
+    return render(request, 'Facebook/FacebookPage.html', context)
 
 
 @login_required()
@@ -70,14 +70,15 @@ def fbPostView(request, FBPostId):
         fbPost = FBPost.objects.filter(_ident=FBPostId)
     if not fbPost:
         raise Http404
-    else: fbPost = fbPost[0]
+    else:
+        fbPost = fbPost[0]
     context = {
-        'fbPost':fbPost,
+        'fbPost': fbPost,
         'user': request.user,
         "navigator": [
             ("Facebook", "/facebook"),
             (fbPost.from_profile, fbPost.from_profile.getLink()),
-            ("%s Facebook"%fbPost.getTypeFrench(), "/facebook/post/%s"%fbPost.pk)
+            ("%s Facebook" % fbPost.getTypeFrench(), "/facebook/post/%s" % fbPost.pk)
         ],
     }
     resetUserSelection(request)
@@ -94,12 +95,12 @@ def fbCommentView(request, fbCommentId):
     if not fbComment:
         raise Http404()
     context = {
-        'fbComment':fbComment,
+        'fbComment': fbComment,
         'user': request.user,
         "navigator": [
             ("Facebook", "/facebook"),
             (fbComment.from_profile, fbComment.from_profile.getLink()),
-            ("Commentaire facebook", "/facebook/post/%s"%fbComment.pk)
+            ("Commentaire facebook", "/facebook/post/%s" % fbComment.pk)
         ],
     }
     resetUserSelection(request)
@@ -111,15 +112,6 @@ def APILoginPage(request):
     if not request.user.is_superuser:
         raise Http404()
     context = {'user': request.user,
-                'app': FACEBOOK_APP_PARAMS
-            }
+               'app': FACEBOOK_APP_PARAMS
+               }
     return render_to_response('Facebook/FacebookLogin.html', context)
-
-
-@login_required()
-@csrf_exempt
-def setAPIToken(request):
-    if not request.user.is_superuser:
-        raise Http404()
-    setFBToken(request.POST['token'])
-    return HttpResponse('worked!')

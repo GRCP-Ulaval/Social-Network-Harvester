@@ -1,25 +1,22 @@
-from django.shortcuts import *
 from django.contrib.auth.decorators import login_required
-from AspiraUser.views import addMessagesToContext
-from AspiraUser.models import getUserSelection, resetUserSelection
-from Youtube.models import YTChannel, YTVideo, YTComment, YTPlaylist
-import re
+from django.shortcuts import *
 
-from SocialNetworkHarvester.settings import viewsLogger, DEBUG
-log = lambda s: viewsLogger.log(s) if DEBUG else 0
-pretty = lambda s: viewsLogger.pretty(s) if DEBUG else 0
+from AspiraUser.models import resetUserSelection
+from AspiraUser.views import addMessagesToContext
+from Youtube.models import YTChannel, YTVideo, YTComment, YTPlaylist
+
 
 @login_required()
 def youtubeBase(request):
-	context = {
-		'user': request.user,
-		"navigator": [
-			("Youtube", "/youtube"),
-		]
-	}
-	request, context = addMessagesToContext(request, context)
-	resetUserSelection(request)
-	return render(request, 'Youtube/YoutubeBase.html', context)
+    context = {
+        'user': request.user,
+        "navigator": [
+            ("Youtube", "/youtube"),
+        ]
+    }
+    request, context = addMessagesToContext(request, context)
+    resetUserSelection(request)
+    return render(request, 'Youtube/YoutubeBase.html', context)
 
 
 @login_required()
@@ -36,9 +33,9 @@ def channelBase(request, identifier):
         'user': request.user,
         "navigator": [
             ("Youtube", "/youtube"),
-            ("Chaine: %s"% channel, channel.getLink()),
+            ("Chaine: %s" % channel, channel.getLink()),
         ],
-        "channel":channel
+        "channel": channel
     }
     request, context = addMessagesToContext(request, context)
     return render(request, 'Youtube/YoutubeChannel.html', context)
@@ -55,13 +52,13 @@ def videoBase(request, identifier):
     context = {
         'user': request.user,
         "navigator": [
-             ("Youtube", "/youtube"),
+            ("Youtube", "/youtube"),
             (video.channel, video.channel.getLink()),
             (video, "/youtube/video/%s" % video.getLink()),
         ],
-        'video':video,
+        'video': video,
     }
-    return render(request,'Youtube/YoutubeVideo.html', context)
+    return render(request, 'Youtube/YoutubeVideo.html', context)
 
 
 @login_required()
@@ -94,7 +91,7 @@ def playlistBase(request, identifier):
     if not playlist: raise Http404
     displayName = identifier
     if playlist.title:
-        displayName = "Liste de lecture: %s"%playlist.title
+        displayName = "Liste de lecture: %s" % playlist.title
     channel = playlist.channel
 
     context = {

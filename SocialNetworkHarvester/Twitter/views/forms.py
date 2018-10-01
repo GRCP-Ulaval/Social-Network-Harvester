@@ -1,19 +1,9 @@
-from django.contrib.auth.decorators import login_required
-from Twitter.models import *
-from django.shortcuts import *
-from django.contrib.auth.decorators import login_required
-from SocialNetworkHarvester.jsonResponses import *
-from AspiraUser.models import getUserSelection, resetUserSelection
-import re
-from tool.views.ajaxTables import readLinesFromCSV
 import tweepy
+from django.contrib.auth.decorators import login_required
 
-import re
-
-from SocialNetworkHarvester.settings import viewsLogger, DEBUG
-log = lambda s: viewsLogger.log(s) if DEBUG else 0
-pretty = lambda s: viewsLogger.pretty(s) if DEBUG else 0
-logerror = lambda s: viewsLogger.exception(s) if DEBUG else 0
+from SocialNetworkHarvester.jsonResponses import *
+from SocialNetworkHarvester.loggers.viewsLogger import logError
+from Twitter.models import *
 
 
 @login_required()
@@ -29,16 +19,17 @@ def addUser(request):
         sns, errors = readScreenNamesFromCSV(request.FILES['Browse'])
         screen_names += sns
         for error in errors:
-            occuredErrors.append('Une erreur est survenue lors de la lecture de votre fichier csv. à la ligne %i.'%error)
+            occuredErrors.append(
+                'Une erreur est survenue lors de la lecture de votre fichier csv. à la ligne %i.' % error)
 
     if not screen_names:
         occuredErrors.append("Écrivez au moins un nom d'utilisateur.")
 
     added_screen_names = []
-    for screen_name_list in [screen_names[x:x+100] for x in range(0,len(screen_names),100)]:
+    for screen_name_list in [screen_names[x:x + 100] for x in range(0, len(screen_names), 100)]:
         if userProfile.twitterUsersToHarvest.count() >= userProfile.twitterUsersToHarvestLimit:
             occuredErrors.append(
-                'Vous avez atteint la limite d\'utilisateurs Twitter pour ce compte! (limite: %i)'%
+                'Vous avez atteint la limite d\'utilisateurs Twitter pour ce compte! (limite: %i)' %
                 userProfile.twitterUsersToHarvestLimit
             )
             break
@@ -66,11 +57,11 @@ def addUser(request):
         introuvables = [screen_name for screen_name in screen_names if screen_name not in added_screen_names]
         response = {'status': 'ok', 'messages':
             '%i L\'utilisateur Twitter %s a été ajouté à votre liste.' % (
-            len(added_screen_names), 's' if len(added_screen_names) > 1 else '')
-        }
+                len(added_screen_names), 's' if len(added_screen_names) > 1 else '')
+                    }
         if introuvables:
-            response['errors']=["Le nom d'utilisateur <b>%s</b> est introuvable ou l'utilisateur préfère " \
-                                "garder ses informations privées."%introuvable for introuvable in introuvables]
+            response['errors'] = ["Le nom d'utilisateur <b>%s</b> est introuvable ou l'utilisateur préfère " \
+                                  "garder ses informations privées." % introuvable for introuvable in introuvables]
     return HttpResponse(json.dumps(response), content_type='application/json')
 
 
@@ -96,7 +87,7 @@ def getTwitterApi(userProfile):
         if e.api_code == 32:
             userProfile.twitterApp_parameters_error = True
             userProfile.save()
-            logerror('Error in Twitter.forms.py: addUser')
+            logError('Error in Twitter.forms.py: addUser')
             raise Exception(
                 "Un problème est survenu avec votre application Twitter! Veuillez visiter votre page de "
                 "<a href='/user/settings' class='TableToolLink'>paramètres</a> et assurez-vous que les informations "
@@ -105,7 +96,8 @@ def getTwitterApi(userProfile):
         else:
             raise
 
-#@viewsLogger.debug(showArgs=True)
+
+# @viewsLogger.debug(showArgs=True)
 def readScreenNamesFromCSV(file):
     screen_names = []
     errors = []
@@ -117,9 +109,10 @@ def readScreenNamesFromCSV(file):
             decodedRow = re.sub('[\\r\\n]', '', decodedRow)
             screen_names.append(decodedRow)
         except UnicodeDecodeError:
-            #log('an invalid line was retrieved')
+            # log('an invalid line was retrieved')
             errors.append(rowNum)
     return screen_names, errors
+
 
 def screenNameIsValid(screen_name):
     if re.match('^[a-zA-z0-9_]+$', screen_name):
@@ -134,7 +127,7 @@ def addHashtag(request):
     terms = request.POST.getlist('hashtags')
     starts = request.POST.getlist('starts')
     ends = request.POST.getlist('ends')
-    hashtags = [(terms[i],starts[i],ends[i]) for i in range(0,len(terms)) if terms[i] != '']
+    hashtags = [(terms[i], starts[i], ends[i]) for i in range(0, len(terms)) if terms[i] != '']
     success_count = 0
 
     if 'Browse' in request.FILES:
@@ -149,7 +142,7 @@ def addHashtag(request):
         try:
             start = datetime.strptime(hashtag[1], '%m/%d/%Y')
         except ValueError:
-            aspiraErrors.append('La date de départ ("%s") n\'est pas valide'% hashtag[1])
+            aspiraErrors.append('La date de départ ("%s") n\'est pas valide' % hashtag[1])
             continue
         try:
             end = datetime.strptime(hashtag[2], '%m/%d/%Y')
@@ -158,7 +151,8 @@ def addHashtag(request):
             continue
         if hashtagIsValid(term, start, end):
             twHashtag, new = Hashtag.objects.get_or_create(term=term)
-            harvester, new = HashtagHarvester.objects.get_or_create(hashtag=twHashtag, _harvest_since=start,_harvest_until=end)
+            harvester, new = HashtagHarvester.objects.get_or_create(hashtag=twHashtag, _harvest_since=start,
+                                                                    _harvest_until=end)
             if userProfile.twitterHashtagsToHarvest.count() < userProfile.twitterHashtagsToHarvestLimit:
                 if not userProfile.twitterHashtagsToHarvest.filter(pk=harvester.pk).exists():
                     userProfile.twitterHashtagsToHarvest.add(harvester)
@@ -173,7 +167,7 @@ def addHashtag(request):
             aspiraErrors.append('Le format du hastag (%s) n\'est pas valide.' % str(hashtag))
 
     if aspiraErrors:
-        response = {'status':'exception','errors' : aspiraErrors}
+        response = {'status': 'exception', 'errors': aspiraErrors}
     else:
         response = {'status': 'ok', 'messages': ['%i nouveaux Hashtag%s %s été ajouté%s à votre liste.' % (
             success_count, 's' if success_count > 1 else '', 'ont' if success_count > 1 else 'a',
@@ -183,13 +177,13 @@ def addHashtag(request):
 
 
 def hashtagIsValid(term, start, end):
-    log('hashtag: %s, %s-%s'%(term, start, end))
+    log('hashtag: %s, %s-%s' % (term, start, end))
     valid = True
     if not re.match('^#?[a-zA-z0-9_]+$', term):
         valid = False
     if start >= end:
         valid = False
-    log('%s'%('valid' if valid else 'invalid'))
+    log('%s' % ('valid' if valid else 'invalid'))
     return valid
 
 

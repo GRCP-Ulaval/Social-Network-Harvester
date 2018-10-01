@@ -1,3 +1,4 @@
+from Twitter.models import Tweet
 from .commonThread import *
 
 

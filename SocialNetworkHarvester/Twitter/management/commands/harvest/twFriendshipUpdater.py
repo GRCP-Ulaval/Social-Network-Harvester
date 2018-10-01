@@ -1,3 +1,4 @@
+from Twitter.models import TWUser, follower
 from .commonThread import *
 
 

@@ -11,58 +11,64 @@ FB = null;
 
 function checkLoginState() {
   FB.getLoginStatus(function (response) {
-    log('getLoginStatus response: ');
-    log(response);
     statusChangeCallback(response);
   });
 }
 
 function statusChangeCallback(response) {
-  console.log('statusChangeCallback');
   if (response.status === 'connected') {
     accessToken = response.authResponse.accessToken;
     updateStoredToken(accessToken, function (response) {
-      log('Logged in into facebook and stored token.');
       display_user_infos(accessToken);
     });
-  } else {
+  } else if (fbAccessToken) {
     updateStoredToken(null, function (response) {
-      log('Logged out of Facebook and deleted access token');
     });
     $('#notLoggedInMessage').show();
     $('#login_infos_container').hide();
   }
 }
 
-function updateStoredToken(fbAccessToken, callback) {
+function updateStoredToken(accessToken, callback) {
   $.ajax({
     type: 'POST',
     url: '/facebook/forms/setFacebookToken',
     data: {
-      fbToken: fbAccessToken,
+      fbToken: accessToken,
       csrfmiddlewaretoken: csrf_token,
     },
     success: function (response) {
+      if (response.code !== 200) {
+        displayNewErrors(['Un problème est survenu lors de votre identification avec Facebook.']);
+      } else if (accessToken) {
+        displayNewMessages(['Votre compte Facebook est enregistré. Vous pouvez maintenant commencer votre collecte.']);
+      } else {
+        displayNewMessages(['Vous êtes maintenant déconnecté de Facebook.']);
+      }
       callback(response);
     },
-  });
+  })
 }
 
 function display_user_infos(accessToken) {
-  FB.api('/me?fields=id,name,picture.type(large)&access_token=' + accessToken, function (response) {
-    if (response['error'] != null) {
-      $('#tokenErrorMarker').show();
-      $('#notLoggedInMessage').show();
-      $('#login_infos_container').hide();
-    } else {
-      $('#userImg').attr('src', response.picture.data.url);
-      $('#user_name').html(response.name);
-      $('#notLoggedInMessage').hide();
-      $('#login_infos_container').show();
-      $('#tokenErrorMarker').hide();
-    }
-  });
-
+  if (accessToken) {
+    FB.api('/me?fields=id,name,picture.type(large)&access_token=' + accessToken, function (response) {
+      if (response['error'] != null) {
+        $('#tokenErrorMarker').show();
+        $('#notLoggedInMessage').show();
+        $('#login_infos_container').hide();
+      } else {
+        $('#userImg').attr('src', response.picture.data.url);
+        $('#user_name').html(response.name);
+        $('#notLoggedInMessage').hide();
+        $('#login_infos_container').show();
+        $('#tokenErrorMarker').hide();
+      }
+    });
+  } else {
+    $('#notLoggedInMessage').show();
+    $('#login_infos_container').hide();
+  }
 }
 
 window.fbAsyncInit = function () {
@@ -72,7 +78,10 @@ window.fbAsyncInit = function () {
     version: facebookAppVersion,
     status: true,
   });
-  checkLoginState();
+  if (!fbAccessToken) {
+    checkLoginState();
+  }
+  display_user_infos(fbAccessToken);
 };
 
 

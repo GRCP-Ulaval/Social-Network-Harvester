@@ -23,7 +23,7 @@
                 var srcs = [
                     {
                         modelName   :   "FBPost",
-                        attr        :   "reactions",
+                        attr        :   "received_reactions",
                         id            : "{{ fbPost.pk }}"
                     }
                 ]
@@ -94,7 +94,7 @@
                         var srcs = [
                             {
                                 modelName   :   "FBComment",
-                                attr        :   "reactions",
+                                attr        :   "received_reactions",
                                 id            : "{{ fbComment.pk }}"
                             }
                         ]
@@ -144,7 +144,74 @@
             </div>
         </div>
 
-
+{% elif source == "fbUserReactions" %}
+  <div class="">
+    <div class="section_menu">
+            <span class="section_title">
+                <b>Réactions partagées</b>
+            </span>
+      <div class="section_options">
+        {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="FBReaction" filename="Harvested_facebook_reactions_of_user_"|join:user %}
+        {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+      </div>
+      {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+    </div>
+    <div class="section_content">
+      <table class="display" id="FBUserReactionTable" drawn='False'>
+        <script class="tableVars">
+          var modelName = "FBReaction";
+          var srcs = [
+            {
+              modelName   :   "FBUser",
+              attr        :   "fbProfile__posted_reactions",
+              id            : "{{ fbUser.pk }}"
+            }
+          ]
+          var columns = [
+            {
+              "searchable": false,
+              "fields":["from_profile__pk","from_profile__getStr","from_profile__getLink"],
+              "colStr":"Profil",
+              "render": function (data, type, row) {
+                if (row['from_profile__pk'] == null) {
+                  return undefinedTag();
+                };
+                return tableToolLink(row["from_profile__getLink"],
+                  truncate_text(row["from_profile__getStr"], 30, true));
+              }
+            },
+            {
+              "fields":["type"],
+              "colStr":"Type",
+              "render": function (data, type, row) {
+                if (row['type'] == null) {
+                  return undefinedTag();
+                };
+                return row['type'];
+              }
+            },
+            {
+              "fields":["from_time"],
+              "colStr":"Depuis (Au moins)",
+              "render": function (data, type, row) {
+                if (row['from_time'] == null) {
+                  return undefinedTag();
+                };
+                return row['from_time'];
+              }
+            },
+            {
+              "fields":["until_time"],
+              "colStr":"Jusqu'à",
+              "render": function (data, type, row) {
+                return row['until_time'];
+              }
+            },
+          ]
+        </script>
+      </table>
+    </div>
+  </div>
 
 {% endif %}
 </section>

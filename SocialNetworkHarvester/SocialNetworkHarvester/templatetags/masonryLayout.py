@@ -1,16 +1,11 @@
+import inspect
+import sys
+
+import emoji
 from django import template
 from django.template.loader import render_to_string
-from collections import OrderedDict
-from Twitter.models import TWUser, Hashtag, Tweet, TWPlace, favorite_tweet, follower, HashtagHarvester
-from Youtube.models import YTChannel, YTVideo, YTPlaylist, YTPlaylistItem, YTComment
-from Facebook.models import FBUser, FBPage, FBPost, FBComment, FBReaction
-import re, sys
-import random, emoji
-import inspect
-from SocialNetworkHarvester.settings import viewsLogger, DEBUG, STATICFILES_VERSION, FACEBOOK_APP_PARAMS
 
-log = lambda s: viewsLogger.log(s) if DEBUG else 0
-pretty = lambda s: viewsLogger.pretty(s) if DEBUG else 0
+from SocialNetworkHarvester.loggers.viewsLogger import log
 
 register = template.Library()
 
@@ -122,7 +117,6 @@ def getFieldsValuesAsTiles(instance, user):
                 return str(rules[self.value])
             return 'black'
 
-
         def parseType(self):
             if not "type" in self.fieldVal:
                 raise Exception('Model %s\'s field "%s" must have a declared type' %
@@ -154,7 +148,8 @@ def getFieldsValuesAsTiles(instance, user):
             elif self.type == "image_url":
                 self.extra_class += "grid-item--width2 grid-item--height2"
                 self.extra_features += 'style="background-image:url(' + self.value + '); background-size:cover;"' \
-                                                                                     'onclick = displayCenterPopup("imageBigDisplayPopup")'
+                                                                                     'onclick = displayCenterPopup(' \
+                                                                                     '"imageBigDisplayPopup")'
             elif self.type == 'object_list':
                 if self.value.count() == 0: return False
                 if not hasattr(self.value.first(), "getLink"):

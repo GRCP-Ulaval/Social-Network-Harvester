@@ -1,18 +1,21 @@
-from django.shortcuts import HttpResponse
 import json
 
+from django.shortcuts import HttpResponse
+
+
 def jResponse(dictResponse):
-    return HttpResponse(json.dumps(dictResponse),content_type='application/json')
+    return HttpResponse(json.dumps(dictResponse), content_type='application/json')
 
 
 def jsonForbiddenError():
     return jResponse({
-        'error' :{
-            'code' :403,
-            'message' :'Forbidden',
+        'error': {
+            'code': 403,
+            'message': 'Forbidden',
             'reason': 'This ressource is forbiden.'
         }
     })
+
 
 def jsonUnauthorizedError():
     return jResponse({
@@ -23,6 +26,7 @@ def jsonUnauthorizedError():
         }
     })
 
+
 def jsonUnknownError():
     return jResponse({
         'error': {
@@ -32,6 +36,7 @@ def jsonUnknownError():
         }
     })
 
+
 def jsonBadRequest(reason):
     return jResponse({
         'error': {
@@ -40,14 +45,19 @@ def jsonBadRequest(reason):
             'reason': reason
         }
     })
+
+
 def missingParam(paramName):
-    return jsonBadRequest("Param <%s> is missing from the request"%paramName)
+    return jsonBadRequest("Param <%s> is missing from the request" % paramName)
+
+
 def invalidParam(paramName):
-    return jsonBadRequest("Param <%s> is invalid"%paramName)
+    return jsonBadRequest("Param <%s> is invalid" % paramName)
 
 
 def jsonDone():
     return jResponse({
+        "code": 200,
         'message': {
             'code': 200,
             'message': 'Completed',
@@ -60,7 +70,7 @@ def jsonNotImplementedError():
         'message': {
             'code': 501,
             'message': 'Not Implemented',
-            'reason':   'Ressource not implemented yet.'
+            'reason': 'Ressource not implemented yet.'
         }
     })
 
@@ -74,11 +84,12 @@ def jsonNotFound():
         }
     })
 
+
 def jsonMessage(messages):
     if not isinstance(messages, list):
         messages = [messages]
     return jResponse({
-        'status':'messages',
+        'status': 'messages',
         'messages': messages
     })
 

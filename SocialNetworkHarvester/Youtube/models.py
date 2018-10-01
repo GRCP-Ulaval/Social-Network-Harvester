@@ -1,18 +1,14 @@
 from django.db import models
 
 from SocialNetworkHarvester.models import Integer_time_label, Big_integer_time_label, Image_time_label, time_label
-from SocialNetworkHarvester.settings import youtubeLogger, DEBUG
 
-log = lambda s: youtubeLogger.log(s) if DEBUG else 0
-pretty = lambda s: youtubeLogger.pretty(s) if DEBUG else 0
-logerror = lambda s: youtubeLogger.exception(s)
+from SocialNetworkHarvester.loggers.youtubeLogger import log
 from Youtube.management.commands.harvest.queues import *
 import re
 
 from datetime import datetime
 from django.utils.timezone import utc
 
-today = lambda: datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=utc)
 
 
 ####################### YTCHANNEL  #######################

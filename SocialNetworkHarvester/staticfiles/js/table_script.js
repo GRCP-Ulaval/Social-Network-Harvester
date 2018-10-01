@@ -4,7 +4,7 @@ $.getScript("/static/js/DataTables-1.10.9/js/jquery.dataTables.min.js",function(
 $.getScript("/static/js/Select-1.0.1/js/dataTables.select.min.js", function(){
     $.fn.dataTable.ext.errMode = function ( settings, helpPage, message ) {
         //log(settings);log(helpPage);log("message: "+message);
-        displayNewErrors(['Une erreur est survenue. Veuillez contacter l\'administrateur.']);
+        displayNewErrors(['Une erreur est survenue.']);
     };
 })
 $.getScript("/static/js/linkify/linkify.min.js", function(){
@@ -58,10 +58,6 @@ $(document).ready(function() {
 
     $(document).on('click', '#selectAllFieldsChechbox', function(event){
         selectAllFields(event);
-    });
-
-    $('.display').on('dt.stateLoadParams', function(event){
-        //log(event)
     });
 
 });

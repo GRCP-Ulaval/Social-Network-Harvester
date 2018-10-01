@@ -1,19 +1,8 @@
 from django.contrib.auth.decorators import login_required
-from AspiraUser.models import UserProfile, getUserSelection, resetUserSelection
 
+from AspiraUser.models import getUserSelection
+from SocialNetworkHarvester.loggers.viewsLogger import logError
 from SocialNetworkHarvester.jsonResponses import *
-from SocialNetworkHarvester.settings import viewsLogger, DEBUG
-from AspiraUser.models import UserProfile, getUserSelection, resetUserSelection
-
-from Twitter.models import *
-from Youtube.models import *
-from Facebook.models import *
-
-log = lambda s: viewsLogger.log(s) if DEBUG else 0
-pretty = lambda s: viewsLogger.pretty(s) if DEBUG else 0
-logError = lambda s: viewsLogger.exception(s) if DEBUG else 0
-
-
 
 
 @login_required()
@@ -39,14 +28,15 @@ def removeSelectedItems(request):
     selection.delete()
     return HttpResponse(json.dumps(response), content_type='application/json')
 
+
 @login_required()
 def addRemoveItemById(request, addRemove):
-    if addRemove not in ['add', 'remove'] :return jsonBadRequest( "bad command: %s" %addRemove)
-    for attr in ['id' ,'list']:
-        if not attr in request.POST: return jsonBadRequest( "missing parameter: %s" %attr)
+    if addRemove not in ['add', 'remove']: return jsonBadRequest("bad command: %s" % addRemove)
+    for attr in ['id', 'list']:
+        if not attr in request.POST: return jsonBadRequest("missing parameter: %s" % attr)
     id = request.POST['id']
     listName = request.POST['list']
-    listLimit = listName+ 'Limit'
+    listLimit = listName + 'Limit'
 
     user = request.user
     if not hasattr(user.userProfile, listName): return jsonBadRequest("no such list: %s" % listName)
@@ -64,9 +54,9 @@ def addRemoveItemById(request, addRemove):
             return jsonBadRequest("Vous avez atteint la limite pour cette liste de collecte. (%s éléments)" % limit)
         list.add(item)
         return jResponse(
-                {'message': {"code": 200, "message": "<b>%s</b> as été ajouté de votre liste de collecte." % item}})
+            {'message': {"code": 200, "message": "<b>%s</b> as été ajouté de votre liste de collecte." % item}})
     else:
         if not item in list.all(): return jsonBadRequest("%s is not in current list" % item)
         list.remove(item)
         return jResponse(
-                {'message': {"code": 200, "message": "<b>%s</b> as été retiré de votre liste de collecte." % item}})
+            {'message': {"code": 200, "message": "<b>%s</b> as été retiré de votre liste de collecte." % item}})

@@ -1,12 +1,9 @@
 from django.contrib.auth.decorators import login_required
 
 from SocialNetworkHarvester.jsonResponses import *
-from SocialNetworkHarvester.settings import viewsLogger
+from SocialNetworkHarvester.loggers.viewsLogger import log, viewsLogger
 from Youtube.models import *
 from tool.views.ajaxTables import readLinesFromCSV
-
-log = lambda s: viewsLogger.log(s) if DEBUG else 0
-pretty = lambda s: viewsLogger.pretty(s) if DEBUG else 0
 
 plurial = lambda i: 's' if int(i) > 1 else ''
 
@@ -20,13 +17,13 @@ validFormNames = [
 
 @login_required()
 def formBase(request, formName):
-    if not request.user.is_authenticated: return jsonUnauthorizedError(request)
+    if not request.user.is_authenticated: return jsonUnauthorizedError()
     if not formName in validFormNames: return jsonBadRequest('Specified form does not exists')
     try:
         return globals()[formName](request)
     except:
         viewsLogger.exception("ERROR OCCURED IN YOUTUBE AJAX WITH FORM NAME '%s'" % formName)
-        return jsonUnknownError(request)
+        return jsonUnknownError()
 
 
 def YTAddChannel(request):

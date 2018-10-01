@@ -1,6 +1,7 @@
+import threading
+
+from SocialNetworkHarvester.loggers.twitterLogger import log
 from .client import *
-from SocialNetworkHarvester.settings import LOG_DIRECTORY, DEBUG
-import os
 
 
 class CommonThread(threading.Thread):

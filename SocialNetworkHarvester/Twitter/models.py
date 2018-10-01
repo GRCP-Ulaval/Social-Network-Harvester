@@ -1,25 +1,10 @@
-from django.db.utils import IntegrityError
-from django.core.exceptions import MultipleObjectsReturned
-from SocialNetworkHarvester.models import *
-from django.utils.timezone import utc
-from datetime import datetime
-import re, time
-
-from SocialNetworkHarvester.settings import twitterLogger, DEBUG
-import re
 import time
-from datetime import datetime
 
 from django.core.exceptions import MultipleObjectsReturned
 from django.db.utils import IntegrityError
-from django.utils.timezone import utc
 
+from SocialNetworkHarvester.loggers.viewsLogger import log, pretty
 from SocialNetworkHarvester.models import *
-from SocialNetworkHarvester.settings import twitterLogger, DEBUG
-
-log = lambda s : twitterLogger.log(s) if DEBUG else 0
-pretty = lambda s : twitterLogger.pretty(s) if DEBUG else 0
-today = lambda : datetime.utcnow().replace(hour=0,minute=0,second=0,microsecond=0,tzinfo=utc)
 
 
 ############### PLACE ####################
@@ -77,9 +62,9 @@ class TWPlace(models.Model):
         if self.name:
             return self.name
         elif self.place_type and self._ident:
-            return "%s #%s"%(self.place_type, self._ident)
+            return "%s #%s" % (self.place_type, self._ident)
 
-    #@twitterLogger.debug(showArgs=True)
+    # @twitterLogger.debug(showArgs=True)
     def UpdateFromResponse(self, jObject):
         if not isinstance(jObject, dict):
             raise Exception('A DICT or JSON object from Twitter must be passed as argument.')
@@ -88,8 +73,8 @@ class TWPlace(models.Model):
         self.save()
 
     def copyBasicFields(self, jObject):
-        for atr in [x.attname for x in self._meta.fields if  x.attname[0]!= '_']:
-            if atr in jObject and atr !='id':
+        for atr in [x.attname for x in self._meta.fields if x.attname[0] != '_']:
+            if atr in jObject and atr != 'id':
                 setattr(self, atr, jObject[atr])
 
     def get_obj_ident(self):
@@ -111,7 +96,7 @@ class Hashtag(models.Model):
                 "name": "Terme",
                 "description": "Mot ou terme du hastag. Sujet de la recherche",
                 "type": "short_string",
-                "searchable":True,
+                "searchable": True,
             },
             "hit_count": {
                 "name": "Nombre de tweets",
@@ -122,16 +107,16 @@ class Hashtag(models.Model):
         }
 
     def getLink(self):
-        return "/twitter/hashtag/%s"%self.pk
+        return "/twitter/hashtag/%s" % self.pk
 
     def __str__(self):
-        return "#"+self.term
+        return "#" + self.term
 
     def hit_count(self):
         return self.tweets.count()
 
     def get_obj_ident(self):
-        return "Hashtag__%s"%self.pk
+        return "Hashtag__%s" % self.pk
 
 
 class HashtagHarvester(models.Model):
@@ -144,51 +129,51 @@ class HashtagHarvester(models.Model):
     _has_reached_begining = models.BooleanField(default=False)
     _last_harvested = models.DateTimeField(null=True, blank=True)
 
-
     def get_fields_description(self):
         return {
             "_harvest_since": {
                 "name": "Collecte depuis",
                 "description": "Date de début de la collecte (collecte les tweets émis après la date)",
                 "type": "date",
-                "options":{
-                    "admin_only":False,
+                "options": {
+                    "admin_only": False,
                 }},
             "_harvest_until": {
                 "name": "Collecte jusqu'à",
                 "description": "Date de fin de la collecte (collecte les tweets émis avant la date)",
                 "type": "date",
-                "options":{
-                    "admin_only":False,
+                "options": {
+                    "admin_only": False,
                 }},
-            "_has_reached_begining":{
-                'name':'Collecte complétée',
-                'description':'Si la collecte est complétée pour la période spécifiée',
+            "_has_reached_begining": {
+                'name': 'Collecte complétée',
+                'description': 'Si la collecte est complétée pour la période spécifiée',
                 "type": "boolean",
-                "options":{
-                    "admin_only":False,
+                "options": {
+                    "admin_only": False,
                 }},
-            '_last_harvested':{
-                'name':'Dernière collecte',
-                'description':'Date de la dernière collecte pour ce hashtag',
+            '_last_harvested': {
+                'name': 'Dernière collecte',
+                'description': 'Date de la dernière collecte pour ce hashtag',
                 "type": "date",
-                "options":{
-                    "admin_only":False,
+                "options": {
+                    "admin_only": False,
                 }},
-            'harvest_count':{
-                'name':'Nombre de résultats',
-                'description':'Nombre de tweets dans la base de données qui furent ajoutées suite à la recherche de ce hashtag',
+            'harvest_count': {
+                'name': 'Nombre de résultats',
+                'description': 'Nombre de tweets dans la base de données qui furent ajoutées suite à la recherche de '
+                               'ce hashtag',
                 "type": "integer"}
         }
 
     def __str__(self):
         since = "undefined"
         until = "undefined"
-        if self._harvest_since :
-            since = "%s-%s-%s"%(self._harvest_since.year, self._harvest_since.month, self._harvest_since.day)
-        if self._harvest_until :
+        if self._harvest_since:
+            since = "%s-%s-%s" % (self._harvest_since.year, self._harvest_since.month, self._harvest_since.day)
+        if self._harvest_until:
             until = "%s-%s-%s" % (self._harvest_until.year, self._harvest_until.month, self._harvest_until.day)
-        return "#%s's harvester (%s to %s)" %(self.hashtag.term, since, until)
+        return "#%s's harvester (%s to %s)" % (self.hashtag.term, since, until)
 
     def harvest_count(self):
         return self.harvested_tweets.count()
@@ -212,7 +197,7 @@ class TWUser(models.Model):
     location = models.CharField(max_length=255)
     profile_background_color = models.CharField(max_length=50)
     profile_background_image_url = models.CharField(max_length=500, null=True)
-    profile_image_url= models.CharField(max_length=1024)
+    profile_image_url = models.CharField(max_length=1024)
     protected = models.BooleanField(default=False)
     verified = models.BooleanField(default=False)
     name = models.CharField(max_length=255, null=True)
@@ -227,83 +212,122 @@ class TWUser(models.Model):
 
     _date_time_fields = ['created_at']
     _time_labels = ['screen_name', 'name', 'time_zone', 'url', 'description',
-                   'statuses_count','favourites_count','followers_count','friends_count','listed_count']
+                    'statuses_count', 'favourites_count', 'followers_count', 'friends_count', 'listed_count']
 
     _last_updated = models.DateTimeField(null=True)
-    def last_updated(self):return self._last_updated
-    _last_tweet_harvested = models.DateTimeField(null=True)
-    def last_tweet_harvested(self):return self._last_tweet_harvested
-    _last_friends_harvested = models.DateTimeField(null=True)
-    def last_friends_harvested(self):return self._last_friends_harvested
-    _last_followers_harvested = models.DateTimeField(null=True)
-    def last_followers_harvested(self):return self._last_followers_harvested
-    _last_fav_tweet_harvested = models.DateTimeField(null=True)
-    def last_fav_tweet_harvested(self):return self._last_fav_tweet_harvested
-    _error_on_update = models.BooleanField(default=False)
-    def error_on_update(self):return self._error_on_update
-    _has_duplicate = models.BooleanField(default=False)
-    def has_duplicate(self):return self._has_duplicate
-    _error_on_harvest = models.BooleanField(default=False)
-    def error_on_harvest(self):return self._error_on_harvest
-    _error_on_network_harvest = models.BooleanField(default=False)
-    def error_on_network_harvest(self):return self._error_on_network_harvest
-    _update_frequency = models.IntegerField(default=5) # 1 = every day, 2 = every 2 days, etc.
-    def update_frequency(self):return self._update_frequency
-    _harvest_frequency = models.IntegerField(default=1)
-    def harvest_frequency(self):return self._harvest_frequency
-    _network_harvest_frequency = models.IntegerField(default=1)
-    def network_harvest_frequency(self):return self._network_harvest_frequency
-    _has_reached_begining = models.BooleanField(default=False)
-    def has_reached_begining(self):return self._has_reached_begining
 
+    def last_updated(self):
+        return self._last_updated
+
+    _last_tweet_harvested = models.DateTimeField(null=True)
+
+    def last_tweet_harvested(self):
+        return self._last_tweet_harvested
+
+    _last_friends_harvested = models.DateTimeField(null=True)
+
+    def last_friends_harvested(self):
+        return self._last_friends_harvested
+
+    _last_followers_harvested = models.DateTimeField(null=True)
+
+    def last_followers_harvested(self):
+        return self._last_followers_harvested
+
+    _last_fav_tweet_harvested = models.DateTimeField(null=True)
+
+    def last_fav_tweet_harvested(self):
+        return self._last_fav_tweet_harvested
+
+    _error_on_update = models.BooleanField(default=False)
+
+    def error_on_update(self):
+        return self._error_on_update
+
+    _has_duplicate = models.BooleanField(default=False)
+
+    def has_duplicate(self):
+        return self._has_duplicate
+
+    _error_on_harvest = models.BooleanField(default=False)
+
+    def error_on_harvest(self):
+        return self._error_on_harvest
+
+    _error_on_network_harvest = models.BooleanField(default=False)
+
+    def error_on_network_harvest(self):
+        return self._error_on_network_harvest
+
+    _update_frequency = models.IntegerField(default=5)  # 1 = every day, 2 = every 2 days, etc.
+
+    def update_frequency(self):
+        return self._update_frequency
+
+    _harvest_frequency = models.IntegerField(default=1)
+
+    def harvest_frequency(self):
+        return self._harvest_frequency
+
+    _network_harvest_frequency = models.IntegerField(default=1)
+
+    def network_harvest_frequency(self):
+        return self._network_harvest_frequency
+
+    _has_reached_begining = models.BooleanField(default=False)
+
+    def has_reached_begining(self):
+        return self._has_reached_begining
 
     def get_fields_description(self):
         return {
             "screen_name": {
                 "description": "Nom d'utilisateur, identifiant le compte.",
                 "name": "Nom d'utilisateur",
-                "type":"short_string",
-                "searchable":True,
+                "type": "short_string",
+                "searchable": True,
             },
             "name": {
                 "description": "Nom complet de l'utilisateur.",
                 "name": "Nom",
-                "type":"short_string",
+                "type": "short_string",
                 "searchable": True,
             },
             "_ident": {
                 "description": "Numéro-identifiant du compte.",
                 "name": "Identifiant",
-                "type":"short_string"},
+                "type": "short_string"},
             "created_at": {
                 "description": "Temps de création du compte.",
                 "name": "Créé le",
-                "type":"date"},
+                "type": "date"},
             "geo_enabled": {
                 "description": "(Booléen) Si le compte a activé la géo-localisation.",
                 "name": "Geo-Activé",
-                "type":"boolean"},
+                "type": "boolean"},
             "has_extended_profile": {
                 "description": "(Booléen) Si le compte a un profil étendu.",
                 "name": "Profil Étendu",
-                "type":"boolean"},
+                "type": "boolean"},
             "is_translator": {
-                "description": "(Booléen) Si l'utilisateur du compte fait partie de la communauté des traducteurs Twitter.",
+                "description": "(Booléen) Si l'utilisateur du compte fait partie de la communauté des traducteurs "
+                               "Twitter.",
                 "name": "Est Traducteur",
-                "type":"boolean"},
+                "type": "boolean"},
             "lang": {
                 "description": "Langue première du compte.",
                 "name": "Language",
-                "type":"short_string"},
+                "type": "short_string"},
             "location": {
-                "description": "Géo-location de l'utilisateur du compte. Peut ne pas être exact puisque les utilisateurs choisissent ce qu'ils écrivent.",
+                "description": "Géo-location de l'utilisateur du compte. Peut ne pas être exact puisque les "
+                               "utilisateurs choisissent ce qu'ils écrivent.",
                 "name": "Location",
-                "type":"short_string"},
+                "type": "short_string"},
             "protected": {
                 "description": "(Booléen) Si le compte dénie la collecte de ses informations via l'API de Twitter",
-                "name":"Protégé",
-                "type":"boolean",
-                "options":{
+                "name": "Protégé",
+                "type": "boolean",
+                "options": {
                     "tile_style": {
                         "value_text_coloring": {
                             False: 'green',
@@ -315,7 +339,7 @@ class TWUser(models.Model):
             "verified": {
                 "description": "(Booléen) Si le compte as été vérifié comme légitime par un employé de Twitter.",
                 "name": "Verifié",
-                "type":"boolean",
+                "type": "boolean",
                 "options": {
                     "tile_style": {
                         "value_text_coloring": {
@@ -328,79 +352,80 @@ class TWUser(models.Model):
             "time_zone": {
                 "description": "Fuseau horaire principal du compte.",
                 "name": "Fuseau horaire",
-                "type":"short_string"},
+                "type": "short_string"},
             "url": {
                 "description": "Site web de l'utilisateur ou de l'organisation.",
                 "name": "URL",
-                "type":"link_url"},
+                "type": "link_url"},
             "description": {
                 "description": "Description du compte, de l'utilisateur ou de l'organisation.",
                 "name": "Description",
-                "type":"long_string"},
+                "type": "long_string"},
             "statuses_count": {
                 "description": "Nombre de status en date de la dernière collecte (généralement <24h).",
                 "name": "Nombre de status",
-                "type":"integer"},
+                "type": "integer"},
             "favourites_count": {
                 "description": "Nombre de tweets favoris en date de la dernière collecte (généralement <24h).",
                 "name": "Nombre de favoris",
-                "type":"integer"},
+                "type": "integer"},
             "followers_count": {
-                "description": "Nombre d'abonnés (followers) au compte en date de la dernière collecte (généralement <24h).",
+                "description": "Nombre d'abonnés (followers) au compte en date de la dernière collecte (généralement "
+                               "<24h).",
                 "name": "Nombre d'abonnés",
-                "type":"integer"},
+                "type": "integer"},
             "friends_count": {
                 "description": "Nombre de compte suivi par l'utilisateur en date de la dernière collecte.",
                 "name": "Nombre d'abonnements",
-                "type":"integer"},
+                "type": "integer"},
             "listed_count": {
                 "description": "nombre de listes publiques dans lesquelles le compte apparait.",
                 "name": "Mentions publiques",
-                "type":"integer"
+                "type": "integer"
             },
             "profile_image_url": {
                 "description": "Url de l'image de profil de l'utilisateur (au moment de la dernière collecte).",
                 "name": "Image de profil",
-                "type":"image_url",
-                "options":{
-                    "render":lambda value: re.sub("_normal","",value),
+                "type": "image_url",
+                "options": {
+                    "render": lambda value: re.sub("_normal", "", value),
                 }
             },
-            "_last_updated":{
-                "name":"Last updated",
-                "type":"date",
-                "options":{
-                    "admin_only":True
+            "_last_updated": {
+                "name": "Last updated",
+                "type": "date",
+                "options": {
+                    "admin_only": True
                 }},
-            "_last_tweet_harvested":{
-                "name":"Last tweet-harvested",
-                "type":"date",
-                "options":{
-                    "admin_only":True
+            "_last_tweet_harvested": {
+                "name": "Last tweet-harvested",
+                "type": "date",
+                "options": {
+                    "admin_only": True
                 }},
-            "_last_friends_harvested":{
-                "name":"Last-friend-harvested",
-                "type":"date",
-                "options":{
-                    "admin_only":True
+            "_last_friends_harvested": {
+                "name": "Last-friend-harvested",
+                "type": "date",
+                "options": {
+                    "admin_only": True
                 }},
-            "_last_followers_harvested":{
-                "name":"Last followers-harvested",
-                "type":"date",
-                "options":{
-                    "admin_only":True
+            "_last_followers_harvested": {
+                "name": "Last followers-harvested",
+                "type": "date",
+                "options": {
+                    "admin_only": True
                 }},
-            "_last_fav_tweet_harvested":{
-                "name":"Last fav-tweet-harvested",
-                "type":"date",
-                "options":{
-                    "admin_only":True
+            "_last_fav_tweet_harvested": {
+                "name": "Last fav-tweet-harvested",
+                "type": "date",
+                "options": {
+                    "admin_only": True
                 }},
-            "_error_on_update":{
-                "name":"Error on update",
-                "type":"boolean",
-                "options":{
-                    "admin_only":True,
+            "_error_on_update": {
+                "name": "Error on update",
+                "type": "boolean",
+                "options": {
+                    "admin_only": True,
                     "tile_style": {
                         "value_text_coloring": {
                             False: 'green',
@@ -408,11 +433,11 @@ class TWUser(models.Model):
                         }
                     }
                 }},
-            "_has_duplicate":{
-                "name":"Has duplicate",
-                "type":"boolean",
-                "options":{
-                    "admin_only":True,
+            "_has_duplicate": {
+                "name": "Has duplicate",
+                "type": "boolean",
+                "options": {
+                    "admin_only": True,
                     "tile_style": {
                         "value_text_coloring": {
                             False: 'green',
@@ -420,11 +445,11 @@ class TWUser(models.Model):
                         }
                     }
                 }},
-            "_error_on_harvest":{
-                "name":"Error on harvest",
-                "type":"boolean",
-                "options":{
-                    "admin_only":True,
+            "_error_on_harvest": {
+                "name": "Error on harvest",
+                "type": "boolean",
+                "options": {
+                    "admin_only": True,
                     "tile_style": {
                         "value_text_coloring": {
                             False: 'green',
@@ -432,11 +457,11 @@ class TWUser(models.Model):
                         }
                     }
                 }},
-            "_error_on_network_harvest":{
-                "name":"Error on network-harvest",
-                "type":"boolean",
-                "options":{
-                    "admin_only":True,
+            "_error_on_network_harvest": {
+                "name": "Error on network-harvest",
+                "type": "boolean",
+                "options": {
+                    "admin_only": True,
                     "tile_style": {
                         "value_text_coloring": {
                             False: 'green',
@@ -444,33 +469,33 @@ class TWUser(models.Model):
                         }
                     }
                 }},
-            "_update_frequency":{
-                "name":"Update frequency",
-                "type":"integer",
-                "options":{
-                    "admin_only":True
+            "_update_frequency": {
+                "name": "Update frequency",
+                "type": "integer",
+                "options": {
+                    "admin_only": True
                 }},
-            "_harvest_frequency":{
-                "name":"Harvest frequency",
-                "type":"integer",
-                "options":{
-                    "admin_only":True,
+            "_harvest_frequency": {
+                "name": "Harvest frequency",
+                "type": "integer",
+                "options": {
+                    "admin_only": True,
                 }},
-            "_network_harvest_frequency":{
-                "name":"Network-harvest frequency",
-                "type":"integer",
-                "options":{
-                    "admin_only":True
+            "_network_harvest_frequency": {
+                "name": "Network-harvest frequency",
+                "type": "integer",
+                "options": {
+                    "admin_only": True
                 }},
-            "_has_reached_begining":{
-                "name":"Has reached begining",
-                "type":"boolean",
-                "options":{
-                    "admin_only":True,
-                    "tile_style":{
+            "_has_reached_begining": {
+                "name": "Has reached begining",
+                "type": "boolean",
+                "options": {
+                    "admin_only": True,
+                    "tile_style": {
                         "value_text_coloring": {
-                            False:'blue',
-                            True:"green"
+                            False: 'blue',
+                            True: "green"
                         }
                     }
                 }},
@@ -480,7 +505,7 @@ class TWUser(models.Model):
         app_label = "Twitter"
 
     def getLink(self):
-        return "/twitter/user/%s"%self.pk
+        return "/twitter/user/%s" % self.pk
 
     def get_obj_ident(self):
         return "TWUser__%s" % self.pk
@@ -489,23 +514,21 @@ class TWUser(models.Model):
         if self.screen_name:
             return self.screen_name
         else:
-            return 'TWUser %s'%self._ident
-
+            return 'TWUser %s' % self._ident
 
     def __init__(self, *args, **kwargs):
         super(TWUser, self).__init__(*args, **kwargs)
         if 'jObject' in kwargs: self.UpdateFromResponse(kwargs['jObject'])
 
     def biggerImageUrl(self):
-        return re.sub("_normal.","_bigger.",self.profile_image_url)
+        return re.sub("_normal.", "_bigger.", self.profile_image_url)
 
-
-    #@twitterLogger.debug(showArgs=False)
+    # @twitterLogger.debug(showArgs=False)
     def UpdateFromResponse(self, jObject):
         if not isinstance(jObject, dict):
             raise Exception('A DICT or JSON object from Twitter must be passed as argument.')
-        #log('len(location): %s'%len(jObject['location']))
-        #log('location: %s'%jObject['location'])
+        # log('len(location): %s'%len(jObject['location']))
+        # log('location: %s'%jObject['location'])
         self.copyBasicFields(jObject)
         self.copyDateTimeFields(jObject)
         self.updateTimeLabels(jObject)
@@ -513,32 +536,31 @@ class TWUser(models.Model):
         self._last_updated = today()
         self.save()
 
-    #@twitterLogger.debug()
+    # @twitterLogger.debug()
     def getLast(self, related_name):
         queryset = getattr(self, related_name).order_by('-recorded_time')
         if queryset.count() == 0:
             return None
         return queryset[0]
 
-
-    #@twitterLogger.debug()
+    # @twitterLogger.debug()
     def copyBasicFields(self, jObject):
-        for atr in [x.attname for x in self._meta.fields if x not in self._date_time_fields and x.attname[0]!= '_']:
-            if atr in jObject and atr !='id':
+        for atr in [x.attname for x in self._meta.fields if x not in self._date_time_fields and x.attname[0] != '_']:
+            if atr in jObject and atr != 'id':
                 setattr(self, atr, jObject[atr])
 
-    #@twitterLogger.debug()
+    # @twitterLogger.debug()
     def copyDateTimeFields(self, jObject):
         for atr in self._date_time_fields:
             if atr in jObject:
                 dt = datetime.strptime(jObject[atr], '%a %b %d %H:%M:%S %z %Y')
                 setattr(self, atr, dt)
 
-    #@twitterLogger.debug()
+    # @twitterLogger.debug()
     def updateTimeLabels(self, jObject):
         for atr in self._time_labels:
             if atr in jObject and jObject[atr]:
-                related_name = atr+'s'
+                related_name = atr + 's'
                 lastItem = self.getLast(related_name)
                 if not lastItem or lastItem.recorded_time != today():
                     if atr == 'url':
@@ -550,36 +572,59 @@ class TWUser(models.Model):
                     try:
                         newItem.save()
                     except:
-                        log('className: %s'% atr)
+                        log('className: %s' % atr)
                         raise
                 elif lastItem.value != jObject[atr]:
                     lastItem.value = jObject[atr]
                     lastItem.save()
 
+
 class screen_name(Text_time_label):
     twuser = models.ForeignKey(TWUser, related_name="screen_names", on_delete=models.CASCADE)
+
+
 class name(Text_time_label):
     twuser = models.ForeignKey(TWUser, related_name="names", on_delete=models.CASCADE)
+
+
 class time_zone(Text_time_label):
     twuser = models.ForeignKey(TWUser, related_name="time_zones", on_delete=models.CASCADE)
+
+
 class TWUrl(Text_time_label):
     twuser = models.ForeignKey(TWUser, related_name="urls", on_delete=models.CASCADE)
+
+
 class description(Text_time_label):
     twuser = models.ForeignKey(TWUser, related_name="descriptions", on_delete=models.CASCADE)
+
+
 class statuses_count(Integer_time_label):
     twuser = models.ForeignKey(TWUser, related_name="statuses_counts", on_delete=models.CASCADE)
+
+
 class favourites_count(Integer_time_label):
     twuser = models.ForeignKey(TWUser, related_name="favourites_counts", on_delete=models.CASCADE)
+
+
 class followers_count(Integer_time_label):
     twuser = models.ForeignKey(TWUser, related_name="followers_counts", on_delete=models.CASCADE)
+
+
 class friends_count(Integer_time_label):
     twuser = models.ForeignKey(TWUser, related_name="friends_counts", on_delete=models.CASCADE)
+
+
 class listed_count(Integer_time_label):
     twuser = models.ForeignKey(TWUser, related_name="listed_counts", on_delete=models.CASCADE)
+
+
 class follower(time_label):
     twuser = models.ForeignKey(TWUser, related_name="followers", on_delete=models.CASCADE)
-    value = models.ForeignKey(TWUser, related_name='friends', on_delete=models.CASCADE) # "value" user is following "twuser", calls it it's "friend"
+    value = models.ForeignKey(TWUser, related_name='friends',
+                              on_delete=models.CASCADE)  # "value" user is following "twuser", calls it it's "friend"
     ended = models.DateTimeField(null=True)
+
     def get_fields_description(self):
         val = super(follower, self).get_fields_description()
         val.update({
@@ -600,7 +645,7 @@ class Tweet(models.Model):
         app_label = "Twitter"
 
     def __str__(self):
-        return "%s tweet #%s"%(("@%s"%self.user if self.user else 'unidentifed TWUser'), self._ident)
+        return "%s tweet #%s" % (("@%s" % self.user if self.user else 'unidentifed TWUser'), self._ident)
 
     def get_obj_ident(self):
         return "Tweet__%s" % self.pk
@@ -621,7 +666,7 @@ class Tweet(models.Model):
     lang = models.CharField(max_length=128)
     withheld_copyright = models.BooleanField(default=False)
     withheld_in_countries = models.CharField(max_length=255)
-    withheld_scope = models.CharField(max_length=32) #either “status” or “user”.
+    withheld_scope = models.CharField(max_length=32)  # either “status” or “user”.
     user = models.ForeignKey(TWUser, related_name="tweets", null=True, on_delete=models.PROTECT)
     in_reply_to_user = models.ForeignKey(TWUser, null=True, related_name="replied_by", on_delete=models.PROTECT)
     in_reply_to_status = models.ForeignKey('self', null=True, related_name="replied_by", on_delete=models.PROTECT)
@@ -633,17 +678,28 @@ class Tweet(models.Model):
     harvested_by = models.ManyToManyField(HashtagHarvester, related_name='harvested_tweets')
 
     _last_updated = models.DateTimeField(null=True)
-    def last_updated(self):return self._last_updated
+
+    def last_updated(self):
+        return self._last_updated
+
     _last_retweeter_harvested = models.DateTimeField(null=True)
-    def last_retweeter_harvested(self):return self._last_retweeter_harvested
+
+    def last_retweeter_harvested(self):
+        return self._last_retweeter_harvested
+
     _error_on_update = models.BooleanField(default=False)
-    def error_on_update(self):return self._error_on_update
+
+    def error_on_update(self):
+        return self._error_on_update
+
     _error_on_retweet_harvest = models.BooleanField(default=False)
-    def error_on_retweet_harvest(self):return self._error_on_retweet_harvest
+
+    def error_on_retweet_harvest(self):
+        return self._error_on_retweet_harvest
 
     _date_time_fields = ['created_at']
     _time_labels = ['retweet_count']
-    _relationals = ['place_id','in_reply_to_user_id','in_reply_to_status_id','quoted_status_id','retweet_of_id',
+    _relationals = ['place_id', 'in_reply_to_user_id', 'in_reply_to_status_id', 'quoted_status_id', 'retweet_of_id',
                     'user_id', 'hashtags_id']
 
     def get_fields_description(self):
@@ -651,142 +707,148 @@ class Tweet(models.Model):
             "_ident": {
                 "name": "Identifiant",
                 "description": "Nombre identificateur du tweet",
-                "type":"short_string"},
+                "type": "short_string"},
             "coordinates": {
                 "name": "Coordonnées",
                 "description": "Coordonnées géographiques du tweet",
-                "type":"short_string"},
+                "type": "short_string"},
             "contributors": {
                 "name": "Contributeurs",
                 "description": "Utilisateurs Twitter ayant contribué au tweet, en postant ou en éditant",
-                "type":"object_list"},
+                "type": "object_list"},
             "created_at": {
                 "name": "Création",
                 "description": "Date et heure de publication du tweet",
-                "type":"date"},
+                "type": "date"},
             "deleted_at": {
                 "name": "Effacement",
                 "description": "Date et heure d'effacement du tweet, si applicable",
-                "type":"date"},
+                "type": "date"},
             "text": {
                 "name": "Texte",
                 "description": "Contenu textuel du tweet",
-                "type":"long_string",
+                "type": "long_string",
                 "searchable": True,
             },
             "retweet_count": {
                 "name": "Nombre de retweets",
                 "description": "Dernière valeur enregistrée du nombre de retweets",
-                "type":"integer"},
+                "type": "integer"},
             "possibly_sensitive": {
                 "name": "Possiblement sensible",
                 "description": "(Booléen) Si le tweet pourrait être perçu comme offensant par un certain auditoire",
-                "type":"boolean"},
+                "type": "boolean"},
             "place": {
                 "name": "Place",
                 "description": "Place(s) d'émission du tweet",
-                "type":"short_string"},
+                "type": "short_string"},
             "source": {
                 "name": "Source",
                 "description": "Application utilisée pour publier le tweet",
-                "type":"html_link"},
+                "type": "html_link"},
             "lang": {
                 "name": "Language",
                 "description": "Language du texte du tweet",
-                "type":"short_string"},
+                "type": "short_string"},
             "withheld_copyright": {
                 "name": "Droits d'auteurs",
                 "description": "(Booléen) Si le tweet contient du matériel protégé par des droits d'auteurs",
-                "type":"boolean"},
+                "type": "boolean"},
             "withheld_in_countries": {
                 "name": "Retenu dans pays",
                 "description": "Pays dans lesquels le tweet est masqué et n'apparait pas aux utilisateurs",
-                "type":"short_string"},
+                "type": "short_string"},
             "withheld_scope": {
                 "name": "Étendue de retenue",
                 "description": "L'étendue de la politique de retenue si le tweet est masqué dans certains pays",
-                "type":"short_string"},
+                "type": "short_string"},
             "user": {
                 "name": "Auteur",
                 "description": "Utilisateur Twitter ayant publié le tweet",
-                "type":"object"},
+                "type": "object"},
             "in_reply_to_user": {
                 "name": "En réponse à l'utilisateur",
                 "description": "Utilisateur Twitter à qui le tweet répond, si applicable",
-                "type":"object"},
+                "type": "object"},
             "in_reply_to_status": {
                 "name": "En réponse au status",
                 "description": "Tweet envers lequel le tweet répond, si applicable",
-                "type":"object"},
+                "type": "object"},
             "quoted_status": {
                 "name": "Status cité",
                 "description": "Tweet cité dans le tweet. Différent d'un retweet.",
-                "type":"object"},
+                "type": "object"},
             "retweet_of": {
                 "name": "Retweet de",
                 "description": "Tweet original du retweet, si applicable",
-                "type":"object"},
+                "type": "object"},
             "userMentionsList": {
                 "name": "Utilisateurs mentionnés",
                 "description": "Utilisateurs Twitter mentionnés dans le texte",
-                "type":"long_string",
-                "options":{"displayable":False}},
+                "type": "long_string",
+                "options": {"displayable": False}},
             "hashtagsList": {
-                "name":"Hashtags",
+                "name": "Hashtags",
                 "description": "Hashtags contenus dans le texte",
-                "type":"long_string",
-                "options":{"displayable":False}},
+                "type": "long_string",
+                "options": {"displayable": False}},
             "user_mentions": {
                 "name": "Utilisateurs mentionnés",
                 "description": "Utilisateurs Twitter mentionnés dans le texte",
-                "type":"object_list",
-                "options":{"downloadable":False}},
+                "type": "object_list",
+                "options": {"downloadable": False}},
             "hashtags": {
-                "name":"Hashtags",
+                "name": "Hashtags",
                 "description": "Hashtags contenus dans le texte",
-                "type":"object_list",
-                "options":{"downloadable":False}},
-            "_last_updated":{
-                "name":"Last updated",
-                "type":"date",
-                "options":{
-                    "admin_only":True,
+                "type": "object_list",
+                "options": {"downloadable": False}},
+            "_last_updated": {
+                "name": "Last updated",
+                "type": "date",
+                "options": {
+                    "admin_only": True,
                 }
             },
-            "_last_retweeter_harvested":{
-                "name":"Last retweet-harvested",
-                "type":"date",
-                "options":{
-                    "admin_only":True,
+            "_last_retweeter_harvested": {
+                "name": "Last retweet-harvested",
+                "type": "date",
+                "options": {
+                    "admin_only": True,
                 }
             },
-            "_error_on_update":{
-                "name":"Error on update",
-                "type":"boolean",
-                "options":{
-                    "admin_only":True,
+            "_error_on_update": {
+                "name": "Error on update",
+                "type": "boolean",
+                "options": {
+                    "admin_only": True,
                 }
             },
-            "_error_on_retweet_harvest":{
-                "name":"Error on retweet-harvest",
-                "type":"boolean",
-                "options":{
-                    "admin_only":True,
+            "_error_on_retweet_harvest": {
+                "name": "Error on retweet-harvest",
+                "type": "boolean",
+                "options": {
+                    "admin_only": True,
                 }
             },
         }
 
     def getLink(self):
-        return "/twitter/tweet/%s"%self.pk
+        return "/twitter/tweet/%s" % self.pk
 
     def _truncated_text(self, n):
-        if self.text:return self.text[:n] + '...' * (len(self.text) > n)
-    def truncated_text_25(self):return self._truncated_text(25)
-    def truncated_text_50(self):return self._truncated_text(50)
-    def truncated_text_100(self):return self._truncated_text(100)
+        if self.text: return self.text[:n] + '...' * (len(self.text) > n)
+
+    def truncated_text_25(self):
+        return self._truncated_text(25)
+
+    def truncated_text_50(self):
+        return self._truncated_text(50)
+
+    def truncated_text_100(self):
+        return self._truncated_text(100)
 
     def hashtagsList(self):
-        return ["#%s"%hashtag.term for hashtag in self.hashtags.all()]
+        return ["#%s" % hashtag.term for hashtag in self.hashtags.all()]
 
     def userMentionsList(self):
         return ["@%s" % user.screen_name for user in self.user_mentions.all()]
@@ -794,11 +856,11 @@ class Tweet(models.Model):
     def digestSource(self):
         if self.source:
             return {
-                "name":re.match(r"<a.*>(?P<name>.*)</a>", self.source).group("name"),
+                "name": re.match(r"<a.*>(?P<name>.*)</a>", self.source).group("name"),
                 "url": re.match(r'.*href="(?P<url>[^"]+)"', self.source).group("url")
             }
 
-    #@twitterLogger.debug(showArgs=True)
+    # @twitterLogger.debug(showArgs=True)
     def UpdateFromResponse(self, jObject):
         if not isinstance(jObject, dict):
             raise Exception('A DICT or JSON object from Twitter must be passed as argument.')
@@ -813,8 +875,9 @@ class Tweet(models.Model):
         if 'user' in jObject and not self.user:
             self.setUser(jObject['user'])
         if jObject['in_reply_to_user_id']:
-            self.setInReplyToUser(screen_name=jObject['in_reply_to_screen_name'],_ident=jObject['in_reply_to_user_id'])
-            #self.setInReplyToUser(screen_name=jObject['in_reply_to_screen_name'], _ident=jObject['in_reply_to_user_id'])
+            self.setInReplyToUser(screen_name=jObject['in_reply_to_screen_name'], _ident=jObject['in_reply_to_user_id'])
+            # self.setInReplyToUser(screen_name=jObject['in_reply_to_screen_name'], _ident=jObject[
+            # 'in_reply_to_user_id'])
         if jObject['in_reply_to_status_id']:
             self.setInReplyToStatus(jObject['in_reply_to_status_id'])
         if 'quoted_status_id' in jObject:
@@ -827,7 +890,7 @@ class Tweet(models.Model):
             self.save()
         except:
             text = self.text.encode('unicode-escape')
-            #log('modified text: %s'%text)
+            # log('modified text: %s'%text)
             self.text = text
             self.save()
 
@@ -842,10 +905,10 @@ class Tweet(models.Model):
             doubles = TWUser.objects.filter(screen_name=screen_name)
             doubles[0]._has_duplicate = True
             doubles[0].save()
-            log('TWUSER %s HAS %s DUPLICATES!'%(doubles[0], doubles.count()-1))
+            log('TWUSER %s HAS %s DUPLICATES!' % (doubles[0], doubles.count() - 1))
             raise
-            #twusers = TWUser.objects.filter(_ident=ident, screen_name=screen_name)
-            #twuser = joinTWUsers(twusers[0], twusers[1])
+            # twusers = TWUser.objects.filter(_ident=ident, screen_name=screen_name)
+            # twuser = joinTWUsers(twusers[0], twusers[1])
         self.user = twuser
 
     def setInReplyToStatus(self, twid):
@@ -856,15 +919,15 @@ class Tweet(models.Model):
         try:
             twuser, new = get_from_any_or_create(TWUser, **kwargs)
         except:
-            log('kwargs: %s'%kwargs)
+            log('kwargs: %s' % kwargs)
             doubles = TWUser.objects.filter(**kwargs)
             doubles[0]._has_duplicate = True
             doubles[0].save()
             log('TWUSER %s HAS %s DUPLICATES!' % (doubles[0], doubles.count() - 1))
             time.sleep(3)
             raise
-            #twusers = TWUser.objects.filter(**kwargs)
-            #twuser = joinTWUsers(twusers[0], twusers[1])
+            # twusers = TWUser.objects.filter(**kwargs)
+            # twuser = joinTWUsers(twusers[0], twusers[1])
         self.in_reply_to_user = twuser
 
     def setQuotedStatus(self, twid):
@@ -887,10 +950,10 @@ class Tweet(models.Model):
     def copyBasicFields(self, jObject):
         atrs = [x.attname for x in self._meta.fields if
                 (x not in self._date_time_fields and
-                 x.attname[0]!= '_' and
+                 x.attname[0] != '_' and
                  x.attname not in self._relationals)]
         for atr in atrs:
-            if atr in jObject and atr !='id':
+            if atr in jObject and atr != 'id':
                 setattr(self, atr, jObject[atr])
 
     def copyDateTimeFields(self, jObject):
@@ -902,7 +965,7 @@ class Tweet(models.Model):
     def updateTimeLabels(self, jObject):
         for atr in self._time_labels:
             if atr in jObject and jObject[atr]:
-                related_name = atr+'s'
+                related_name = atr + 's'
                 lastItem = self.getLast(related_name)
                 if not lastItem or lastItem.recorded_time != today():
                     className = globals()[atr]
@@ -918,7 +981,7 @@ class Tweet(models.Model):
             return None
         return queryset[0]
 
-    #@twitterLogger.debug(showArgs=True)
+    # @twitterLogger.debug(showArgs=True)
     def setUserMentions(self, jObject):
         if "user_mentions" in jObject:
             for user_mention in jObject["user_mentions"]:
@@ -931,8 +994,10 @@ class Tweet(models.Model):
                 hashtagObj, new = get_from_any_or_create(Hashtag, term=hashtag['text'])
                 self.hashtags.add(hashtagObj)
 
+
 class retweet_count(Integer_time_label):
     tweet = models.ForeignKey(Tweet, related_name="retweet_counts", on_delete=models.CASCADE)
+
 
 class favorite_tweet(time_label):
     twuser = models.ForeignKey(TWUser, related_name="favorite_tweets", on_delete=models.CASCADE)
@@ -942,28 +1007,29 @@ class favorite_tweet(time_label):
     def get_fields_description(self):
         val = super(favorite_tweet, self).get_fields_description()
         val.update({
-            'ended':{
+            'ended': {
                 'name': 'Ended',
-                'description':'Time at wich the TWuser no longer favorites the target Tweet'
+                'description': 'Time at wich the TWuser no longer favorites the target Tweet'
             },
-            'recorded_time':{
-                'name':'Recorded Time',
-                'description':'Time at wich the target Tweet has been recorded as a favorite of the Twitter user'
+            'recorded_time': {
+                'name': 'Recorded Time',
+                'description': 'Time at wich the target Tweet has been recorded as a favorite of the Twitter user'
             }
         })
         return val
+
 
 def get_from_any_or_create(table, **kwargs):
     '''
     Retrieves an object from any of the attributes. If any attribute in <kwargs> matches an entry in <table>, then the
     entry is returned, otherwise an object is created using all the attributes.
     '''
-    kwargs = {kwarg : kwargs[kwarg] for kwarg in kwargs.keys() if kwargs[kwarg]} # eliminate "None" values
+    kwargs = {kwarg: kwargs[kwarg] for kwarg in kwargs.keys() if kwargs[kwarg]}  # eliminate "None" values
     item = None
     for param in kwargs.keys():
         if not item:
             try:
-                item = table.objects.get(**{param:kwargs[param]})
+                item = table.objects.get(**{param: kwargs[param]})
             except models.ObjectDoesNotExist:
                 continue
             except MultipleObjectsReturned:
@@ -971,9 +1037,9 @@ def get_from_any_or_create(table, **kwargs):
                 pretty(kwargs)
                 log(table.objects.filter(**{param: kwargs[param]}))
                 log("Returning first instance of item")
-                item = table.objects.filter(**{param:kwargs[param]}).first()
+                item = table.objects.filter(**{param: kwargs[param]}).first()
             except:
-                log("An unknown error occured in get_from_any_or_create(%s) (Twitter.models)"%kwargs)
+                log("An unknown error occured in get_from_any_or_create(%s) (Twitter.models)" % kwargs)
                 raise
         else:
             setattr(item, param, kwargs[param])
@@ -983,12 +1049,13 @@ def get_from_any_or_create(table, **kwargs):
     else:
         try:
             item = table.objects.create(**kwargs)
-        except IntegrityError: # sometimes the table entry is created while this processes...
+        except IntegrityError:  # sometimes the table entry is created while this processes...
             log("django.db.utils.IntegrityError caugth!")
             return get_from_any_or_create(table, **kwargs)
         return item, True
 
-#@twitterLogger.debug(showArgs=True)
+
+# @twitterLogger.debug(showArgs=True)
 def joinTWUsers(user1, user2):
     if user2.screen_name:
         user1.screen_name = user2.screen_name
@@ -1006,11 +1073,10 @@ def joinTWUsers(user1, user2):
         'friends_counts',
         'listed_counts',
     ]:
-        log('transfering all %s from %s to %s'%(label,user2,user1))
+        log('transfering all %s from %s to %s' % (label, user2, user1))
         for item in getattr(user2, label).all():
             item.twuser = user1
             item.save()
     user1.save()
     user2.delete()
     return user1
-

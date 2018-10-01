@@ -8,7 +8,7 @@
         <div class="">
     <div class="section_menu">
             <span class="section_title">
-                <b>Pages publiques collectés</b>
+                <b>Pages publiques collectées</b>
             </span>
         <div class="section_options">
 
@@ -174,11 +174,11 @@
                                 str = tableToolLink("/facebook/page/" + row["pk"],
                                         truncate_text(row['name'], 30, true));
                             }
-                            if (row['error_on_update']) {
+                            /*if (row['error_on_update']) {
                                 str = `<span style="cursor:pointer;" title="Cet utilisateur n'existe pas ou ses informations sont privées.">
                                     {% include 'tool/icons.html' with x=3 y=5 style="height:12px;width:12px;"%}
                                         </span>` + str;
-                            }
+                            }*/
                             return str
                         }
                     },

@@ -10,18 +10,16 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
-import logging
 import os
-import socket
 
 try:
-    from .environment import *
+    if 'prod_DB' in os.environ and os.environ['prod_DB'] in ['true', 'True']:
+        from .environment_prod_DB import *
+    else:
+        from .environment import *
 except ModuleNotFoundError:
     raise Exception(('You must create an environment file! Copy the file "environment_clean.py"'
                      ' into "environment.py" and populate it\'s values.'))
-
-
-from .logger import Logger
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -123,13 +121,3 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'staticfiles'),)
 
 LOG_DIRECTORY = os.path.join(BASE_DIR, "log")
-
-###### LOGERs ######
-twitterLogger = Logger(loggerName='twitterLogger', filePath=os.path.join(LOG_DIRECTORY, "twitter.log"),
-                       append=True, indentation=0, showThread=True)
-facebookLogger = Logger(loggerName='facebookLogger', filePath=os.path.join(LOG_DIRECTORY, "facebook.log"),
-                        append=True, indentation=0, showThread=False)
-youtubeLogger = Logger(loggerName='youtubeLogger', filePath=os.path.join(LOG_DIRECTORY, "youtube.log"),
-                       append=False, indentation=0, showThread=True)
-viewsLogger = Logger(loggerName='viewsLogger', filePath=os.path.join(LOG_DIRECTORY, "views.log"),
-                     append=True, indentation=2)

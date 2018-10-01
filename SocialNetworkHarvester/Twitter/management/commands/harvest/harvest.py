@@ -1,33 +1,37 @@
+import os
 
-from AspiraUser.models import UserProfile
-from django.template.loader import render_to_string
-from django.core.mail import send_mail, mail_admins, EmailMessage
 from django.contrib.auth.models import User
-from .twUserUpdater import *
-from .twFriendshipUpdater import *
-from .twFollowersUpdater import *
-from .twFavTweetUpdater import *
-from .twUserHarvester import *
-from .twRetweeterHarvester import *
-from .tweetUpdater import *
-from .twHashtagHarvester import *
+from django.core.mail import EmailMessage
 from django.core.paginator import Paginator
+
+from AspiraUser.models import UserProfile, TWUser, Tweet
+from SocialNetworkHarvester.loggers.twitterLogger import log, logError
+from SocialNetworkHarvester.settings import LOG_DIRECTORY
+from .twFavTweetUpdater import *
+from .twFollowersUpdater import *
+from .twFriendshipUpdater import *
+from .twHashtagHarvester import *
+from .twRetweeterHarvester import *
+from .twUserHarvester import *
+from .twUserUpdater import *
+from .tweetUpdater import *
 
 myEmailMessage = ["Twitter harvest routine has completed successfully"]
 myEmailTitle = ["Twitter harvest completed"]
 threadList = [[]]
 
-RAMUSAGELIMIT = 600000000 # in bytes
+RAMUSAGELIMIT = 600000000  # in bytes
 GRAPHRAMUSAGE = False
+
 
 @twitterLogger.debug()
 def harvestTwitter():
-    #resetErrorsTwUser("_error_on_network_harvest")
-    #resetErrorsTwUser("_error_on_update")
+    # resetErrorsTwUser("_error_on_network_harvest")
+    # resetErrorsTwUser("_error_on_update")
     clearNetworkHarvestTime()
     all_profiles = UserProfile.objects.filter(twitterApp_parameters_error=False)
     clientList = getClientList(all_profiles)
-    all_profiles = all_profiles.filter(twitterApp_parameters_error=False) # insures that his/her twitter app is valid
+    all_profiles = all_profiles.filter(twitterApp_parameters_error=False)  # insures that his/her twitter app is valid
     if len(all_profiles) == 0:
         log('No valid Twitter client exists!')
         myEmailTitle[0] = 'Twitter harvest has not launched'
@@ -53,7 +57,7 @@ def harvestTwitter():
         (launchUpdaterTread, 'launchUpdater', {'profiles': all_profiles}),
         (plotRamUsage, 'ramUsage', None),
     ]:
-        t = threading.Thread(target=thread[0],name=thread[1],kwargs=thread[2])
+        t = threading.Thread(target=thread[0], name=thread[1], kwargs=thread[2])
         threadList[0].append(t)
         t.start()
 
@@ -64,23 +68,24 @@ def harvestTwitter():
 def plotRamUsage():
     if GRAPHRAMUSAGE:
         csvfile = open(os.path.join(LOG_DIRECTORY, 'twitterMemLog.csv'), 'w')
-        header = 'time,memory usage,updateQueue,friendsUpdateQueue,followersUpdateQueue,favoriteTweetUpdateQueue,userHarvestQueue,hashtagHarvestQueue,tweetUpdateQueue,twRetweetUpdateQueue\n'
+        header = 'time,memory usage,updateQueue,friendsUpdateQueue,followersUpdateQueue,favoriteTweetUpdateQueue,' \
+                 'userHarvestQueue,hashtagHarvestQueue,tweetUpdateQueue,twRetweetUpdateQueue\n'
         csvfile.write(header)
         csvfile.close()
-        #log(header)
+        # log(header)
         while not threadsExitFlag[0]:
             time.sleep(5)
             csvfile = open(os.path.join(LOG_DIRECTORY, 'twitterMemLog.csv'), 'a')
             s = '%s,%s' % (elapsedSeconds(), process.memory_info()[0])
             for queue in allQueues:
-                s +=',%s'%queue.qsize()
-            #log(s)
-            s+= '\n'
+                s += ',%s' % queue.qsize()
+            # log(s)
+            s += '\n'
             csvfile.write(s)
             csvfile.close()
 
 
-def send_routine_email(title,message):
+def send_routine_email(title, message):
     logfilepath = os.path.join(LOG_DIRECTORY, 'twitter.log')
     logfile = open(logfilepath, 'r')
     adresses = [user.email for user in User.objects.filter(is_superuser=True)]
@@ -90,23 +95,24 @@ def send_routine_email(title,message):
         email.to = adresses
         email.from_email = 'Aspira'
         email.send()
-        print('%s - Routine email sent to %s'%(datetime.now().strftime('%y-%m-%d_%H:%M'),adresses))
+        print('%s - Routine email sent to %s' % (datetime.now().strftime('%y-%m-%d_%H:%M'), adresses))
     except Exception as e:
         print('Routine email failed to send')
         print(e)
         twitterLogger.exception('An error occured while sending an email to admin')
 
-#@profile
-#@twitterLogger.debug(showArgs=True)
+
+# @profile
+# @twitterLogger.debug(showArgs=True)
 def updateNewUsers():
     allNewUsers = list(TWUser.objects.filter(_ident__isnull=True, _error_on_update=False))
-    userlists = [allNewUsers[i:i+100] for i in range(0,len(allNewUsers), 100)]
-    #log("userlists: %s"% userlists)
+    userlists = [allNewUsers[i:i + 100] for i in range(0, len(allNewUsers), 100)]
+    # log("userlists: %s"% userlists)
     for userList in userlists:
         client = getClient('lookup_users')
         try:
             responses = client.call('lookup_users', screen_names=[user.screen_name for user in userList])
-        except tweepy.error.TweepError as e: #None of the usernames exists
+        except tweepy.error.TweepError as e:  # None of the usernames exists
             for falseUser in userList:
                 log('%s has returned no result' % falseUser)
                 falseUser._error_on_update = True
@@ -114,24 +120,24 @@ def updateNewUsers():
         returnClient(client)
     for response in responses:
         user = next((user for user in allNewUsers if user.screen_name == response._json['screen_name']), None)
-        #log('user: %s'%user)
+        # log('user: %s'%user)
         if user:
             user.UpdateFromResponse(response._json)
             allNewUsers.remove(user)
     for user in allNewUsers:
-        #log('%s has returned no result' % user)
+        # log('%s has returned no result' % user)
         user._error_on_update = True
         user.save()
 
 
-#@profile
-#@twitterLogger.debug()
+# @profile
+# @twitterLogger.debug()
 def launchHashagHarvestThreads(*args, **kwargs):
     profiles = kwargs['profiles']
     hashtags = profiles[0].twitterHashtagsToHarvest.all()
-    #log("profiles: %s"% profiles)
+    # log("profiles: %s"% profiles)
     for profile in profiles:
-        #log(profile)
+        # log(profile)
         hashtags = hashtags | profile.twitterHashtagsToHarvest.all()
 
     harvestThread = []
@@ -144,16 +150,16 @@ def launchHashagHarvestThreads(*args, **kwargs):
     put_batch_in_queue(hashtagHarvestQueue, orderQueryset(hashtags, '_last_harvested'))
 
 
-#@profile
-#@twitterLogger.debug()
+# @profile
+# @twitterLogger.debug()
 def launchUpdaterTread(*args, **kwargs):
     priority_updates = orderQueryset(TWUser.objects.filter(harvested_by__isnull=False, _error_on_update=False),
-                                       '_last_updated', delay=0.5)
+                                     '_last_updated', delay=0.5)
     allUserstoUpdate = orderQueryset(TWUser.objects.filter(_error_on_update=False)
                                      .exclude(pk__in=priority_updates), '_last_updated', delay=5)
     updateThreads = []
 
-    threadNames = ['userUpdater1','userUpdater2','userUpdater3']
+    threadNames = ['userUpdater1', 'userUpdater2', 'userUpdater3']
     for threadName in threadNames:
         thread = TwUserUpdater(threadName)
         thread.start()
@@ -161,7 +167,7 @@ def launchUpdaterTread(*args, **kwargs):
 
     put_batch_in_queue(updateQueue, priority_updates)
 
-    #put_batch_in_queue(updateQueue, allUserstoUpdate)
+    # put_batch_in_queue(updateQueue, allUserstoUpdate)
 
     '''
     chunksize = 1000
@@ -190,15 +196,15 @@ def launchUpdaterTread(*args, **kwargs):
                 time.sleep(1)
 
 
-#@profile
-#@twitterLogger.debug()
+# @profile
+# @twitterLogger.debug()
 def launchTweetHarvestThreads(*args, **kwargs):
     profiles = kwargs['profiles']
-    twUsers = profiles[0].twitterUsersToHarvest.filter(_error_on_harvest=False,protected=False)
+    twUsers = profiles[0].twitterUsersToHarvest.filter(_error_on_harvest=False, protected=False)
     for profile in profiles[1:]:
-        twUsers = twUsers | profile.twitterUsersToHarvest.filter(_error_on_harvest=False,protected=False)
+        twUsers = twUsers | profile.twitterUsersToHarvest.filter(_error_on_harvest=False, protected=False)
 
-    #twUsers = orderQueryset(twUsers, '_last_tweet_harvested', delay=1)
+    # twUsers = orderQueryset(twUsers, '_last_tweet_harvested', delay=1)
     priorities = [(twUser, twUser.statuses_count - twUser.tweets.count()) for twUser in twUsers]
     priorities.sort(key=lambda x: x[1], reverse=True)
     twUsers = [prioritie[0] for prioritie in priorities]
@@ -216,18 +222,17 @@ def launchTweetHarvestThreads(*args, **kwargs):
             userHarvestQueue.put(item)
         else:
             time.sleep(1)
-    log('Finished adding %s items in %s'%(len(twUsers), userHarvestQueue._name), showTime=True)
-    #put_batch_in_queue(userHarvestQueue, twUsers)
+    log('Finished adding %s items in %s' % (len(twUsers), userHarvestQueue._name), showTime=True)
+    # put_batch_in_queue(userHarvestQueue, twUsers)
 
 
-
-#@profile
-#@twitterLogger.debug()
+# @profile
+# @twitterLogger.debug()
 def launchNetworkHarvestThreads(*args, **kwargs):
     profiles = kwargs['profiles']
-    twUsers = profiles[0].twitterUsersToHarvest.filter(_error_on_network_harvest=False,protected=False)
+    twUsers = profiles[0].twitterUsersToHarvest.filter(_error_on_network_harvest=False, protected=False)
     for profile in profiles[1:]:
-        twUsers = twUsers | profile.twitterUsersToHarvest.filter(_error_on_network_harvest=False,protected=False)
+        twUsers = twUsers | profile.twitterUsersToHarvest.filter(_error_on_network_harvest=False, protected=False)
 
     thread1 = TwFriendshipUpdater('friender1')
     threadList[0].append(thread1)
@@ -244,13 +249,13 @@ def launchNetworkHarvestThreads(*args, **kwargs):
     put_batch_in_queue(favoriteTweetUpdateQueue, orderQueryset(twUsers, '_last_fav_tweet_harvested'))
 
 
-#@profile
-#@twitterLogger.debug()
+# @profile
+# @twitterLogger.debug()
 def launchRetweeterHarvestThreads(*args, **kwargs):
     profiles = kwargs['profiles']
     twUsers = TWUser.objects.none()
     for profile in profiles:
-        twUsers = twUsers | profile.twitterUsersToHarvest.filter(_error_on_network_harvest=False,protected=False)
+        twUsers = twUsers | profile.twitterUsersToHarvest.filter(_error_on_network_harvest=False, protected=False)
 
     tweets = Tweet.objects.none()
     for twUser in twUsers:
@@ -260,7 +265,7 @@ def launchRetweeterHarvestThreads(*args, **kwargs):
 
     tweets = orderQueryset(tweets, '_last_retweeter_harvested', delay=2)
 
-    threadNames = ['retweeter1','retweeter2']
+    threadNames = ['retweeter1', 'retweeter2']
     for threadName in threadNames:
         thread = TwRetweeterHarvester(threadName)
         threadList[0].append(thread)
@@ -269,13 +274,13 @@ def launchRetweeterHarvestThreads(*args, **kwargs):
     put_batch_in_queue(twRetweetUpdateQueue, tweets)
 
 
-#@profile
-#@twitterLogger.debug()
+# @profile
+# @twitterLogger.debug()
 def launchTweetUpdateThread(*args, **kwargs):
     profiles = kwargs['profiles']
     twUsers = TWUser.objects.none()
     for profile in profiles:
-        twUsers = twUsers | profile.twitterUsersToHarvest.filter(_error_on_harvest=False,protected=False)
+        twUsers = twUsers | profile.twitterUsersToHarvest.filter(_error_on_harvest=False, protected=False)
 
     tweets = Tweet.objects.none()
     for twUser in twUsers:
@@ -283,7 +288,7 @@ def launchTweetUpdateThread(*args, **kwargs):
                                                deleted_at__isnull=True,
                                                retweet_of__isnull=True)
 
-    tweets = orderQueryset(tweets, '_last_updated',delay=2)
+    tweets = orderQueryset(tweets, '_last_updated', delay=2)
 
     threadNames = ['tweetUpdater1', 'tweetUpdater2']
     for name in threadNames:
@@ -293,7 +298,8 @@ def launchTweetUpdateThread(*args, **kwargs):
 
     put_batch_in_queue(tweetUpdateQueue, tweets)
 
-#@twitterLogger.debug()
+
+# @twitterLogger.debug()
 def getClientList(profiles):
     clientList = []
     for profile in profiles:
@@ -302,50 +308,54 @@ def getClientList(profiles):
             clientList.append(client)
     return clientList
 
-#@twitterLogger.debug()
-#@profile()
-def orderQueryset(queryset, dateTimeFieldName,delay=1):
-    isNull = dateTimeFieldName+"__isnull"
-    lt = dateTimeFieldName+"__lt"
-    ordered_elements = queryset.filter(**{isNull:True}) | \
+
+# @twitterLogger.debug()
+# @profile()
+def orderQueryset(queryset, dateTimeFieldName, delay=1):
+    isNull = dateTimeFieldName + "__isnull"
+    lt = dateTimeFieldName + "__lt"
+    ordered_elements = queryset.filter(**{isNull: True}) | \
                        queryset.filter(**{lt: xDaysAgo(delay)}).order_by(dateTimeFieldName)
     return ordered_elements
 
-#@twitterLogger.debug()
+
+# @twitterLogger.debug()
 def createTwClient(profile):
     try:
         client = Client(
-            name = "%s's Twitter app"%profile.user,
-            ck = profile.twitterApp_consumerKey,
-            cs = profile.twitterApp_consumer_secret,
-            atk = profile.twitterApp_access_token_key,
-            ats = profile.twitterApp_access_token_secret,
+            name="%s's Twitter app" % profile.user,
+            ck=profile.twitterApp_consumerKey,
+            cs=profile.twitterApp_consumer_secret,
+            atk=profile.twitterApp_access_token_key,
+            ats=profile.twitterApp_access_token_secret,
         )
         return client
     except tweepy.error.TweepError:
         profile.twitterApp_parameters_error = True
         profile.save()
-        twitterLogger.exception('%s has got an invalid Twitter app'%profile.user)
+        twitterLogger.exception('%s has got an invalid Twitter app' % profile.user)
         return None
 
 
 def put_batch_in_queue(queue, queryset):
-    log('preparing to queue %s items in %s'%(queryset.count(), queue._name))
+    log('preparing to queue %s items in %s' % (queryset.count(), queue._name))
     for item in queryset.iterator():
         if threadsExitFlag[0]: break
         if QUEUEMAXSIZE == 0 or queue.qsize() < QUEUEMAXSIZE:
             queue.put(item)
         else:
             time.sleep(1)
-    log('Finished adding %s items in %s'% (queryset.count(),queue._name), showTime=True)
+    log('Finished adding %s items in %s' % (queryset.count(), queue._name), showTime=True)
 
-#@twitterLogger.debug()
+
+# @twitterLogger.debug()
 def clearUpdatedTime():
     for twUser in TWUser.objects.filter(_last_updated__isnull=False):
         twUser._last_updated = None
         twUser.save()
 
-#@twitterLogger.debug()
+
+# @twitterLogger.debug()
 def clearNetworkHarvestTime():
     for twUser in TWUser.objects.filter(_last_friends_harvested__isnull=False):
         twUser._last_friends_harvested = None
@@ -357,14 +367,14 @@ def clearNetworkHarvestTime():
         twUser._last_fav_tweet_harvested = None
         twUser.save()
 
+
 @twitterLogger.debug(showArgs=True)
 def resetErrorsTwUser(errorMarker):
-    for twuser in TWUser.objects.filter(**{errorMarker:True}):
+    for twuser in TWUser.objects.filter(**{errorMarker: True}):
         setattr(twuser, errorMarker, False)
         twuser.save()
 
 
-import io, csv, types
 @twitterLogger.debug()
 def waitForThreadsToEnd():
     notEmptyQueuesNum = -1
@@ -373,8 +383,8 @@ def waitForThreadsToEnd():
         if process.memory_info()[0] >= RAMUSAGELIMIT:
             log('MEMORY USAGE LIMIT EXCEDED!')
             myEmailTitle[0] = 'MEMORY USAGE LIMIT EXCEDED!'
-            myEmailMessage[0] = 'Python script memory usage has exceded the set limit (%s Mb)'% \
-                                (RAMUSAGELIMIT/1000000)
+            myEmailMessage[0] = 'Python script memory usage has exceded the set limit (%s Mb)' % \
+                                (RAMUSAGELIMIT / 1000000)
             queues = allQueues
             return stopAllThreads()
         notEmptyQueues = [(queue._name, queue.qsize()) for queue in allQueues if not queue.empty()]
@@ -404,7 +414,7 @@ def stopAllThreads():
             except:
                 myEmailMessage[0] = 'An exception has been retrieved from a Thread. (%s)' % threadName
                 myEmailTitle[0] = 'SNH - Twitter harvest routine error'
-                logerror(myEmailMessage[0])
+                logError(myEmailMessage[0])
 
 
 def cleanDuplicates():
@@ -412,7 +422,7 @@ def cleanDuplicates():
     if duplicates:
         log("SOME TWUSERS HAVE DUPLICATES!")
         for duplicate in duplicates:
-            log("%s has at least a duplicate"%duplicate)
+            log("%s has at least a duplicate" % duplicate)
             duplicate._error_on_update = True
             duplicate.save()
     else:

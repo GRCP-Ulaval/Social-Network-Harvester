@@ -1,3 +1,4 @@
+from Twitter.models import Tweet
 from .commonThread import *
 from urllib.parse import quote
 import urllib.request as req

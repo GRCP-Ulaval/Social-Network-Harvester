@@ -2,14 +2,11 @@ import facebook
 from django.contrib.auth.decorators import login_required
 
 from AspiraUser.models import FBAccessToken
-from Facebook.models import *
+from Facebook.models.FBPage import FBPage
+from Facebook.models.FBProfile import FBProfile
 from SocialNetworkHarvester.jsonResponses import *
-from SocialNetworkHarvester.settings import viewsLogger, DEBUG
+from SocialNetworkHarvester.loggers.viewsLogger import logError, viewsLogger
 from tool.views.ajaxTables import readLinesFromCSV
-
-log = lambda s: viewsLogger.log(s) if DEBUG else 0
-pretty = lambda s: viewsLogger.pretty(s) if DEBUG else 0
-logerror = lambda s: viewsLogger.exception(s) if DEBUG else 0
 
 plurial = lambda i: 's' if int(i) > 1 else ''
 
@@ -21,13 +18,13 @@ validFormNames = [
 
 @login_required()
 def formBase(request, formName):
-    if not request.user.is_authenticated: return jsonUnauthorizedError(request)
+    if not request.user.is_authenticated: return jsonUnauthorizedError()
     if not formName in validFormNames: return jsonBadRequest('Specified form does not exists')
     try:
         return globals()[formName](request)
     except:
         viewsLogger.exception("ERROR OCCURED IN %s AJAX WITH FORM NAME '%s':" % (__name__, formName))
-        return jsonUnknownError(request)
+        return jsonUnknownError()
 
 
 # @viewsLogger.debug()
@@ -53,7 +50,7 @@ def FBAddPage(request):
     try:
         invalids += addFbPages(request, pageUrls)
     except FacebookAccessTokenException:
-        logerror('Error while adding FBPages to harvest:')
+        logError('Error while adding FBPages to harvest:')
         return jResponse({
             'status': 'exception',
             'errors': ["Vous devez d'abord vous connecter à Facebook à l'aide d'un compte.",
@@ -87,7 +84,7 @@ def addFbPages(request, pageUrls):
     try:
         response = graph.get_objects(pageUrls)
     except Exception as e:
-        pretty(response)
+        logError("An error occured")
         return pageUrls
     for url in response.keys():
         if 'name' in response[url] and 'id' in response[url]:
@@ -135,4 +132,4 @@ def setFacebookToken(request):
     fbAccessToken.save()
     profile.facebookApp_parameters_error = False
     profile.save()
-    return HttpResponse("ok")
+    return jsonDone()

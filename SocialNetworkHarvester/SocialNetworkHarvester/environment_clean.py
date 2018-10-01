@@ -1,5 +1,6 @@
 import os
 
+# IMPORTANT: copy this file into "environment.py" and then populate the values.
 
 SECRET_KEY = ''
 DEBUG = True

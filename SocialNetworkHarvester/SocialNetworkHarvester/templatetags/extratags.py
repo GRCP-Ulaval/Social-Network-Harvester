@@ -1,9 +1,13 @@
+import re
+
+from AspiraUser.models import getModel
 from .masonryLayout import *
 
 
 @register.filter
 def sort(value):
     return sorted(value)
+
 
 @register.filter
 def getFields(className):
@@ -14,7 +18,7 @@ def getFields(className):
     :param className: The Class name of a given model. (example: "TWUser", "TWeet". "Hashtag", etc.)
     :return: a list of tuples, containing a string (field) and a dict {"name":"aName","description":"aDescription"}.
     '''
-    fields = globals()[className]().get_fields_description()
+    fields = getModel(className)().get_fields_description()
     keys = fields.keys()
     orderedFields = []
     for key in sorted(keys):
@@ -25,13 +29,13 @@ def getFields(className):
                 ("admin_only" in options and options['admin_only'])
             ]):
                 continue
-        orderedFields.append((key,fields[key]))
+        orderedFields.append((key, fields[key]))
     return orderedFields
 
 
 @register.filter
 def getFieldsAsDict(className):
-    fields = globals()[className]().get_fields_description()
+    fields = getModel(className)().get_fields_description()
     return fields
 
 
@@ -41,7 +45,7 @@ def join(string, arg):
     :param string: The string to be appended
     :return: joit string and args values
     '''
-    return re.sub(" ","_", str(string) + str(arg))
+    return re.sub(" ", "_", str(string) + str(arg))
 
 
 @register.filter

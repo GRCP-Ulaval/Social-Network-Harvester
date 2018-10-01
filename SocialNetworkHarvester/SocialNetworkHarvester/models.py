@@ -7,7 +7,6 @@ import re, emoji
 def djangoNow():
     return now().replace(hour=0,minute=0,second=0,microsecond=0,tzinfo=utc)
 
-
 def today():
     return datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=utc)
 
