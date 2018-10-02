@@ -169,15 +169,17 @@
           ]
           var columns = [
             {
-              "searchable": false,
-              "fields":["from_profile__pk","from_profile__getStr","from_profile__getLink"],
-              "colStr":"Profil",
+              "fields":["to_post__getStr","to_post__getLink","to_comment__getStr", "to_comment__getLink"],
+              "colStr":"Cible",
               "render": function (data, type, row) {
-                if (row['from_profile__pk'] == null) {
-                  return undefinedTag();
-                };
-                return tableToolLink(row["from_profile__getLink"],
-                  truncate_text(row["from_profile__getStr"], 30, true));
+                if (row['to_post__getStr']){
+                  return tableToolLink(row["to_post__getLink"],
+                    truncate_text(row["to_post__getStr"], 60, true));
+                } else if (row['to_comment__getStr']) {
+                  return tableToolLink(row["to_comment__getLink"],
+                    truncate_text(row["to_comment__getStr"], 60, true));
+                }
+                return undefinedTag()
               }
             },
             {
