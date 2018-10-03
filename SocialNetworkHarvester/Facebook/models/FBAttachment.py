@@ -8,7 +8,7 @@ class FBAttachment(models.Model):
     imageUrl = models.CharField(max_length=1024, null=True)
     targetUrl = models.CharField(max_length=1024, null=True)
     title = models.CharField(max_length=512, null=True)
-    type = models.CharField(max_length=32, null=True)
+    type = models.CharField(max_length=64, null=True)
 
     def update(self, jObject):
         if 'description' in jObject:
