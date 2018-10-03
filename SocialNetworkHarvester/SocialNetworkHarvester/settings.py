@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'tool',
     'Twitter',
     'Youtube',
+    'Collection'
 
 ]
 
