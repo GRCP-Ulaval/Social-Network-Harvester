@@ -1,3 +1,4 @@
+from Facebook.models import FBProfile, FBComment
 from .commonThread import *
 
 
@@ -7,19 +8,23 @@ class FbCommentHarvester(CommonThread):
     queryLimit = 5000
     itemIndex = 0
 
-    #@facebookLogger.debug(showArgs=True)
+    # @facebookLogger.debug(showArgs=True)
     def method(self, nodeList):
         node = nodeList[0]
         self.cursor = ClientItterator("%s/comments" % node._ident, limit=self.queryLimit)
         try:
             jObject = self.getNext()
         except ClientException as e:
-            if re.match(r".*Object with ID '[0-9_]+' does not exist, cannot be loaded due to missing permissions, or does not support this operation\. .*", e.response['error']['message']):
+            if re.match(
+                    r".*Object with ID '[0-9_]+' does not exist, cannot be loaded due to missing permissions, "
+                    r"or does not support this operation\. .*",
+                    e.response['error']['message']):
                 node.error_on_harvest = True
                 node.save()
-                log("could not harvest comments from %s"%node)
+                log("could not harvest comments from %s" % node)
                 return
-            else: raise
+            else:
+                raise
         while jObject:
             if threadsExitFlag[0]: return
             fbProfile, new = FBProfile.objects.get_or_create(_ident=jObject['from']['id'])
@@ -38,7 +43,7 @@ class FbCommentHarvester(CommonThread):
 
     def updateCursor(self):
         self.cursor.kwargs['limit'] = self.queryLimit
-        log("queryLimit: %s"%self.queryLimit)
+        log("queryLimit: %s" % self.queryLimit)
 
     def getNext(self):
         try:
@@ -46,7 +51,7 @@ class FbCommentHarvester(CommonThread):
             self.itemIndex += 1
             if self.itemIndex >= self.queryLimit:
                 self.itemIndex = 0
-                self.queryLimit = min(self.queryLimit+5, 5000)  # augmenting the amount of requested data (max 5000)
+                self.queryLimit = min(self.queryLimit + 5, 5000)  # augmenting the amount of requested data (max 5000)
                 self.updateCursor()
         except ClientException as e:
             if e.response["error"]["message"] in \
@@ -55,5 +60,6 @@ class FbCommentHarvester(CommonThread):
                 self.queryLimit = max(5, int(self.queryLimit * 0.5))  # reducing the ammount of requested data
                 self.updateCursor()
                 return self.getNext()
-            else: raise
+            else:
+                raise
         return item

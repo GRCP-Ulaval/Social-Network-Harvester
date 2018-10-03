@@ -60,12 +60,12 @@
     {% if chart_type == 'activite_en_ligne' %}
         <!-- LINECHART -->
         {% include "tool/charts/lineChart.html" with source="userActivity" %}
-        <!-- TWITTER USERS -->
+        <!-- TWITTER USERS TWEETS-->
         {% include "tool/tables/twitterUserTable.html" with source="ToolLinechart_userActivity" %}
-        <!-- TWITTER HASHTAGS -->
+        <!-- TWITTER HASHTAGS TWEETS-->
         {% include "tool/tables/twitterHashtagTable.html" with source="ToolLinechart" %}
-
-
+        <!-- FACEBOOK PAGE POSTS -->
+        {% include "tool/tables/facebookPageTable.html" with source="ToolLinechart_fbPage_posts" %}
 
 
 
@@ -74,10 +74,10 @@
     {% elif chart_type == 'popularite_en_ligne' %}
         <!-- LINECHART -->
         {% include "tool/charts/lineChart.html" with source="userPopularity" %}
-        <!-- TWITTER USERS -->
+        <!-- TWITTER USERS FOLLOWERS -->
         {% include "tool/tables/twitterUserTable.html" with source="ToolLinechart_userFollowers" %}
-        <!--FACEBOOK PAGE -->
-        {% include "tool/tables/facebookPageTable.html" with source="ToolLineChart_fbpage" %}
+        <!--FACEBOOK PAGE FANS-->
+        {% include "tool/tables/facebookPageTable.html" with source="ToolLineChart_fbpage_fans" %}
 
 
     {% elif chart_type == 'content_popularity' %}

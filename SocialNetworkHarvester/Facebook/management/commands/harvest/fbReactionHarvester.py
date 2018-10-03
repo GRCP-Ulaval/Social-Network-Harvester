@@ -1,3 +1,4 @@
+from Facebook.models import FBProfile, FBPost, FBReaction, FBComment
 from .commonThread import *
 
 
@@ -6,7 +7,7 @@ class FbReactionHarvester(CommonThread):
     workQueueName = "reactionHarvestQueue"
     queryLimit = 4000
 
-    #@facebookLogger.debug(showArgs=True)
+    # @facebookLogger.debug(showArgs=True)
     def method(self, nodeList):
         node = nodeList[0]
         cursor = ClientItterator("%s/reactions" % node._ident, limit=self.queryLimit)
@@ -15,7 +16,9 @@ class FbReactionHarvester(CommonThread):
             jObject = cursor.next()
         except ClientException as e:
             if re.match(
-                    r".*Object with ID '[0-9_]+' does not exist, cannot be loaded due to missing permissions, or does not support this operation\. .*", e.response['error']['message']):
+                    r".*Object with ID '[0-9_]+' does not exist, cannot be loaded due to missing permissions, "
+                    r"or does not support this operation\. .*",
+                    e.response['error']['message']):
                 node.error_on_harvest = True
                 node.save()
                 log("could not harvest reactions from %s" % node)
@@ -24,7 +27,7 @@ class FbReactionHarvester(CommonThread):
                 raise
         while jObject:
             if threadsExitFlag[0]: return
-            #pretty(jObject)
+            # pretty(jObject)
             fbProfile, new = FBProfile.objects.get_or_create(_ident=jObject['id'])
             if new:
                 profileUpdateQueue.put(fbProfile)
@@ -40,7 +43,8 @@ class FbReactionHarvester(CommonThread):
                     to_comment=node,
                     type=jObject['type']
                 )
-            else: raise Exception("can only harvest reactions to FBPost and FBComment")
+            else:
+                raise Exception("can only harvest reactions to FBPost and FBComment")
             retrieved_reactions.append(reaction)
             jObject = cursor.next()
         for reaction in node.reactions.filter(until_time__isnull=True):
@@ -49,4 +53,3 @@ class FbReactionHarvester(CommonThread):
                 reaction.save()
         node.last_reaction_harvested = today()
         node.save()
-

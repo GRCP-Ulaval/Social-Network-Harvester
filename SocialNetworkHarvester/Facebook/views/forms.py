@@ -5,7 +5,7 @@ from AspiraUser.models import FBAccessToken
 from Facebook.models.FBPage import FBPage
 from Facebook.models.FBProfile import FBProfile
 from SocialNetworkHarvester.jsonResponses import *
-from SocialNetworkHarvester.loggers.viewsLogger import logError, viewsLogger
+from SocialNetworkHarvester.loggers.viewsLogger import logError, viewsLogger, pretty
 from tool.views.ajaxTables import readLinesFromCSV
 
 plurial = lambda i: 's' if int(i) > 1 else ''
@@ -22,8 +22,15 @@ def formBase(request, formName):
     if not formName in validFormNames: return jsonBadRequest('Specified form does not exists')
     try:
         return globals()[formName](request)
+    except FacebookAccessTokenException:
+        logError('Error while adding FBPages to harvest:')
+        return jResponse({
+            'status': 'exception',
+            'errors': ["Une erreur est survenue avec votre connection Facebook. Visitez votre page de <a class='classic' "
+                       "href='/user/settings'>paramètres</a> pour en savoir plus."],
+        })
     except:
-        viewsLogger.exception("ERROR OCCURED IN %s AJAX WITH FORM NAME '%s':" % (__name__, formName))
+        logError("ERROR OCCURED IN %s AJAX WITH FORM NAME '%s':" % (__name__, formName))
         return jsonUnknownError()
 
 
@@ -47,16 +54,7 @@ def FBAddPage(request):
         invalids += errors
     if limit <= currentCount + len(pageUrls):
         pageUrls = pageUrls[:limit - currentCount]
-    try:
-        invalids += addFbPages(request, pageUrls)
-    except FacebookAccessTokenException:
-        logError('Error while adding FBPages to harvest:')
-        return jResponse({
-            'status': 'exception',
-            'errors': ["Vous devez d'abord vous connecter à Facebook à l'aide d'un compte.",
-                       "Veuillez vous connecter via votre page de <a class='classic' "
-                       "href='/user/settings'>paramètres</a>"],
-        })
+    invalids += addFbPages(request, pageUrls)
     numAddedPages = len(pageUrls) - len(invalids)
     if not numAddedPages:
         return jResponse({
@@ -76,13 +74,14 @@ def FBAddPage(request):
 @viewsLogger.debug(showArgs=True)
 def addFbPages(request, pageUrls):
     aspiraProfile = request.user.userProfile
-    if not hasattr(aspiraProfile, "fbAccessToken"): raise FacebookAccessTokenNotSetException()
-    if aspiraProfile.fbAccessToken.is_expired(): raise FacebookAccessTokenExpiredException()
+    if not hasattr(aspiraProfile, "fbAccessToken"): raise FacebookAccessTokenException()
+    if aspiraProfile.fbAccessToken.is_expired(): raise FacebookAccessTokenException()
     graph = facebook.GraphAPI(aspiraProfile.fbAccessToken._token)
     invalids = []
     response = None
     try:
-        response = graph.get_objects(pageUrls)
+        response = graph.get_objects(ids=pageUrls)
+        pretty(response)
     except Exception as e:
         logError("An error occured")
         return pageUrls
@@ -108,14 +107,6 @@ def addFbPages(request, pageUrls):
 class FacebookAccessTokenException(Exception): pass
 
 
-class FacebookAccessTokenNotSetException(FacebookAccessTokenException):
-    pass
-
-
-class FacebookAccessTokenExpiredException(FacebookAccessTokenException):
-    pass
-
-
 @viewsLogger.debug()
 def setFacebookToken(request):
     if not 'fbToken' in request.POST: return jsonBadRequest("'fbToken' is required")
@@ -126,8 +117,9 @@ def setFacebookToken(request):
     fbAccessToken = profile.fbAccessToken
     fbAccessToken._token = request.POST['fbToken']
     if not request.POST['fbToken']:
-        fbAccessToken.expires = None;
+        fbAccessToken.expires = None
     else:
+        pass
         fbAccessToken.extend()
     fbAccessToken.save()
     profile.facebookApp_parameters_error = False

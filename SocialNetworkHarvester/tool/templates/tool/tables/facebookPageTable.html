@@ -1,8 +1,6 @@
 {% load staticfiles %}
 {% load extratags %}
 
-
-
 {% if source == "facebookBase" %}
     <section class="tableContainer">
         <div class="">
@@ -13,6 +11,7 @@
         <div class="section_options">
 
             <span>|</span>
+
             <span id="new_page" class="section_menuItem"><a
                     onclick="addFBPageFormPopup()">Ajouter</a></span>
             <!-- ADD NEW FBPAGE POPUP-->
@@ -106,6 +105,7 @@
             </div>
 
             <span>|</span>
+
             <span id="remove_page" class="section_menuItem"><a onclick="removeSelectedPages()">Retirer</a></span>
             <!-- REMOVE FBPAGE POPUP-->
             <div class="popup" id="removeFbPage">
@@ -317,7 +317,7 @@
         </div>
     </div>
     </section>
-{% elif source == "ToolLineChart_fbpage" %}
+{% elif source == "ToolLineChart_fbpage_fans" %}
     <section class="tableContainer halfWidth">
         <div class="">
             <div class="section_menu">
@@ -388,4 +388,58 @@
             </div>
         </div>
     </section>
+
+{% elif source == "ToolLinechart_fbPage_posts" %}
+<section class="tableContainer halfWidth">
+  <div class="">
+    <div class="section_menu">
+                <span class="section_title">
+                    <b>Activité des pages Facebook</b>
+                </span>
+      <div class="section_options">
+        {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+      </div>
+      {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+    </div>
+    <div class="section_content">
+      <table class="display" id="FacebookPagesPosts" width="100%" drawn='False'>
+        <script class="tableVars">
+          var modelName = "FBPage";
+          var srcs = [
+            {
+              attr: "facebookPagesToHarvest",
+            }
+          ]
+          var columns = [
+            {
+              "colStr": "Nom",
+              "fields": ["name", "pk"],
+              "render": function (data, type, row) {
+                if (row['name'] == null) {
+                  return undefinedTag();
+                } else {
+                  return tableToolLink("/facebook/page/" + row["pk"],
+                    truncate_text(row['name'], 30, true));
+                }
+              }
+            },
+
+            {
+              "searchable": false,
+              "orderable": false,
+              "fields": ["link"],
+              "render": function (data, type, row) {
+                if (row['link'] == null) {
+                  return ""
+                }
+                ;
+                return tableToolLink(row["link"], "Voir page", "target='_blank'");
+              }
+            },
+          ]
+        </script>
+      </table>
+    </div>
+  </div>
+</section>
 {% endif %}

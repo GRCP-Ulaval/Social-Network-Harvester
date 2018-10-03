@@ -104,7 +104,10 @@ class FBAccessToken(models.Model):
             if not 'access_token' in response:
                 raise Exception("failed to extend access token: %s" % self)
             self._token = response['access_token']
-            self.expires = time.time() + int(response['expires_in'])
+            if 'expires_in' in response:
+                self.expires = time.time() + int(response['expires_in'])
+            else:
+                self.expires = time.time() + 60*5
             self.save()
             log("%s expires in %s seconds" % (self, self.expires - time.time()))
         except Exception as e:

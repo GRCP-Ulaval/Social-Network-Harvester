@@ -1,17 +1,16 @@
+import datetime
 import logging
-import os
 import pprint
 import re
 import threading
-import datetime
+
 
 def dtNow():
     return datetime.datetime.now()
 
-class Logger():
 
+class Logger():
     indent_level = 0
-    pp = pprint.PrettyPrinter(indent=2, width=160)
 
     def __init__(self, loggerName="defaultLogger", filePath="default.log", format='%(message)s',
                  wrap=False, append=True, indentation=4, showThread=False):
@@ -60,13 +59,13 @@ class Logger():
         if 'showTime' in kwargs:
             showTime = kwargs['showTime']
         try:
-            self.logger.info('%s%s%s%s'%(
-                    self.showThread*'{:<30}'.format(threading.current_thread().name),
-                    ' '*(self.indent_level),
-                    showTime*dtNow().strftime('%H:%M: '),
-                    message
-                )
+            self.logger.info('%s%s%s%s' % (
+                self.showThread * '{:<30}'.format(threading.current_thread().name),
+                ' ' * (self.indent_level),
+                showTime * dtNow().strftime('%H:%M: '),
+                message
             )
+                             )
         except:
             self.logger.exception("AN ERROR OCCURED IN LOGGING ELEMENT!")
 
@@ -76,23 +75,24 @@ class Logger():
                 self.log('[')
                 self.indent()
                 for i in message:
-                    self.log('%s,'%i)
+                    self.log('%s,' % i)
                 self.unindent()
                 self.log(']')
             else:
-                self.logger.info(self.pp.pformat(message))
+                self.logger.info(self.pformat(message))
         except:
-            self.logger.info(self.pp.pformat(message.encode('unicode-escape')))
+            self.logger.info(self.pformat(message.encode('unicode-escape')))
 
-    def exception(self, message='EXCEPTION',showTime=True):
-        self.logger.exception("%s%s%s"%(
-                self.showThread*'{:<30}'.format(threading.current_thread().name),
-                showTime*dtNow().strftime('%H:%M '),
-                message))
+    def exception(self, message='EXCEPTION', showTime=True):
+        self.logger.exception("%s%s%s" % (
+            self.showThread * '{:<30}'.format(threading.current_thread().name),
+            showTime * dtNow().strftime('%H:%M '),
+            message))
 
     def debug(self, showArgs=False, showFile=False, showClass=True):
         '''Decorator used to intelligently debug functions, classes, etc.
         '''
+
         def outer(func):
             def inner(*args, **kwargs):
                 filename = func.__code__.co_filename
@@ -104,7 +104,7 @@ class Logger():
                 s = []
                 if self.showThread:
                     s += ['{:<30}'.format(threading.current_thread().name)]
-                s += [' '*self.indent_level]
+                s += [' ' * self.indent_level]
                 if showFile:
                     s += [re.sub(r'(.*/)|(.*\\)', '', filename), ": "]
 
@@ -113,10 +113,10 @@ class Logger():
                     inClassInstance = 1
                     instance = args[0]
                     if showClass:
-                        s += ["%s."%re.search(r"(?<=\.)\w+(?=\'>)", str(type(instance))).group(0)]
+                        s += ["%s." % re.search(r"(?<=\.)\w+(?=\'>)", str(type(instance))).group(0)]
 
                 s += [func_name, '(']
-                for varName in varNames[0:argCount-inClassInstance]:
+                for varName in varNames[0:argCount - inClassInstance]:
                     s += [varName, ', ']
                 if s[-1] == ', ':
                     s[-1] = "):"
@@ -127,13 +127,13 @@ class Logger():
                 self.indent_level += self.indentation
 
                 if showArgs:
-                    self.printArgs(varNames,argCount,inClassInstance,args)
+                    self.printArgs(varNames, argCount, inClassInstance, args)
 
                 if self.wrap:
-                    if self.indent_level > self.indentation*40:
+                    if self.indent_level > self.indentation * 40:
                         self.indent_level = 8
                     elif self.indent_level < 0:
-                        self.indent_level = self.indentation*40 - 4
+                        self.indent_level = self.indentation * 40 - 4
                 try:
                     ret = func(*args, **kwargs)
                     self.indent_level -= self.indentation
@@ -143,7 +143,9 @@ class Logger():
                         self.printArgs(varNames, argCount, inClassInstance, args)
                     raise
                 return ret
+
             return inner
+
         return outer
 
     def printArgs(self, varNames, argCount, inClassInstance, args):
@@ -153,8 +155,11 @@ class Logger():
                 strVar += ['{:<30}'.format(threading.current_thread().name)]
             strVar.append(" " * self.indent_level + '<arg ' + variable + ' = ')
             if isinstance(args[i], dict):
-                strVar.append(self.pp.pformat(args[i]))
+                strVar.append(self.pformat(args[i]))
             else:
                 strVar.append(str(args[i]))
             strVar.append('>')
             self.logger.info("".join(strVar))
+
+    def pformat(self, message):
+        return pprint.pformat(message, indent=self.indentation)

@@ -1,26 +1,26 @@
-import re, requests
-from sys import maxsize as MAX_INT
-import time
-from .globals import *
-#import facebook
+import re
+import threading
+
+import requests
+
+# import facebook
+from SocialNetworkHarvester.loggers.facebookLogger import logError
 from SocialNetworkHarvester.settings import FACEBOOK_APP_PARAMS
+from .globals import *
 
 
 class Client:
-
     name = "Unnamed Facebook Client"
-
 
     def __str__(self):
         return self.name
-
 
     def __init__(self, **kwargs):
         self.access_token = kwargs['access_token']
         if not self.access_token: raise NullAccessTokenException()
         if "name" in kwargs:
             self.name = kwargs['name']
-        #self.graph = facebook.GraphAPI(access_token=self.access_token)
+        # self.graph = facebook.GraphAPI(access_token=self.access_token)
         if not FACEBOOK_APP_PARAMS['version']:
             raise Exception("Please set FACEBOOK_APP_PARAMS values in settings.py")
         self.baseURL = 'https://graph.facebook.com/%s/' % FACEBOOK_APP_PARAMS['version']
@@ -60,7 +60,6 @@ class Client:
 
 
 class ClientItterator:
-
     lastResponse = {}
     dataIndex = 0
     until = None
@@ -73,7 +72,7 @@ class ClientItterator:
         self.node = node
         self.kwargs = kwargs
 
-    #@facebookLogger.debug(showArgs=True,showClass=True)
+    # @facebookLogger.debug(showArgs=True,showClass=True)
     def call(self):
         self.lastResponse = None
         self.dataIndex = 0
@@ -85,14 +84,14 @@ class ClientItterator:
                                   after=self.after,
                                   **self.kwargs)
             self.setLastResponse(response)
-            #log('lastResponse: %s'%self.lastResponse)
+            # log('lastResponse: %s'%self.lastResponse)
         except Exception as e:
             returnClient(client)
             if threadsExitFlag[0]:
                 raise
             elif isinstance(e, ClientException) and e.response['error']['message'] == 'An unknown error occurred':
-                #log(e)
-                #log("Continuing normal operations")
+                # log(e)
+                # log("Continuing normal operations")
                 self.errorCounter += 1
                 if self.errorCounter >= self.errorLimit:
                     self.errorCounter = 0
@@ -103,7 +102,6 @@ class ClientItterator:
                 raise e
         returnClient(client)
 
-
     def setLastResponse(self, jResponse):
         if "data" in jResponse:
             self.lastResponse = jResponse
@@ -112,7 +110,7 @@ class ClientItterator:
                 if isinstance(jResponse[key], dict) and "data" in jResponse[key]:
                     self.lastResponse = jResponse[key]
 
-    #@facebookLogger.debug(showArgs=True, showClass=True)
+    # @facebookLogger.debug(showArgs=True, showClass=True)
     def next(self):
         item = None
         if not self.lastResponse:
@@ -128,17 +126,17 @@ class ClientItterator:
             self.call()
             return self.next()
 
-    #@facebookLogger.debug(showArgs=True, showClass=True)
+    # @facebookLogger.debug(showArgs=True, showClass=True)
     def getPagingToken(self):
         if self.lastResponse and \
-                        "paging" in self.lastResponse and \
-                        "next" in self.lastResponse['paging']:
-            #log(self.lastResponse['paging']['next'])
+                "paging" in self.lastResponse and \
+                "next" in self.lastResponse['paging']:
+            # log(self.lastResponse['paging']['next'])
             until = pagingToken = after = None
             nextURL = self.lastResponse['paging']['next']
 
             match = re.match(r".+until=(?P<until>\w+).*", nextURL)
-            if match: until = int(match.group('until'))-1
+            if match: until = int(match.group('until')) - 1
 
             match = re.match(r".+__paging_token=(?P<token>\w+).*", nextURL)
             if match: pagingToken = match.group('token')
@@ -154,27 +152,27 @@ def getClient():
     while not client:
         if not clientQueue.empty():
             client = clientQueue.get()
-    #log('obtaining Client (%s)'%client)
+    # log('obtaining Client (%s)'%client)
     return client
 
 
 def returnClient(client):
     assert not clientQueue.full(), "Client Queue is already full. There is a Client that has been returned twice!"
-    #log('returning Client (%s)'%client)
+    # log('returning Client (%s)'%client)
     clientQueue.put(client)
 
 
 def createClient(profile):
     try:
         client = Client(
-            name = "%s's facebook App"%profile.user,
-            access_token = profile.fbAccessToken._token
+            name="%s's facebook App" % profile.user,
+            access_token=profile.fbAccessToken._token
         )
         return client
     except NullAccessTokenException:
         profile.facebookApp_parameters_error = True
         profile.save()
-        facebookLogger.exception('%s has got an invalid Facebook app'%profile.user)
+        logError('%s has got an invalid Facebook app' % profile.user)
         return None
 
 
@@ -182,16 +180,17 @@ class ExitFlagRaised(Exception):
     pass
 
 
-
 class NullAccessTokenException(Exception):
     def __init__(self): super(NullAccessTokenException, self).__init__("Access token cannot be null")
 
+
 class ClientException(Exception):
     keys = []
+
     def __init__(self, **kwargs):
         super(ClientException, self).__init__("An erro occured while processing the request")
         self.keys = kwargs.keys()
         for kwarg, val in kwargs.items(): setattr(self, kwarg, val)
 
     def __str__(self):
-        return "".join(["\n      {:20}{}".format(key+":", getattr(self, key)) for key in self.keys])+"\n"
+        return "".join(["\n      {:20}{}".format(key + ":", getattr(self, key)) for key in self.keys]) + "\n"

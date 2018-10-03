@@ -118,8 +118,9 @@ def linechart_userActivity(request):
     tableSelection = getUserSelection(request)
     selectedTWUsers = tableSelection.getSavedQueryset('TWUser', 'TWUserTable')
     selectedTWHashHarvs = tableSelection.getSavedQueryset('HashtagHarvester', 'TWHashtagTable')
+    selectedFBPages = tableSelection.getSavedQueryset('FBPage', 'FacebookPagesPosts')
 
-    if selectedTWHashHarvs.count() + selectedTWUsers.count() > 10:
+    if selectedTWHashHarvs.count() + selectedTWUsers.count() + selectedFBPages.count() > 10:
         raise Exception('Veuillez sélectionner au plus 10 éléments.')
 
     for source in selectedTWUsers:
@@ -136,6 +137,12 @@ def linechart_userActivity(request):
         chartGen.insertValues(tweets.extra({'date_created': "date(created_at)"}) \
                               .values('date_created') \
                               .annotate(date_count=Count('id')))
+    for source in selectedFBPages:
+        chartGen.addColum({'label': '%s (Status partagés)' % source.name, 'type': 'number'})
+        statuses = source.fbProfile.postedStatuses.exclude(created_time__isnull=True)
+        chartGen.insertValues(statuses.extra({'date_created': "date(created_time)"}) \
+                              .values('date_created') \
+                              .annotate(date_count=Count('id')))
     return chartGen.generate()
 
 
@@ -149,7 +156,7 @@ def linechart_userPopularity(request):
                            'type': 'number'})
         chartGen.insertValues(
             source.followers_counts.extra({'date_created': "date(recorded_time)", 'date_count': 'value'}) \
-            .values('date_created', 'date_count'))
+                .values('date_created', 'date_count'))
     for source in selectedFBPages:
         chartGen.addColum({'label': '%s (Nombre de fans)' % source,
                            'type': 'number'})
