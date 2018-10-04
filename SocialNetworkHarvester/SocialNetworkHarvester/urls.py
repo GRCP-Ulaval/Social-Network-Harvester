@@ -23,5 +23,6 @@ urlpatterns = [
     url(r'^youtube/?', include('Youtube.urls')),
     url(r'^tool/?', include('tool.urls')),
     url(r'^user/?', include('AspiraUser.urls')),
+    url(r'^collection/?', include('Collection.urls')),
     url(r'^', include('AspiraUser.urls')),
 ] #+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

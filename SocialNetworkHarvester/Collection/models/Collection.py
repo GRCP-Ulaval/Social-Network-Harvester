@@ -11,6 +11,9 @@ class Collection(models.Model):
     name = models.CharField(
         max_length=512,
     )
+    description = models.TextField(
+        null=True,
+    )
     created_on = models.DateTimeField(
         default=djangoNow
     )
@@ -21,6 +24,11 @@ class Collection(models.Model):
         null=True,
         blank=True
     )
+    harvest_is_active = models.BooleanField(
+        default=False
+    )
+    harvest_start = models.DateTimeField()
+    harvest_end = models.DateTimeField()
     curators = models.ManyToManyField(
         User,
         related_name='curated_collections'
