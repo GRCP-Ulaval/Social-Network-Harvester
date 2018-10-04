@@ -330,13 +330,13 @@
                             "orderable": false,
                             "searchable": false,
                             "colStr": "Nombre de tweets",
-                            "fields": ["harvest_count"],
+                            "fields": ["hashtag__tweets__count"],
                             "render": function (data, type, row) {
-                                if (row['harvest_count'] == null) {
+                                if (row['hashtag__tweets__count'] == null) {
                                     return ""
                                 }
                                 ;
-                                return row['harvest_count'];
+                                return row['hashtag__tweets__count'];
                             }
                         },
                         {
