@@ -6,7 +6,7 @@ body {
 
 #chart_data_type_selector {
     background-color:#FFF;
-    border:solid 1px #DDD; 
+    border:solid 1px #DDD;
     text-align: center;
     padding: 3px;
     margin-bottom:3px;
@@ -21,7 +21,7 @@ body {
 .chart_container{
     margin:10px;
     height:400px;
-    
+
 }
 
 .table_box {
@@ -40,12 +40,12 @@ body {
     margin-bottom:2px;
 }
 
-.TableToolLink{
+.dark_blue_link{
     color:#000;
     cursor:pointer;
     text-decoration:none;
 }
-.TableToolLink:hover{
+.dark_blue_link:hover{
     text-decoration: underline;
 }
 

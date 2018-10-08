@@ -1,4 +1,4 @@
-{% extends "MainPage.html" %}
+{% extends "main/containers/MainPage.html" %}
 {% load staticfiles %}
 
 
@@ -48,7 +48,7 @@
         </tr>
         <tr>
           <td>
-            <a class="TableToolLink" onclick=displayCenterPopup("passwordChanger") style="padding-top:20px;">
+            <a class="dark_blue_link" onclick=displayCenterPopup("passwordChanger") style="padding-top:20px;">
               Changer mon mot de passe
             </a>
             <div class="popup" id="passwordChanger">

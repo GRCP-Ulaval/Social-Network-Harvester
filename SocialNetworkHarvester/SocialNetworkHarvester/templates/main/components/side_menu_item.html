@@ -1,0 +1,6 @@
+<a href="{{ href }}" {% if target %}target=target{% endif %}>
+  <div class="{% if sub %}sub_{% endif %}left_menu_item" id="{{ id }}">
+    {% include "tool/icons.html" with x=x y=y className="left_menu_item_icon" %}
+    <span>{{ title }}</span>
+  </div>
+</a>

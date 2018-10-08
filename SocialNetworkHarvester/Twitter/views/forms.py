@@ -122,7 +122,7 @@ def screenNameIsValid(screen_name):
 
 @login_required()
 def addHashtag(request):
-    aspiraErrors = []
+    errors = []
     userProfile = request.user.userProfile
     terms = request.POST.getlist('hashtags')
     starts = request.POST.getlist('starts')
@@ -134,7 +134,7 @@ def addHashtag(request):
         hs, errors = readHashtagsFromCSV(request.FILES['Browse'])
         hashtags += hs
         for error in errors:
-            aspiraErrors.append('Une erreur est survenue lors de la lecture de votre fichier, sur la ligne %i.' % error)
+            errors.append('Une erreur est survenue lors de la lecture de votre fichier, sur la ligne %i.' % error)
 
     log(hashtags)
     for hashtag in hashtags:
@@ -142,12 +142,12 @@ def addHashtag(request):
         try:
             start = datetime.strptime(hashtag[1], '%m/%d/%Y')
         except ValueError:
-            aspiraErrors.append('La date de départ ("%s") n\'est pas valide' % hashtag[1])
+            errors.append('La date de départ ("%s") n\'est pas valide' % hashtag[1])
             continue
         try:
             end = datetime.strptime(hashtag[2], '%m/%d/%Y')
         except ValueError:
-            aspiraErrors.append('La date de fin ("%s") n\'est pas valide' % hashtag[2])
+            errors.append('La date de fin ("%s") n\'est pas valide' % hashtag[2])
             continue
         if hashtagIsValid(term, start, end):
             twHashtag, new = Hashtag.objects.get_or_create(term=term)
@@ -158,16 +158,16 @@ def addHashtag(request):
                     userProfile.twitterHashtagsToHarvest.add(harvester)
                     success_count += 1
             else:
-                aspiraErrors.append(
+                errors.append(
                     'Vous avez atteint la limite de hastags à aspirer pour ce compte! (limite: %i)' %
                     userProfile.twitterHashtagsToHarvestLimit
                 )
                 break
         else:
-            aspiraErrors.append('Le format du hastag (%s) n\'est pas valide.' % str(hashtag))
+            errors.append('Le format du hastag (%s) n\'est pas valide.' % str(hashtag))
 
-    if aspiraErrors:
-        response = {'status': 'exception', 'errors': aspiraErrors}
+    if errors:
+        response = {'status': 'exception', 'errors': errors}
     else:
         response = {'status': 'ok', 'messages': ['%i nouveaux Hashtag%s %s été ajouté%s à votre liste.' % (
             success_count, 's' if success_count > 1 else '', 'ont' if success_count > 1 else 'a',

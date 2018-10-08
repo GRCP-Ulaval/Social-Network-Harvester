@@ -1,0 +1,19 @@
+{% load extratags %}
+
+<div id="navigator">
+  <span class="navigator_item"><a href="/">Accueil</a></span>
+
+  {% for link, url in navigator|slice:"-1" %}
+  <span>{% include "tool/icons.html" with x=4 y=3 className="closing_bracket_icon" %}</span>
+  <span class="navigator_item"><a href="{{ url }}">{{ link|truncatechars:40 }}</a></span>
+  {% endfor %}
+
+  {% if navigator %}
+  {% for link, url in navigator|slice:"-1:" %}
+  <span>
+    {% include "tool/icons.html" with x=4 y=3 className="closing_bracket_icon" %}
+  </span>
+  <span style="cursor:default;padding:4px;"><b>{{ link|truncatechars:40 }}</b></span>
+  {% endfor %}
+  {% endif %}
+</div>

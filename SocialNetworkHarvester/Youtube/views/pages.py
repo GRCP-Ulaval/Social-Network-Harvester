@@ -2,7 +2,6 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import *
 
 from AspiraUser.models import resetUserSelection
-from AspiraUser.views import addMessagesToContext
 from Youtube.models import YTChannel, YTVideo, YTComment, YTPlaylist
 
 
@@ -14,7 +13,6 @@ def youtubeBase(request):
             ("Youtube", "/youtube"),
         ]
     }
-    request, context = addMessagesToContext(request, context)
     resetUserSelection(request)
     return render(request, 'Youtube/YoutubeBase.html', context)
 
@@ -37,7 +35,6 @@ def channelBase(request, identifier):
         ],
         "channel": channel
     }
-    request, context = addMessagesToContext(request, context)
     return render(request, 'Youtube/YoutubeChannel.html', context)
 
 
@@ -103,5 +100,4 @@ def playlistBase(request, identifier):
         ],
         "playlist": playlist
     }
-    request, context = addMessagesToContext(request, context)
     return render(request, 'Youtube/YoutubePlaylist.html', context)

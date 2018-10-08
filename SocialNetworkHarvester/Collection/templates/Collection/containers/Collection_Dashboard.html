@@ -1,0 +1,109 @@
+{% extends "main/containers/MainPage.html" %}
+{% load staticfiles %}
+{% load extratags %}
+
+
+{% block extendHead %}
+<link rel="stylesheet" type="text/css" href='{% static "css/table_style.css" %}?v={{ STATICFILES_VERSION }}'
+      name="style">
+
+<script type="text/javascript" src='{% static "js/table_script.js" %}?v={{ STATICFILES_VERSION }}'></script>
+{% endblock %}
+
+{% block content %}
+<!--  GUIDE D'UTILISATION  -->
+<section class="tableContainer">
+
+  <div class="section_menu">
+  <span class="section_title">
+    <b>Guide d'utilisation</b>
+  </span>
+    {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+  </div>
+
+  <div class="section_content">
+    Les collectes (ou collections) vous permettent de regrouper différentes source de données sous forme de "Collecte
+    Aspira". Vous pouvez donc organiser vos utilisateurs Twitter, pages Facebook et chaines Youtube selon un theme
+    commun.
+    <br/><br/>
+    Il est aussi possible de naviguer parmis les collectes existantes, et de suivre celles qui vous intéressent.
+  </div>
+</section>
+
+<section class="tableContainer">
+  <div class="section_menu">
+    <!-- SEARCH COLLECTION -->
+    {% include 'Collection/components/searchCollectionPopup.html' %}
+
+    <!-- CREATE NEW COLLECTION -->
+    {% include 'Collection/components/createNewCollectionPopup.html' %}
+  </div>
+</section>
+
+{% for followed_collection in user.followed_collections.all %}
+{% include "tool/tables/collection_table.html" with source="collection_dashboad" collection=followed_collection %}
+{% endfor %}
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

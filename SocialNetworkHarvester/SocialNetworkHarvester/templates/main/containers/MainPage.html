@@ -1,0 +1,238 @@
+<!doctype html>
+{% load staticfiles %}
+{% load extratags %}
+
+<head>
+  <meta name="robots" content="NONE,NOARCHIVE"/>
+  <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+  <meta content="utf-8" http-equiv="encoding">
+  {% with rnd="123"|make_list|random %}{% if rnd == "1" %}
+  <link rel="icon" type="image/png" href='{% static "medias/favicon_green.png" %}'/>
+  {% elif rnd == "2" %}
+  <link rel="icon" type="image/png" href='{% static "medias/favicon_yellow.png" %}'/>
+  {% else %}
+  <link rel="icon" type="image/png" href='{% static "medias/favicon_purple.png" %}'/>
+  {% endif %}{% endwith %}
+  <link rel="stylesheet" href='{% static "css/jquery-ui-1.11.4.custom/jquery-ui.css" %}'/>
+  <link rel="stylesheet" href='{% static "css/design.css" %}?v={{ STATICFILES_VERSION }}' name="style">
+  <script src='{% static "js/jquery-2.1.4.js" %}'></script>
+  <script src='{% static "js/script.js" %}?v={{ STATICFILES_VERSION }}'></script>
+  {% block Title %}<title>SNH | {{ navigator|last|first|truncatechars:40 }}</title>{% endblock %}
+  {%if DISPLAY_YET_TO_COMES %}
+  <script>var DEBUG = true;</script>
+  {% else %}
+  <script>var DEBUG = false;</script>
+  {% endif %}
+  {% block extendHead %}{% endblock %}
+</head>
+
+<body>
+<!-- HEAD BANNER -->
+<div id="head_banner" style="z-index:2">
+  <div id="menu_select">
+    {% include "tool/icons.html" with x=0 y=3 %}
+  </div>
+  <a href="/">
+    <div id="SNH_Title">Aspira</div>
+  </a>
+  <a href="#">
+    {% if not user.is_authenticated %}
+    <div id="login_button">
+      Connexion
+    </div>
+    {% else %}
+    <div id="login_button">
+      Bienvenue {{ user }}
+    </div>
+    {% endif %}
+  </a>
+  <div id="login_section">
+    {% if not user.is_authenticated %}
+    {% if 'next' in request.GET %}
+    <form class="loginForm" action="/login?next={{ request.GET.next }}" method="post">
+      {% else %}
+      <form class="loginForm" action="/login" method="post">
+        {% endif %}
+        {% csrf_token %}
+        <table>
+          <tr>
+            <td>Nom d'utilisateur:</td>
+            <td><input class='prettyInput' type="text" name="username" placeholder="nom d'utilisateur"></td>
+          </tr>
+          <tr>
+            <td>Mot de passe:</td>
+            <td><input class='prettyInput' type="password" name="password"></td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td colspan=2><input type="submit" value="login" style="width:80px;"></td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td colspan=2>
+              <center><a class="dark_blue_link" onclick=displayCenterPopup("passwordResetPopup")
+                         style="font-size:10px;">
+                Identifiant/mot de passe perdu?
+              </a></center>
+            </td>
+          </tr>
+        </table>
+      </form>
+      <div class="popup" id="passwordResetPopup">
+        <div id="title">Réinitialisation du mot de passe</div>
+        <div id="help">
+          Utilisez ce formulaire pour réinitialiser votre mot de passe.
+        </div>
+        <div id="content">
+          <table>
+            <tr>
+              <td>Entrez votre adresse email:</td>
+              <td><input class="prettyInput" name="email" type="email"
+                         placeholder="email" id="emailInput"
+                         onkeyup=emailKeyUp(event)></td>
+            </tr>
+            <tr>
+              <td>&nbsp;</td>
+            </tr>
+            <tr>
+              <td colspan=2>
+                <center><input type="submit" value="Soummetre"
+                               onclick=submitPasswordResetForm()
+                               id="emailSubmitButton" disabled></center>
+              </td>
+            </tr>
+          </table>
+        </div>
+        <script id="functions">
+          function emailKeyUp(event) {
+            if (checkEmailValid() && event.keyCode == 13) {
+              submitPasswordResetForm();
+            }
+          }
+
+          function checkEmailValid() {
+            var emailInput = $('#centerPopupContent').find('#emailInput');
+            var emailSubmitButton = $('#centerPopupContent').find('#emailSubmitButton');
+            if (emailInput.prop('value') != 'undefined' &&
+              emailInput.prop('value') != '' &&
+              emailInput[0].validity.valid) {
+              emailSubmitButton.prop('disabled', false);
+              return true;
+            } else {
+              emailSubmitButton.prop('disabled', true);
+              return false;
+            }
+          }
+
+          function submitPasswordResetForm() {
+            if (checkEmailValid()) {
+              var emailInput = $('#centerPopupContent').find('#emailInput');
+              $('#centerPopupContent').find('#emailSubmitButton').prop('disabled', true);
+              $.post('/user/forms/resetPW', {
+                  'email': emailInput.prop('value'),
+                  'csrfmiddlewaretoken': '{{ csrf_token }}',
+                },
+                function (response) {
+                  if (response['status'] == 'ok') {
+                    displayNewMessages(
+                      ['Un courriel vous a été envoyé à ' + emailInput.prop('value') +
+                      '. Veuillez suivre les instructions qui s\'y trouvent.',
+                      ], 0);
+                  } else {
+                    displayNewErrors(response['errors'], 4000);
+                  }
+                  closeCenterPopup();
+                },
+              );
+            }
+          }
+        </script>
+      </div>
+      {% else %}
+      <a href="/logout" class="perm_item">Déconnexion</a>
+      {% endif %}
+  </div>
+  {% if user.is_authenticated %}
+
+  <div id="header_icon">
+    <a onclick="displayCenterPopup('notificationPopup')">
+      {% include "tool/icons.html" with x=3 y=4 %}
+    </a>
+
+    <!-- NOTIFICATION POPUP -->
+    <div class="popup" id="notificationPopup">
+      <div id="title">Notifications</div>
+      <div id="help">
+        Notifications de votre compte et de vos activitées
+      </div>
+      <div id="content">
+        <div style="height:150px;width:300px;text-align: center">
+          Aucune nouvelles notifications
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="header_icon">
+    <a href="/user/settings">
+      {% include "tool/icons.html" with x=2 y=4 %}
+    </a>
+  </div>
+  <form id="searchForm" method="get" action="/search">
+    <input id="searchInput" class="prettyInput collapsed" type="text" placeholder="Rechercher" value="{{  query}}">
+    <div id="header_icon">
+      {% include "tool/icons.html" with x=6 y=0 style="float:right;" id="searchIcon" %}
+    </div>
+  </form>
+  {% endif %}
+</div>
+
+<!--SIDE MENU-->
+{% include 'main/components/side_menu.html' with user=user %}
+
+
+<!-- MAIN CONTAINER> -->
+<div id="content_container">
+  <div id="inner_container">
+    {% include "main/components/messages.html" with messages=messages %}
+    {% include "main/components/navigator.html" with navigator=navigator %}
+    {% block content %}{% endblock %}
+  </div>
+  <div style="height:100px;" id="bottom_spacer"></div>
+</div>
+
+{% include "tool/popupContainer.html" %}
+
+
+</body>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -60,7 +60,7 @@
         <span style=" font-size:18px;color:{{ field.valueTextColor }}">
         {% endif %}
             {% if field.type == "link_url" %}
-            <a href='{{ field.value }}' class='TableToolLink' target='_blank'>{{ field.value|truncatechars:40 }}</a>
+            <a href='{{ field.value }}' class='dark_blue_link' target='_blank'>{{ field.value|truncatechars:40 }}</a>
             {% else %}
             {{ field.strValue|truncatechars:40 }}
             {% endif %}
@@ -82,7 +82,7 @@
     {% elif field.type == "object"%}
     <div class='value object_value'>
         <span>
-            <a href='{{ field.value.getLink }}' class='TableToolLink'>{{ field.value }}</a>
+            <a href='{{ field.value.getLink }}' class='dark_blue_link'>{{ field.value }}</a>
         </span>
     </div>
 
@@ -91,7 +91,7 @@
         <span style="color:{{ field.valueTextColor }}"><ul>
             {% with field.value.all as values %}
             {% for val in values %}
-            <li><a href='{{ val.getLink }}' class='TableToolLink'>{{ val }}</a></li>
+            <li><a href='{{ val.getLink }}' class='dark_blue_link'>{{ val }}</a></li>
             {% endfor %}
             {% endwith %}
         </ul></span>

@@ -481,7 +481,7 @@ function formatTweetText(text){
     if (usernames != null) {
         usernames.forEach(function (username) {
             //log(username);
-            text = text.replace(username, '<a class="TableToolLink snippetHover" target="_blank" href="/twitter/user/' + username.slice(1) + '">' + username + '</a>');
+            text = text.replace(username, '<a class="dark_blue_link snippetHover" target="_blank" href="/twitter/user/' + username.slice(1) + '">' + username + '</a>');
         });
     }
 
@@ -490,7 +490,7 @@ function formatTweetText(text){
     if (hashtags != null) {
         hashtags.forEach(function (hashtag) {
             //log(hashtag);
-            text = text.replace(hashtag, '<a class="TableToolLink" target="_blank" href="/twitter/hashtag/' + hashtag.slice(1) + '">' + hashtag + '</a>');
+            text = text.replace(hashtag, '<a class="dark_blue_link" target="_blank" href="/twitter/hashtag/' + hashtag.slice(1) + '">' + hashtag + '</a>');
         });
     }
     return text;

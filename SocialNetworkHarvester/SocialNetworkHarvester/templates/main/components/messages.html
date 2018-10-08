@@ -1,0 +1,51 @@
+<div id="messages_container_container">
+  <center style="height:0px;">
+    {% if messages|length > 5%}
+    <div class="message_container autoClose">
+          <span class="message_content">
+            <a class="dark_blue_link" onclick="displayCenterPopup('multiple_messages_popup')">
+              Trop de message a afficher! Clickez ici pour les afficher.
+            </a>
+          </span>
+      <span class="message_closer">X</span>
+    </div>
+    <!-- TOO MANY ERRORS POPUP -->
+    <div class="popup" id="multiple_messages_popup">
+      <div id="title">Messages multiples</div>
+      <div id="help">Plusieurs messages doivent être affichés.</div>
+      <div id="content" >
+        {% for message in messages %}
+        {% if message.level == DEFAULT_MESSAGE_LEVELS.INFO %}
+        <div class="message_container autoClose">
+          <span class="message_content">{{ message }}</span>
+          <span class="message_closer">X</span>
+        </div>
+        {% elif message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+        <div class="error_container autoClose">
+          <span class="message_content">{{ message }}</span>
+          <span class="message_closer">X</span>
+        </div>
+        {% endif %}
+        <br>
+        {% endfor %}
+      </div>
+      <script id="functions"></script>
+    </div>
+    {% else %}
+    {% for message in messages %}
+    {% if message.level == DEFAULT_MESSAGE_LEVELS.INFO %}
+    <div class="message_container autoClose">
+      <span class="message_content">{{ message }}</span>
+      <span class="message_closer">X</span>
+    </div>
+    {% elif message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+    <div class="error_container autoClose">
+      <span class="message_content">{{ message }}</span>
+      <span class="message_closer">X</span>
+    </div>
+    {% endif %}
+    <br>
+    {% endfor %}
+    {% endif %}
+  </center>
+</div>

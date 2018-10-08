@@ -6,14 +6,14 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import validate_email
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.template.loader import render_to_string
 
 from AspiraUser.models import UserProfile
-from AspiraUser.views.pages import addMessagesToContext
 from SocialNetworkHarvester.jsonResponses import *
 from SocialNetworkHarvester.loggers.viewsLogger import logError
 from SocialNetworkHarvester.settings import DEBUG
+from SocialNetworkHarvester.views.messages import add_info_message, add_error_message, add_error_messages
 from Youtube.models import *
 from .pages import userSettings, lastUrlOrHome
 
@@ -26,11 +26,13 @@ def userLogin(request):
         if user.is_active:
             login(request, user)
         else:
-            request.session['aspiraErrors'] = [
-                'Ce nom d\'utilisateur existe, mais le compte est présentement inactif. Est-ce que le webmaster vous '
-                'a contacté?']
+            add_error_message(
+                'Ce nom d\'utilisateur existe, mais le compte est '
+                'présentement inactif. Est-ce que le webmaster vous '
+                'a contacté?'
+            )
     else:
-        request.session['aspiraErrors'] = ['Invalid login information']
+        add_error_message(request, 'Invalid login information')
 
     return lastUrlOrHome(request)
 
@@ -59,8 +61,8 @@ def editUserSettings(request):
             'p_twitterApp_access_token_secret',
             'p_youtubeApp_dev_key'
         ] and not atr == 'csrfmiddlewaretoken':
-            request.session['aspiraErrors'] = ['Une erreur est survenue. Veuillez contacter l\'administrateur.']
-            return userSettings(request)
+            add_error_message('Une erreur est survenue. Veuillez contacter l\'administrateur.')
+            return redirect('/settings')
         if atr[0] == 'u':
             setattr(user, atr[2:], request.POST[atr])
         elif atr[0] == 'p':
@@ -70,13 +72,13 @@ def editUserSettings(request):
     user.userProfile.facebookApp_parameters_error = False
     user.userProfile.youtubeApp_parameters_error = False
     user.userProfile.save()
-    request.session['aspiraMessages'] = ['Vos paramètres ont été mis à jour. Merci!']
-    return userSettings(request)
+    add_info_message(request, 'Vos paramètres ont été mis à jour. Merci!')
+    return redirect('/settings')
 
 
 def userRegister(request):
     data = request.POST
-    aspiraErrors = []
+    errors = []
     masterAddrs = [user.email for user in User.objects.filter(is_superuser=True, email__isnull=False) if
                    user.email != '']
     required_fields = {'username': 'Username',
@@ -91,31 +93,31 @@ def userRegister(request):
 
     for field in required_fields.keys():
         if field not in data or data[field] == '':
-            aspiraErrors.append('Le champ "%s" est vide! Veuillez y insérer une valeur.' % required_fields[field])
+            errors.append('Le champ "%s" est vide! Veuillez y insérer une valeur.' % required_fields[field])
 
-    if not aspiraErrors and data['pw'] != data['pw_confirm']:
-        aspiraErrors.append('Les mots de passe ne coincident pas!')
+    if not errors and data['pw'] != data['pw_confirm']:
+        errors.append('Les mots de passe ne coincident pas!')
 
-    if not aspiraErrors and len(data['pw']) < 6:
-        aspiraErrors.append('Votre mot de passe doit avoir au moins 6 caractères.')
+    if not errors and len(data['pw']) < 6:
+        errors.append('Votre mot de passe doit avoir au moins 6 caractères.')
 
-    if not aspiraErrors and User.objects.filter(email=data['email']).exists():
-        aspiraErrors.append('Un compte avec cette adresse email existe déjà!')
+    if not errors and User.objects.filter(email=data['email']).exists():
+        errors.append('Un compte avec cette adresse email existe déjà!')
 
-    if not aspiraErrors and User.objects.filter(username=data['username']).exists():
-        aspiraErrors.append('Un compte avec ce nom d\'utilisateur existe déjà!')
+    if not errors and User.objects.filter(username=data['username']).exists():
+        errors.append('Un compte avec ce nom d\'utilisateur existe déjà!')
 
-    if not aspiraErrors and not validate_userName(data['username']):
-        aspiraErrors.append('Le nom d\'utilisateur ne peut contenir que des caractères alphanumériques.')
+    if not errors and not validate_userName(data['username']):
+        errors.append('Le nom d\'utilisateur ne peut contenir que des caractères alphanumériques.')
 
-    if not aspiraErrors:
+    if not errors:
         try:
             validate_email(data['email'])
         except ValidationError:
-            aspiraErrors.append('L\'adresse email fournie ne semble pas valide. Veuillez vérifier qu\'il '
+            errors.append('L\'adresse email fournie ne semble pas valide. Veuillez vérifier qu\'il '
                                 'ne s\'agit pas d\'une erreur.')
 
-    if not aspiraErrors:
+    if not errors:
         message = render_to_string('AspiraUser/emails/newAccountInstructions.html', {
             'username': data['username'],
             'fname': data['fname'],
@@ -126,7 +128,7 @@ def userRegister(request):
         send_mail('SNH - Account creation instructions', 'message',
                   'doNotReplyMail', [data['email']], html_message=message)
 
-    if not aspiraErrors:
+    if not errors:
         try:
             newUser = User.objects.create_user(data['username'], data['email'], data['pw'],
                                                first_name=data['fname'],
@@ -136,9 +138,9 @@ def userRegister(request):
             newProfile = UserProfile.objects.create(user=newUser)
         except:
             logError('An error occured while creating a new AspiraUser!')
-            aspiraErrors.append('An error occured! Please contact the webmaster directly to create your account.')
+            errors.append('An error occured! Please contact the webmaster directly to create your account.')
 
-    if not aspiraErrors:
+    if not errors:
         message = render_to_string('AspiraUser/emails/validateNewAccount.html', {
             'email': data['email'],
             'username': data['username'],
@@ -155,8 +157,8 @@ def userRegister(request):
         except:
             logError('An error occured while sending an email to %s' % masterAddrs)
 
-    if aspiraErrors:
-        request.session['aspiraErrors'] = aspiraErrors
+    if errors:
+        add_error_messages(request, errors)
         fieldKeeper = {}
         for field in ['fname', 'username', 'org', 'email', 'lname', 'usageText']:
             if field in data:
@@ -164,10 +166,9 @@ def userRegister(request):
         context['fieldKeeper'] = fieldKeeper
         template = 'AspiraUser/login_page.html'
     else:
-        request.session['aspiraMessages'] = ["Merci! Vous reçevrez un courriel aussitôt que \
-        votre compte est approuvé par le webmaster."]
+        add_info_message(request, "Merci! Vous reçevrez un courriel aussitôt que \
+        votre compte est approuvé par le webmaster.")
         template = 'AspiraUser/register_successful.html'
-    request, context = addMessagesToContext(request, context)
     return render(request, template, context)
 
 

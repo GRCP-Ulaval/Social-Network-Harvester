@@ -1,9 +1,11 @@
 import pickle
 import random
+import re
 
 import facebook
 from django.contrib.auth.models import User
 
+from Collection.models import Collection
 from Facebook.models import FBPage, FBPost, FBComment, FBReaction, FBUser
 from SocialNetworkHarvester.loggers.viewsLogger import logError
 from SocialNetworkHarvester.settings import FACEBOOK_APP_PARAMS
@@ -280,7 +282,7 @@ def getRandomString(length=255):
 
 MODEL_WHITELIST = ['FBPage', 'FBPost', 'FBComment', 'FBReaction', 'FBUser',
                    'Tweet', 'TWUser', "HashtagHarvester", "Hashtag", "favorite_tweet", "follower",
-                   'YTChannel', 'YTVideo', 'YTPlaylist', 'Subscription', 'YTComment', 'YTPlaylistItem']
+                   'YTChannel', 'YTVideo', 'YTPlaylist', 'Subscription', 'YTComment', 'YTPlaylistItem', 'Collection']
 
 
 def getModel(modelName):
@@ -289,5 +291,6 @@ def getModel(modelName):
     return {model.__name__: model for model in [
         TWUser, Tweet, HashtagHarvester, follower, favorite_tweet, Hashtag,
         FBPage, FBPost, FBComment, FBReaction, FBUser,
-        YTChannel, YTVideo, YTPlaylist, Subscription, YTComment, YTPlaylistItem
+        YTChannel, YTVideo, YTPlaylist, Subscription, YTComment, YTPlaylistItem,
+        Collection
     ]}[modelName]
