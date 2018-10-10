@@ -1,0 +1,127 @@
+{% load staticfiles %}
+{% load extratags %}
+
+<section class="tableContainer">
+  {% if source == "collection_dashboad" %}
+  <div>
+    <div class="section_menu">
+        <span class="section_title">
+            <b>{{ collection.name|truncatechars:40 }}</b>
+        </span>
+      <div class="section_options">
+
+        <!-- REMOVE SELECTION --
+                <span>|</span>
+        <span class="section_menuItem">
+          <a
+              onclick="collection_remove_selected('{{ collection.pk }}')"
+              title="Retirer la sélection de cette collecte."
+          >
+            Retirer
+          </a>
+        </span>
+        <div class="popup" id="remove_collection_item_popup_{{ collection.pk }}">
+          <div id="title">Retirer</div>
+          <div id="help">
+            Retire les éléments présentement sélectionnés de cette collecte.
+          </div>
+          <div id="content">
+            <center>
+              Êtes-vous sûr de vouloir retirer les <br>
+              éléments sélectionnés de la collecte: <br>
+              <b>{{ collection.name }}</b>
+              <br><br>
+              <div id="selected_collection_elements"></div>
+              <br>
+              <input
+                  type="submit"
+                  value="Remove"
+                  onclick="submit_remove_collection_items('{{ collection.pk }}')"
+              >
+            </center>
+          </div>
+          <script id="functions">
+            function collection_remove_selected(collection_id) {
+              lastPopupId = null;
+
+              var length = selectedCounts['#collection_table_' + collection_id];
+              if (!length) {
+                alert('Vous devez d\'abpord sélectioner une ligne du tableau.');
+              }
+
+              else {
+                var displayer = $('#remove_collection_item_popup_'+collection_id)
+                  .find('#selected_collection_elements');
+
+                let plural = length > 1 ? 's' : '';
+                displayer.html('' + length + ' ligne' + plural + ' sélectionnée' + plural);
+                displayCenterPopup('remove_collection_item_popup_' + collection_id);
+              }
+            }
+
+            function submit_remove_collection_items(collection_id) {
+              let url = makeUrl('/collection/ajax/remove', {
+                pageURL: window.location.pathname,
+                tableId: 'collection_table_' + collection_id,
+                collectionId: collection_id,
+              });
+              executeAjaxAndDisplayMessages(url, '#collection_table_' + collection_id);
+            }
+          </script>
+        </div>
+        -->
+
+        {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+
+        <span> | </span>
+
+        {% include "Collection/components/unsubscribePopup.html" %}
+
+        <span>|</span>
+
+        <span>
+          <a href="/collection/{{ collection.pk }}" title="Voir la collection">
+            {% include "tool/icons.html" with x=2 y=5 className="tableOptionIcon" %}
+          </a>
+        </span>
+      </div>
+      {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+    </div>
+    <div class="section_content">
+      <table class="display" id='collection_table_{{ collection.pk }}' width="100%" drawn='False'>
+        <script class="tableVars">
+          modelName = 'CollectionItem';
+          var srcs = [
+            {
+              modelName: 'Collection',
+              attr: 'collection_items',
+              id: '{{ collection.pk }}',
+            },
+          ];
+          var columns = [
+            {
+              'orderable': false,
+              'searchable': false,
+              'fields': ['str', 'getLink'],
+              'colStr': 'Nom',
+              'render': function (data, type, row) {
+                return tableToolLink(row['getLink'],
+                  truncate_text(row['str'], 50, true));
+              },
+            },
+            {
+              'orderable': false,
+              'searchable': false,
+              'fields': ['object_class'],
+              'colStr': 'Type d\'objet',
+              'render': function (data, type, row) {
+                return row['object_class'];
+              },
+            },
+          ];
+        </script>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</section>

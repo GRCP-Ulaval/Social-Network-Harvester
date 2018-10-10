@@ -1,0 +1,70 @@
+<span
+    class="tableOpenCloseIcon main_menu_item"
+    title="Créer une nouvelle collecte"
+    onclick="show_create_new_collection_popup()"
+>
+      {% include "tool/icons.html" with x=6 y=2 className="openCloseIcon" %}
+      <div class="popup" id="create_new_collection_popup">
+      <div id="title">Création d'une nouvelle collecte</div>
+      <div id="help">
+        Utilisez cet outil pour créer un nouveau thème de collecte Aspira.
+      </div>
+      <div id="content">
+        <form
+            action="/collection/form/create"
+            method="post"
+            id="create_collection_form"
+        >
+          {% csrf_token %}
+          <table>
+            <tr class="form_line">
+              <td>Nom:</td>
+              <td><a class='dark_blue_link' title="Le nom donné à la collecte. Choisissez un nom représentatif du thème de votre collecte.">?</a></td>
+              <td colspan="2"><input type="text" name="name" placeholder="Nom de la collecte" /></td>
+            </tr>
+
+            <tr class="form_line">
+              <td>Description:</td>
+              <td><a class='dark_blue_link' title="(Optionnel) Une courte description du contexte dans lequel la collecte est réalisée.">?</a></td>
+              <td colspan="2">
+                <textarea
+                    method="post"
+                    rows="4"
+                    name="description"
+                    style="font-family: Verdana;font-size: 12px;"></textarea>
+              </td>
+            </tr>
+
+            <tr class="form_line">
+              <td>Début de collecte:</td>
+              <td><a class='dark_blue_link' title="Date de début de la collecte. Aucune donnée datant d'avant cette date ne sera collectée">?</a></td>
+              <td colspan="2"><input type="date" name="harvest_start" /></td>
+            </tr>
+
+            <tr class="form_line">
+              <td>Fin de collecte:</td>
+              <td><a class='dark_blue_link' title="Date de fin de la collecte. Aucune donnée datant d'après cette date ne sera collectée. Choisissez la période de collecte la plus petite possible correspondant à vos besoins.">?</a></td>
+              <td colspan="2"><input type="date" name="harvest_end" /></td>
+            </tr>
+
+            <tr class="form_line">
+              <td>Activée:</td>
+              <td><a class='dark_blue_link' title="Active ou non la collecte. Si désactivée, la collecte se produira pas de nouvelles données. Les données existantes resteront visibles.">?</a></td>
+              <td colspan="2"><input type="checkbox" name="active" checked/></td>
+            </tr>
+
+            <tr class="form_line">
+              <td></td>
+              <td colspan="3"><input type="submit" value="Ajouter"></td>
+            </tr>
+          </table>
+        </form>
+      </div>
+      <script id="functions">
+        function show_create_new_collection_popup() {
+          displayCenterPopup('create_new_collection_popup', function () {
+          });
+        }
+      </script>
+    </div>
+    </span>

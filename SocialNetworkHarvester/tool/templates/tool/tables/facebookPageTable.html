@@ -2,400 +2,423 @@
 {% load extratags %}
 
 {% if source == "facebookBase" %}
-    <section class="tableContainer">
-        <div class="">
+<section class="tableContainer">
+  <div class="">
     <div class="section_menu">
-            <span class="section_title">
-                <b>Pages publiques collectées</b>
-            </span>
-        <div class="section_options">
+      <span class="section_title">
+        <b>Pages publiques collectées</b>
+      </span>
+      <div class="section_options">
 
-            <span>|</span>
+        <span>|</span>
 
-            <span id="new_page" class="section_menuItem"><a
-                    onclick="addFBPageFormPopup()">Ajouter</a></span>
-            <!-- ADD NEW FBPAGE POPUP-->
-            <div class="popup" id="addNewFbPage">
-                <div id="title">Ajouter une nouvelle Page</div>
-                <div id="help">
-                    Ajoutez une nouvelle page Facebook à votre liste en collant l'url de la page ci-dessous.
+        <!-- ADD NEW FBPAGE POPUP-->
+        <span id="new_page" class="section_menuItem">
+        <a onclick="addFBPageFormPopup()">Ajouter</a>
+      </span>
+        <div class="popup" id="addNewFbPage">
+          <div id="title">Ajouter une nouvelle Page</div>
+          <div id="help">
+            Ajoutez une nouvelle page Facebook à votre liste en collant l'url de la page ci-dessous.
+          </div>
+          <div id="content">
+            <form style="max-width:450px;" method="post" action="/facebook/forms/FBAddPage"
+                  enctype="multipart/form-data" id="newPageForm">
+              {% csrf_token %}
+              <p>Ajoutez toutes les urls:</p>
+              <center>
+                <table>
+                  <tr>
+                  </tr>
+                </table>
+                <br>
+                <div onclick="addPageLine()" id="addLineButton">
+                  <div class="plusIconInput">
+                    {% include "tool/icons.html" with x=3 y=3 %}
+                  </div>
                 </div>
-                <div id="content">
-                    <form style="max-width:450px;" method="post" action="/facebook/forms/FBAddPage"
-                          enctype="multipart/form-data" id="newPageForm">
-                        {% csrf_token %}
-                        <p>Ajoutez toutes les urls:</p>
-                        <center>
-                            <table>
-                                <tr>
-                                </tr>
-                            </table>
-                            <br>
-                            <div onclick="addPageLine()" id="addLineButton">
-                                <div class="plusIconInput">
-                                    {% include "tool/icons.html" with x=3 y=3 %}
-                                </div>
-                            </div>
-                        </center>
-                        <hr>
-                        <div class="">
-                            <p>Alternativement, sélectionnez un fichier .csv:</p>
-                            <input type="file" name="Browse" size="chars">
-                            <br><br>
-                        </div>
-                        <center><input type="submit" value="Soumetre" style="right:0px;"></input></center>
-                    </form>
-                </div>
-                <script id="functions">
-                    function addPageLine() {
-                        var container = getPopupContainer();
-                        container.find('tr').last().after(function () {
-                            return $(
-                                    '<tr>' +
-                                    '<td><input type="text" name="pageUrl" placeholder="https://www.facebook.com/..." ' +
-                                    'value="" style="width:300px"></td>'+
-                                    '</tr>'+
-                                    '<tr>' +
-                                    '<td><form>Date de debut: <input id="startdate" type="date"></form></td>'+
-                                    '</tr>'+
-                                    +'<tr>'
-                                    +'<td><form>Date de fin: <input id="enddate" type="date"></form></td>'+
-                                    '</tr>'+
-                                    '</tr>'
-                            );
-                        });
-                        $(".datePicker").datepicker();
-                    }
-                    function addFBPageFormPopup() {
-                        var addLine = lastPopupId != 'addNewFbPage';
-                        displayCenterPopup('addNewFbPage', function () {
-                            if (addLine) {
-                                addPageLine()
-                            }
-                            ;
-                        });
-                        $('#centerPopupContent').find("#newPageForm").unbind('submit');
-                        $('#centerPopupContent').find("#newPageForm").submit(function (event) {
-                            event.preventDefault();
-                            var formData = new FormData($(this)[0]);
-                            $('#centerPopupInner').addClass("waitingMask");
-                            $('#centerPopupContent').addClass('unselectable');
-                            $.ajax({
-                                url: $(this).attr("action"),
-                                type: "POST",
-                                data: formData,
-                                processData: false,
-                                contentType: false,
-                                success: function (response) {
-                                    $('#centerPopupInner').removeClass("waitingMask");
-                                    $('#centerPopupContent').removeClass('unselectable');
-                                    $('#centerPopupOutter').hide();
-                                    reloadTable('#FbPagesTable')
-                                    if (response['status'] == 'ok') {
-                                        displayNewMessages(response['messages'], 4000)
-                                    } else if (response['status'] == 'exception') {
-                                        displayNewErrors(response['errors'], 4000)
-                                    }
-                                    ;
-                                }
-                            });
-                        });
-                    }
-                </script>
-            </div>
+              </center>
+              <hr>
+              <div class="">
+                <p>Alternativement, sélectionnez un fichier .csv:</p>
+                <input type="file" name="Browse" size="chars">
+                <br><br>
+              </div>
+              <center><input type="submit" value="Soumetre" style="right:0px;"></input></center>
+            </form>
+          </div>
+          <script id="functions">
+            function addPageLine() {
+              var container = getPopupContainer();
+              container.find('tr').last().after(function () {
+                return $(
+                  '<tr>' +
+                  '<td><input type="text" name="pageUrl" placeholder="https://www.facebook.com/..." ' +
+                  'value="" style="width:300px"></td>' +
+                  '</tr>' +
+                  '<tr>' +
+                  '<td><form>Date de debut: <input id="startdate" type="date"></form></td>' +
+                  '</tr>' +
+                  +'<tr>'
+                  + '<td><form>Date de fin: <input id="enddate" type="date"></form></td>' +
+                  '</tr>' +
+                  '</tr>',
+                );
+              });
+              $('.datePicker').datepicker();
+            }
 
-            <span>|</span>
-
-            <span id="remove_page" class="section_menuItem"><a onclick="removeSelectedPages()">Retirer</a></span>
-            <!-- REMOVE FBPAGE POPUP-->
-            <div class="popup" id="removeFbPage">
-                <div id="title">Retirer</div>
-                <div id="help">
-                    Retire les pages Facebook actuellement sélectionnés de votre liste de collecte. Les
-                    informations ne seront pas supprimées, mais vous ne les verrez plus apparaitre dans
-                    votre liste "Pages publiques collectés".
-                </div>
-                <div id="content">
-                    <center>Êtes-vous sûr de vouloir supprimer les <br> pages Facebook de votre liste de
-                        collecte?
-                        <br><br>
-                        <div id="selectedFbPages">0 lignes selectionnées</div>
-                        <br>
-                        <input type="submit" value="Remove" onclick="submitForm()"></input>
-                    </center>
-                </div>
-                <script id="functions">
-                    function removeSelectedPages() {
-                        lastPopupId = null;
-                        var displayer = $('#removeFbPage').children('#content').children().children('#selectedFbPages');
-                        var length = selectedCounts['#FbPagesTable']
-                        if (!length) {
-                            alert("Vous devez d'abpord sélectioner une ligne du tableau.")
-                        }
-                        else {
-                            displayer.html("" + length + " row" + (length > 1 ? "s" : "") + " selected");
-                            displayCenterPopup('removeFbPage')
-                        }
+            function addFBPageFormPopup() {
+              var addLine = lastPopupId != 'addNewFbPage';
+              displayCenterPopup('addNewFbPage', function () {
+                if (addLine) {
+                  addPageLine();
+                }
+                ;
+              });
+              $('#centerPopupContent').find('#newPageForm').unbind('submit');
+              $('#centerPopupContent').find('#newPageForm').submit(function (event) {
+                event.preventDefault();
+                var formData = new FormData($(this)[0]);
+                $('#centerPopupInner').addClass('waitingMask');
+                $('#centerPopupContent').addClass('unselectable');
+                $.ajax({
+                  url: $(this).attr('action'),
+                  type: 'POST',
+                  data: formData,
+                  processData: false,
+                  contentType: false,
+                  success: function (response) {
+                    $('#centerPopupInner').removeClass('waitingMask');
+                    $('#centerPopupContent').removeClass('unselectable');
+                    $('#centerPopupOutter').hide();
+                    reloadTable('#FbPagesTable');
+                    if (response['status'] == 'ok') {
+                      displayNewMessages(response['messages'], 4000);
+                    } else if (response['status'] == 'exception') {
+                      displayNewErrors(response['errors'], 4000);
                     }
-                    function submitForm() {
-                        executeAjaxAndDisplayMessages(makeUrl("/removeSelectedItems",{
-                            pageURL : window.location.pathname,
-                            listToRemoveFrom: 'facebookPagesToHarvest',
-                            tableId : 'FbPagesTable',
-                        }), '#FbPagesTable');
-                    }
-                </script>
-            </div>
-
-            {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="FBPage" filename="Harvested_Facebook_Pages" %}
-            {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+                    ;
+                  },
+                });
+              });
+            }
+          </script>
         </div>
-        {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+
+        <span>|</span>
+
+        <!-- REMOVE FBPAGE POPUP-->
+        <span id="remove_page" class="section_menuItem"><a onclick="removeSelectedPages()">Retirer</a></span>
+        <div class="popup" id="removeFbPage">
+          <div id="title">Retirer</div>
+          <div id="help">
+            Retire les pages Facebook actuellement sélectionnés de votre liste de collecte. Les
+            informations ne seront pas supprimées, mais vous ne les verrez plus apparaitre dans
+            votre liste "Pages publiques collectés".
+          </div>
+          <div id="content">
+            <center>Êtes-vous sûr de vouloir supprimer les <br> pages Facebook de votre liste de
+              collecte?
+              <br><br>
+              <div id="selectedFbPages">0 lignes selectionnées</div>
+              <br>
+              <input type="submit" value="Remove" onclick="submitForm()"></input>
+            </center>
+          </div>
+          <script id="functions">
+            function removeSelectedPages() {
+              lastPopupId = null;
+              var displayer = $('#removeFbPage').children('#content').children().children('#selectedFbPages');
+              var length = selectedCounts['#FbPagesTable'];
+              if (!length) {
+                alert('Vous devez d\'abpord sélectioner une ligne du tableau.');
+              }
+              else {
+                displayer.html('' + length + ' row' + (length > 1 ? 's' : '') + ' selected');
+                displayCenterPopup('removeFbPage');
+              }
+            }
+
+            function submitForm() {
+              executeAjaxAndDisplayMessages(makeUrl('/removeSelectedItems', {
+                pageURL: window.location.pathname,
+                listToRemoveFrom: 'facebookPagesToHarvest',
+                tableId: 'FbPagesTable',
+              }), '#FbPagesTable');
+            }
+          </script>
+        </div>
+
+        <!-- ADD TO COLLECTION -->
+        {% with name="add_to_collection" model_name="FBPage" table_id="FbPagesTable" %}
+        {% include "tool/tables/tableMenuItems.html" %}
+        {% endwith %}
+
+        <!-- DOWNLOAD FIELDS -->
+        {% with name="downloadFields" className="FBPage" filename="Harvested_Facebook_Pages" %}
+        {% include "tool/tables/tableMenuItems.html" %}
+        {% endwith %}
+
+        {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+      </div>
+      {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
     </div>
     <div class="section_content">
-        <table class="display" id="FbPagesTable" width="100%" drawn='False'>
-            <script class="tableVars">
-                var modelName = "FBPage";
-                var srcs = [
-                    {
-                        //modelName   :   "",
-                        attr        :   "facebookPagesToHarvest",
-                        //tableId     :   null,
-                        //id            : "{{ item.pk }}"
-                    }
-                ]
-                var columns = [
-                    {
-                        "colStr":"Nom",
-                        "fields":["name", "pk","error_on_update"],
-                        "render":function (data, type, row) {
-                            var str = undefinedTag();
-                            if (row['name'] != null) {
-                                str = tableToolLink("/facebook/page/" + row["pk"],
-                                        truncate_text(row['name'], 30, true));
-                            }
-                            /*if (row['error_on_update']) {
-                                str = `<span style="cursor:pointer;" title="Cet utilisateur n'existe pas ou ses informations sont privées.">
-                                    {% include 'tool/icons.html' with x=3 y=5 style="height:12px;width:12px;"%}
-                                        </span>` + str;
-                            }*/
-                            return str
-                        }
-                    },
-                    {
-                        "colStr": "Catégorie",
-                        "fields": ["category"],
-                        "render": function (data, type, row) {
-                            if (row['category'] == null) {
-                                return ""
-                            }
-                            ;
-                            return row['category'];
-                        }
-                    },
-                    {
-                        "colStr": "Nombre de fans",
-                        "searchable": false,
-                        "fields": ["fan_count"],
-                        "render": function (data, type, row) {
-                            if (row['fan_count'] == null) {return ""};
-                            return centeredTag(row['fan_count']);
-                        }
-                    },
-                    {
-                        "colStr": "Nombre de références",
-                        "searchable": false,
-                        "fields": ["talking_about_count"],
-                        "render": function (data, type, row) {
-                            if (row['talking_about_count'] == null) {return ""};
-                            return centeredTag(row['talking_about_count']);
-                        }
-                    },
-                    {
-                        "searchable": false,
-                        "orderable": false,
-                        "fields": ["link"],
-                        "render": function (data, type, row) {
-                            if (row['link'] == null) {
-                                return ""
-                            };
-                            return tableToolLink(row["link"], "Voir page", "target='_blank'");
-                        }
-                    },
-                ]
-            </script>
-        </table>
+      <table class="display" id="FbPagesTable" width="100%" drawn='False'>
+        <script class="tableVars">
+          var modelName = 'FBPage';
+          var srcs = [
+            {
+              //modelName   :   "",
+              attr: 'facebookPagesToHarvest',
+              //tableId   :   null,
+              //id      : "{{ item.pk }}"
+            },
+          ];
+          var columns = [
+            {
+              'colStr': 'Nom',
+              'fields': ['name', 'pk', 'error_on_update'],
+              'render': function (data, type, row) {
+                var str = undefinedTag();
+                if (row['name'] != null) {
+                  str = tableToolLink('/facebook/page/' + row['pk'],
+                    truncate_text(row['name'], 30, true));
+                }
+                /*if (row['error_on_update']) {
+                  str = `<span style="cursor:pointer;" title="Cet utilisateur n'existe pas ou ses informations sont privées.">
+                    {% include 'tool/icons.html' with x=3 y=5 style="height:12px;width:12px;"%}
+                      </span>` + str;
+                }*/
+                return str;
+              },
+            },
+            {
+              'colStr': 'Catégorie',
+              'fields': ['category'],
+              'render': function (data, type, row) {
+                if (row['category'] == null) {
+                  return '';
+                }
+                ;
+                return row['category'];
+              },
+            },
+            {
+              'colStr': 'Nombre de fans',
+              'searchable': false,
+              'fields': ['fan_count'],
+              'render': function (data, type, row) {
+                if (row['fan_count'] == null) {
+                  return '';
+                }
+                ;
+                return centeredTag(row['fan_count']);
+              },
+            },
+            {
+              'colStr': 'Nombre de références',
+              'searchable': false,
+              'fields': ['talking_about_count'],
+              'render': function (data, type, row) {
+                if (row['talking_about_count'] == null) {
+                  return '';
+                }
+                ;
+                return centeredTag(row['talking_about_count']);
+              },
+            },
+            {
+              'searchable': false,
+              'orderable': false,
+              'fields': ['link'],
+              'render': function (data, type, row) {
+                if (row['link'] == null) {
+                  return '';
+                }
+                ;
+                return tableToolLink(row['link'], 'Voir page', 'target=\'_blank\'');
+              },
+            },
+          ];
+        </script>
+      </table>
     </div>
-</div>
-    </section>
+  </div>
+</section>
 
 {% elif source == "searchResult" %}
-    <section class="tableContainer">
-        <div class="">
-        <div class="section_menu">
-            <span class="section_title">
-                <b>Pages Facebook</b>
-            </span>
-            <div class="section_options">
-                {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="FBPage" filename="Facebook_Pages_Search_Results_"|join:query %}
-                {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
-            </div>
-            {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
-        </div>
-        <div class="section_content">
-            <table class="display" id="FacebookPages" width="100%" drawn='False'>
-                <script class="tableVars">
-                    var modelName = "FBPage";
-                    var srcs = [
-                        {
-                            query: '{% autoescape off %}{{ query }}{% endautoescape %}'
-                        }
-                    ]
-                    var columns = [
-                        {
-                            "colStr": "Nom",
-                            "fields": ["name", "pk"],
-                            "render": function (data, type, row) {
-                                if (row['name'] == null) {
-                                    return undefinedTag();
-                                } else {
-                                    return tableToolLink("/facebook/page/" + row["pk"],
-                                            truncate_text(row['name'], 30, true));
-                                }
-                            }
-                        },
-                        {
-                            "colStr": "Catégorie",
-                            "fields": ["category"],
-                            "render": function (data, type, row) {
-                                if (row['category'] == null) {
-                                    return ""
-                                }
-                                ;
-                                return row['category'];
-                            }
-                        },
-                        {
-                            "colStr": "Nombre de fans",
-                            "searchable": false,
-                            "fields": ["fan_count"],
-                            "render": function (data, type, row) {
-                                if (row['fan_count'] == null) {
-                                    return ""
-                                }
-                                ;
-                                return centeredTag(row['fan_count']);
-                            }
-                        },
-                        {
-                            "colStr": "Nombre de références",
-                            "searchable": false,
-                            "fields": ["talking_about_count"],
-                            "render": function (data, type, row) {
-                                if (row['talking_about_count'] == null) {
-                                    return ""
-                                }
-                                ;
-                                return centeredTag(row['talking_about_count']);
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "orderable": false,
-                            "fields": ["link"],
-                            "render": function (data, type, row) {
-                                if (row['link'] == null) {
-                                    return ""
-                                }
-                                ;
-                                return tableToolLink(row["link"], "Voir page", "target='_blank'");
-                            }
-                        },
-                    ]
-                </script>
-            </table>
-        </div>
+<section class="tableContainer">
+  <div class="">
+    <div class="section_menu">
+      <span class="section_title">
+        <b>Pages Facebook</b>
+      </span>
+      <div class="section_options">
+        <!-- DOWNLOAD FIELDS -->
+        {% with name="downloadFields" className="FBPage" filename="Facebook_Pages_Search_Results_"|join:query %}
+        {% include "tool/tables/tableMenuItems.html" %}
+        {% endwith %}
+
+        {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+      </div>
+      {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
     </div>
-    </section>
+    <div class="section_content">
+      <table class="display" id="FacebookPages" width="100%" drawn='False'>
+        <script class="tableVars">
+          var modelName = 'FBPage';
+          var srcs = [
+            {
+              query: '{% autoescape off %}{{ query }}{% endautoescape %}',
+            },
+          ];
+          var columns = [
+            {
+              'colStr': 'Nom',
+              'fields': ['name', 'pk'],
+              'render': function (data, type, row) {
+                if (row['name'] == null) {
+                  return undefinedTag();
+                } else {
+                  return tableToolLink('/facebook/page/' + row['pk'],
+                    truncate_text(row['name'], 30, true));
+                }
+              },
+            },
+            {
+              'colStr': 'Catégorie',
+              'fields': ['category'],
+              'render': function (data, type, row) {
+                if (row['category'] == null) {
+                  return '';
+                }
+                ;
+                return row['category'];
+              },
+            },
+            {
+              'colStr': 'Nombre de fans',
+              'searchable': false,
+              'fields': ['fan_count'],
+              'render': function (data, type, row) {
+                if (row['fan_count'] == null) {
+                  return '';
+                }
+                ;
+                return centeredTag(row['fan_count']);
+              },
+            },
+            {
+              'colStr': 'Nombre de références',
+              'searchable': false,
+              'fields': ['talking_about_count'],
+              'render': function (data, type, row) {
+                if (row['talking_about_count'] == null) {
+                  return '';
+                }
+                ;
+                return centeredTag(row['talking_about_count']);
+              },
+            },
+            {
+              'searchable': false,
+              'orderable': false,
+              'fields': ['link'],
+              'render': function (data, type, row) {
+                if (row['link'] == null) {
+                  return '';
+                }
+                ;
+                return tableToolLink(row['link'], 'Voir page', 'target=\'_blank\'');
+              },
+            },
+          ];
+        </script>
+      </table>
+    </div>
+  </div>
+</section>
 {% elif source == "ToolLineChart_fbpage_fans" %}
-    <section class="tableContainer halfWidth">
-        <div class="">
-            <div class="section_menu">
-                <span class="section_title">
-                    <b>Nombre de fans de pages Facebook</b>
-                </span>
-                <div class="section_options">
-                    {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
-                </div>
-                {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
-            </div>
-            <div class="section_content">
-                <table class="display" id="FacebookPages" width="100%" drawn='False'>
-                    <script class="tableVars">
-                        var modelName = "FBPage";
-                        var srcs = [
-                            {
-                                attr: "facebookPagesToHarvest",
-                            }
-                        ]
-                        var columns = [
-                            {
-                                "colStr": "Nom",
-                                "fields": ["name", "pk"],
-                                "render": function (data, type, row) {
-                                    if (row['name'] == null) {
-                                        return undefinedTag();
-                                    } else {
-                                        return tableToolLink("/facebook/page/" + row["pk"],
-                                            truncate_text(row['name'], 30, true));
-                                    }
-                                }
-                            },
-                           // {
-                               // "colStr": "Nombre de references",
-                               // "searchable" :false,
-                               // "fields": [""],
-                           // }
+<section class="tableContainer halfWidth">
+  <div class="">
+    <div class="section_menu">
+        <span class="section_title">
+          <b>Nombre de fans de pages Facebook</b>
+        </span>
+      <div class="section_options">
+        {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+      </div>
+      {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+    </div>
+    <div class="section_content">
+      <table class="display" id="FacebookPages" width="100%" drawn='False'>
+        <script class="tableVars">
+          var modelName = 'FBPage';
+          var srcs = [
+            {
+              attr: 'facebookPagesToHarvest',
+            },
+          ];
+          var columns = [
+            {
+              'colStr': 'Nom',
+              'fields': ['name', 'pk'],
+              'render': function (data, type, row) {
+                if (row['name'] == null) {
+                  return undefinedTag();
+                } else {
+                  return tableToolLink('/facebook/page/' + row['pk'],
+                    truncate_text(row['name'], 30, true));
+                }
+              },
+            },
+            // {
+            // "colStr": "Nombre de references",
+            // "searchable" :false,
+            // "fields": [""],
+            // }
 
-                            {
-                                "colStr": "Nombre de fans",
-                                "searchable": false,
-                                "fields": ["fan_count"],
-                                "render": function (data, type, row) {
-                                    if (row['fan_count'] == null) {
-                                        return ""
-                                    }
-                                    ;
-                                    return centeredTag(row['fan_count']);
-                                }
-                            },
+            {
+              'colStr': 'Nombre de fans',
+              'searchable': false,
+              'fields': ['fan_count'],
+              'render': function (data, type, row) {
+                if (row['fan_count'] == null) {
+                  return '';
+                }
+                ;
+                return centeredTag(row['fan_count']);
+              },
+            },
 
-                            {
-                                "searchable": false,
-                                "orderable": false,
-                                "fields": ["link"],
-                                "render": function (data, type, row) {
-                                    if (row['link'] == null) {
-                                        return ""
-                                    }
-                                    ;
-                                    return tableToolLink(row["link"], "Voir page", "target='_blank'");
-                                }
-                            },
-                        ]
-                    </script>
-                </table>
-            </div>
-        </div>
-    </section>
+            {
+              'searchable': false,
+              'orderable': false,
+              'fields': ['link'],
+              'render': function (data, type, row) {
+                if (row['link'] == null) {
+                  return '';
+                }
+                ;
+                return tableToolLink(row['link'], 'Voir page', 'target=\'_blank\'');
+              },
+            },
+          ];
+        </script>
+      </table>
+    </div>
+  </div>
+</section>
 
 {% elif source == "ToolLinechart_fbPage_posts" %}
 <section class="tableContainer halfWidth">
   <div class="">
     <div class="section_menu">
-                <span class="section_title">
-                    <b>Activité des pages Facebook</b>
-                </span>
+        <span class="section_title">
+          <b>Activité des pages Facebook</b>
+        </span>
       <div class="section_options">
         {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
       </div>
@@ -404,42 +427,97 @@
     <div class="section_content">
       <table class="display" id="FacebookPagesPosts" width="100%" drawn='False'>
         <script class="tableVars">
-          var modelName = "FBPage";
+          var modelName = 'FBPage';
           var srcs = [
             {
-              attr: "facebookPagesToHarvest",
-            }
-          ]
+              attr: 'facebookPagesToHarvest',
+            },
+          ];
           var columns = [
             {
-              "colStr": "Nom",
-              "fields": ["name", "pk"],
-              "render": function (data, type, row) {
+              'colStr': 'Nom',
+              'fields': ['name', 'pk'],
+              'render': function (data, type, row) {
                 if (row['name'] == null) {
                   return undefinedTag();
                 } else {
-                  return tableToolLink("/facebook/page/" + row["pk"],
+                  return tableToolLink('/facebook/page/' + row['pk'],
                     truncate_text(row['name'], 30, true));
                 }
-              }
+              },
             },
 
             {
-              "searchable": false,
-              "orderable": false,
-              "fields": ["link"],
-              "render": function (data, type, row) {
+              'searchable': false,
+              'orderable': false,
+              'fields': ['link'],
+              'render': function (data, type, row) {
                 if (row['link'] == null) {
-                  return ""
+                  return '';
                 }
                 ;
-                return tableToolLink(row["link"], "Voir page", "target='_blank'");
-              }
+                return tableToolLink(row['link'], 'Voir page', 'target=\'_blank\'');
+              },
             },
-          ]
+          ];
         </script>
       </table>
     </div>
+  </div>
+</section>
+
+{% elif source == "collection_details" %}
+<section class="tableContainer">
+  <div class="section_menu">
+  <span class="section_title">
+  <b>Pages Facebook</b>
+  </span>
+    <div class="section_options">
+      <span>|</span>
+
+      <!-- DOWNLOAD FIELDS -->
+      <span class="section_menuItem tableDownloader"
+            filename="Collecte_twitter_users" title="Télécharger la sélection">
+        {% include "tool/icons.html" with x=5 y=4 className="tableOptionIcon" %}
+        <div class="downloadFields">
+          {% for key,val in 'FBPage'|getFields %}
+          <div field="facebook_page__{{key}}" helper="{{val.description}}">{{ val.name }}</div>
+          {% endfor %}
+        </div>
+      </span>
+
+      {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+    </div>
+    {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+  </div>
+  <div class="section_content">
+    <table class="display" id="collection_facebook_page_table" width="100%" drawn='False'>
+
+      <script class="tableVars">
+        var modelName = 'CollectionItem';
+        var srcs = [
+          {
+            modelName: 'Collection',
+            attr: 'items_facebook_pages',
+            id: '{{ collection.pk }}',
+          },
+        ];
+        var columns = [
+          {
+            'colStr': 'Nom',
+            'fields': ['facebook_page__name', 'facebook_page__pk'],
+            'render': function (data, type, row) {
+              if (row['facebook_page__name'] == null) {
+                return undefinedTag();
+              } else {
+                return tableToolLink('/facebook/page/' + row['facebook_page__pk'],
+                  truncate_text(row['facebook_page__name'], 30, true));
+              }
+            },
+          },
+        ];
+      </script>
+    </table>
   </div>
 </section>
 {% endif %}

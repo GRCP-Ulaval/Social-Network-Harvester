@@ -1,0 +1,81 @@
+{% load staticfiles %}
+
+<div id="side_menu">
+  {% if user.is_authenticated %}
+  <!-- TWITTER -->
+  {% with href='/twitter' title='Twitter' x=0 y=0 %}
+  {% include 'main/components/side_menu_item.html' %}
+  {% endwith %}
+
+  <!-- FACEBOOK -->
+  {% with href='/facebook' title='Facebook' x=1 y=0 %}
+  {% include 'main/components/side_menu_item.html' %}
+  {% endwith %}
+
+  <!-- YOUTUBE -->
+  {% with href='/youtube' title='Youtube' x=2 y=0 %}
+  {% include 'main/components/side_menu_item.html' %}
+  {% endwith %}
+
+  <hr class="menu_hr">
+
+  <!-- COLLECTIONS -->
+  {% with href='/collection' title='Collectes' x=2 y=1 %}
+  {% include 'main/components/side_menu_item.html' %}
+  {% endwith %}
+
+  <hr class="menu_hr">
+
+  <!-- ANALYSIS TOOLS -->
+  {% with href='#' id='analysis_box' title='Outils analytiques' x=5 y=1 %}
+  {% include 'main/components/side_menu_item.html' %}
+  {% endwith %}
+
+  <div id="SubLeftMenu">
+    <!-- LINECHART -->
+    {% with href='/tool/linechart?chart_type=activite_en_ligne' title='Temporel' x=0 y=1 sub=1 %}
+    {% include 'main/components/side_menu_item.html' %}
+    {% endwith %}
+
+    <!-- PIECHART -->
+    {% with href='/tool/piechart' title='Proportion' x=5 y=2 sub=1 %}
+    {% include 'main/components/side_menu_item.html' %}
+    {% endwith %}
+  </div>
+
+  <hr class="menu_hr">
+
+  {% endif %}
+
+  <div id="">
+    {% if user.is_authenticated %}
+    <!-- SETTINGS -->
+    {% with href='/user/settings' title='Paramètres' x=2 y=4 %}
+    {% include 'main/components/side_menu_item.html' %}
+    {% endwith %}
+    {% endif %}
+
+    <!-- GITHUB -->
+    {% with href='https://github.com/GRCP-Ulaval/Social-Network-Harvester' target="_blank" title='Github' x=3 y=2 %}
+    {% include 'main/components/side_menu_item.html' %}
+    {% endwith %}
+
+    <!-- MAILTO -->
+    {% with href='mailto:scloutier@nexapp.ca' target="_blank" title='Contacter' x=2 y=2 %}
+    {% include 'main/components/side_menu_item.html' %}
+    {% endwith %}
+
+    {% if user.is_staff %}
+    <!-- ADMIN -->
+    {% with href='/admin' title='Administration' x=1 y=2 %}
+    {% include 'main/components/side_menu_item.html' %}
+    {% endwith %}
+    {% endif %}
+  </div>
+  <hr class="menu_hr">
+  <div id="GRCP_banner">
+    <a class="perm_item" href="https://www.grcp.ulaval.ca/">
+      <img src="{%static 'medias/GRCP_Banner.jpg'%}" style="width:100%;">
+    </a>
+  </div>
+</div>

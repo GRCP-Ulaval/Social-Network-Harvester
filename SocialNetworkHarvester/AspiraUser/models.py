@@ -1,9 +1,11 @@
 import pickle
 import random
+import re
 
 import facebook
 from django.contrib.auth.models import User
 
+from Collection.models import Collection, CollectionItem
 from Facebook.models import FBPage, FBPost, FBComment, FBReaction, FBUser
 from SocialNetworkHarvester.loggers.viewsLogger import logError
 from SocialNetworkHarvester.settings import FACEBOOK_APP_PARAMS
@@ -107,7 +109,7 @@ class FBAccessToken(models.Model):
             if 'expires_in' in response:
                 self.expires = time.time() + int(response['expires_in'])
             else:
-                self.expires = time.time() + 60*5
+                self.expires = time.time() + 60 * 5
             self.save()
             log("%s expires in %s seconds" % (self, self.expires - time.time()))
         except Exception as e:
@@ -280,14 +282,17 @@ def getRandomString(length=255):
 
 MODEL_WHITELIST = ['FBPage', 'FBPost', 'FBComment', 'FBReaction', 'FBUser',
                    'Tweet', 'TWUser', "HashtagHarvester", "Hashtag", "favorite_tweet", "follower",
-                   'YTChannel', 'YTVideo', 'YTPlaylist', 'Subscription', 'YTComment', 'YTPlaylistItem']
+                   'YTChannel', 'YTVideo', 'YTPlaylist', 'Subscription', 'YTComment', 'YTPlaylistItem',
+                   'Collection', 'CollectionItem'
+                   ]
 
 
 def getModel(modelName):
     if modelName not in MODEL_WHITELIST:
-        raise Exception('Invalid or forbidden model name: %s'%modelName)
+        raise Exception('Invalid or forbidden model name: %s' % modelName)
     return {model.__name__: model for model in [
         TWUser, Tweet, HashtagHarvester, follower, favorite_tweet, Hashtag,
         FBPage, FBPost, FBComment, FBReaction, FBUser,
-        YTChannel, YTVideo, YTPlaylist, Subscription, YTComment, YTPlaylistItem
+        YTChannel, YTVideo, YTPlaylist, Subscription, YTComment, YTPlaylistItem,
+        Collection, CollectionItem
     ]}[modelName]

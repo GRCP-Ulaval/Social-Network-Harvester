@@ -13,20 +13,7 @@ from tool.views.ajaxTables import digestQuery, cleanQuery
 def lastUrlOrHome(request):
     if 'next' in request.GET:
         return HttpResponseRedirect(request.GET['next'])
-    # if request.META.get('HTTP_REFERER'):
-    #    referer = request.META.get('HTTP_REFERER')
-    #    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
     return HttpResponseRedirect('/')
-
-
-def addMessagesToContext(request, context):
-    if 'aspiraErrors' in request.session:
-        context['aspiraErrors'] = request.session['aspiraErrors']
-    if 'aspiraMessages' in request.session:
-        context['aspiraMessages'] = request.session['aspiraMessages']
-    request.session['aspiraMessages'] = []
-    request.session['aspiraErrors'] = []
-    return request, context
 
 
 @login_required()
@@ -42,7 +29,6 @@ def userDashboard(request):
         "ytStats": getYoutubeStats(aspiraUser),
         "fbStats": getFacebookStats(aspiraUser),
     }
-    request, context = addMessagesToContext(request, context)
     return render(request, 'AspiraUser/dashboard.html', context)
 
 
@@ -175,7 +161,6 @@ def userLoginPage(request):
             ('Enregistrement', '#')
         ]
     }
-    request, context = addMessagesToContext(request, context)
     return render(request, 'AspiraUser/login_page.html', context=context)
 
 
@@ -191,7 +176,6 @@ def userSettings(request):
     if hasattr(request.user.userProfile, 'fbAccessToken') and \
             request.user.userProfile.fbAccessToken._token:
         context['fbAccessToken'] = request.user.userProfile.fbAccessToken._token
-    request, context = addMessagesToContext(request, context)
     return render(request, 'AspiraUser/settings.html', context)
 
 

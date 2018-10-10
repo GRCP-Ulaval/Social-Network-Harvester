@@ -1,3 +1,4 @@
+import re
 import time
 
 from django.core.exceptions import MultipleObjectsReturned
@@ -87,6 +88,8 @@ class Hashtag(models.Model):
     # TODO: be able to order hashtags by hit_count in an SQL query
     class Meta:
         app_label = "Twitter"
+        verbose_name = 'Hashtag Twitter'
+        verbose_name_plural = 'Hashtags Twitter'
 
     term = models.CharField(max_length=128, null=True)
 
@@ -122,6 +125,8 @@ class Hashtag(models.Model):
 class HashtagHarvester(models.Model):
     class Meta:
         app_label = "Twitter"
+        verbose_name = 'Hashtag Twitter'
+        verbose_name_plural = 'Hashtags Twitter'
 
     hashtag = models.ForeignKey(Hashtag, related_name="harvesters", on_delete=models.CASCADE)
     _harvest_since = models.DateTimeField(null=True, blank=True)
@@ -175,11 +180,17 @@ class HashtagHarvester(models.Model):
             until = "%s-%s-%s" % (self._harvest_until.year, self._harvest_until.month, self._harvest_until.day)
         return "#%s's harvester (%s to %s)" % (self.hashtag.term, since, until)
 
+    def str(self):
+        return str(self.hashtag)
+
     def harvest_count(self):
         return self.harvested_tweets.count()
 
     def get_obj_ident(self):
         return "HashtagHarvester__%s" % self.pk
+
+    def getLink(self):
+        return self.hashtag.getLink()
 
 
 ################### TWUSER ####################
@@ -503,6 +514,8 @@ class TWUser(models.Model):
 
     class Meta:
         app_label = "Twitter"
+        verbose_name = 'Utilisateur Twitter'
+        verbose_name_plural = 'Utilisateurs Twitter'
 
     def getLink(self):
         return "/twitter/user/%s" % self.pk
@@ -643,6 +656,8 @@ class follower(time_label):
 class Tweet(models.Model):
     class Meta:
         app_label = "Twitter"
+        verbose_name = 'Tweet'
+        verbose_name_plural = 'Tweets'
 
     def __str__(self):
         return "%s tweet #%s" % (("@%s" % self.user if self.user else 'unidentifed TWUser'), self._ident)

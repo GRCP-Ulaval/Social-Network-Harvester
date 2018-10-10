@@ -2,987 +2,1058 @@
 {% load extratags %}
 
 
-    {% if source == "TwitterBase" %}
-        <section class="tableContainer">
-            <div class="">
-        <div class="section_menu">
-            <span class="section_title toggleableSection">
-                <b>Utilisateurs collectés</b>
-            </span>
-            <div class="section_options">
-                <span>|</span>
-                <span id="new_user" class="section_menuItem"><a
-                        onclick="addTWUserFormPopup()">Ajouter</a></span>
-                <!-- ADD NEW TWUSER POPUP-->
-                <div class="popup" id="addNewTwitterUser">
-                    <div id="title">Ajouter un nouvel utilisateur</div>
-                    <div id="help">
-                        Ajoutez un nouvel utilisateur Twitter à votre liste en écrivant leur nom d'utilisateur
-                        (screen_name), ou en téléchargeant un fichier .csv, dans lequel chaque ligne correspond
-                        à un nom d'utilisateur distinct et valide.
-                    </div>
-                    <div id="content">
-                        <form style="max-width:450px;" method="post" action="/twitter/addUser"
-                              enctype="multipart/form-data" id="newUserForm">
-                            {% csrf_token %}
-                            <p>Écrivez tous les noms d'utilisateurs (les "screen_name") ainsi que les
-                                dates voulus:</p>
-                            <center>
-                                <input id='slot_1' type="text" name="screen_name" placeholder="Nom d'utilisateur" value="">
-                                <br>
-                                Date de debut :<input type="date">
-                                <br>
-                                Date de fin : <input type="date">
-                                <p></p>
-                                <br>
-                                <br>
-                                    <div class="plusIconInput" onclick="addUserLine(this)">
-                                            {% include "tool/icons.html" with x=3 y=3 %}
-                                    </div>
-                            </center>
-                            <hr>
-                            <p>Alternativement, sélectionnez un fichier .csv:</p>
-                            <input type="file" name="Browse" size="chars">
-                            <br><br>
-                            <center><input type="submit" value="Soumettre" style="right:0px;"></center>
-                        </form>
-                    </div>
-                    <script id="functions">
-                        function addUserLine(elem) {
-                            $(elem).parent().children('p').last().after(function () {
-                                return $(
-                                    "<input type='text' name='screen_name' placeholder=\"Nom d'utilisateur\">"
-                                    + "<br>"
-                                    + "Date de debut :<input type=\"date\">"
-                                    + "<br>"
-                                    + "Date de fin : <input type=\"date\">"
-                                    + "<p></p>")
-                            });
-                        }
-                        function addTWUserFormPopup() {
-                            displayCenterPopup('addNewTwitterUser')
-                            $('#centerPopupContent').find("#newUserForm").unbind('submit');
-                            $('#centerPopupContent').find("#newUserForm").submit(function (event) {
-                                event.preventDefault();
-                                var formData = new FormData($(this)[0]);
-                                $('#centerPopupInner').addClass("waitingMask");
-                                $('#centerPopupContent').addClass('unselectable');
-                                $.ajax({
-                                    url: $(this).attr("action"),
-                                    type: "POST",
-                                    data: formData,
-                                    processData: false,
-                                    contentType: false,
-                                    success: function (response) {
-                                        $('#centerPopupInner').removeClass("waitingMask");
-                                        $('#centerPopupContent').removeClass('unselectable');
-                                        $('#centerPopupOutter').hide();
-                                        reloadTable('#TWUserTable')
-                                        if (typeof response['messages'] != 'undefined') {
-                                            displayNewMessages(response['messages'])
-                                        }
-                                        if (typeof response['errors'] != 'undefined') {
-                                            displayNewErrors(response['errors'])
-                                        }
-                                        ;
-                                    }
-                                });
-                            });
-                        }
-                    </script>
-                </div>
-                <span>|</span>
-                <span id="delete_user" class="section_menuItem"><a onclick="removeSelectedUsers()">Retirer</a></span>
-                <!-- REMOVE TWUSER POPUP-->
-                <div class="popup" id="removeTwitterUser">
-                    <div id="title">Retirer</div>
-                    <div id="help">
-                        Retire les utilisateurs Twitter actuellement sélectionnés de votre liste de collecte. Les
-                        informations
-                        ne seront pas supprimées, mais vous ne les verrez plus apparaitre dans votre liste
-                        d'"Utilisateurs
-                        Collectés".
-                    </div>
-                    <div id="content">
-                        <center>Êtes-vous sûr de vouloir supprimer les <br> utilisateurs Twitter de votre liste de
-                            collecte?
-                            <br><br>
-                            <div id="selectedTWUsers">0 lignes selectionnées</div>
-                            <br>
-                            <input type="submit" value="Remove" onclick="submitForm()"></input>
-                        </center>
-                    </div>
-                    <script id="functions">
-                        function removeSelectedUsers() {
-                            lastPopupId = null;
-                            var displayer = $('#removeTwitterUser').children('#content').children().children('#selectedTWUsers');
-                            var length = selectedCounts['#TWUserTable']
-                            if (!length) {
-                                alert("Vous devez d'abpord sélectioner une ligne du tableau.")
-                            }
-                            else {
-                                displayer.html("" + length + " row" + (length > 1 ? "s" : "") + " selected");
-                                displayCenterPopup('removeTwitterUser')
-                            }
-                        }
-                        function submitForm() {
-                            url = '/removeSelectedItems?pageURL=' +
-                                    window.location.pathname + '&tableId=TWUserTable' +
-                                    '&listToRemoveFrom=twitterUsersToHarvest';
-                            executeAjaxAndDisplayMessages(url, '#TWUserTable');
-                        }
-                    </script>
-                </div>
-                {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="TWUser" filename="Harvested_Twitter_Users" %}
-                {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
-            </div>
-            {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
-        </div>
-        <div class="section_content">
-            <table class="display" id="TWUserTable" width="100%" drawn='False'>
-                <script class="tableVars">
-                    var modelName = "TWUser";
-                    var srcs = [
-                        {
-                            attr:"twitterUsersToHarvest",
-                        }
-                    ]
-                    var columns = [
-                        {
-                            "colStr":"Nom",
-                            "fields":["name", "pk"],
-                            "render":function (data, type, row) {
-                                if (row['name'] == null) {
-                                    return undefinedTag();
-                                } else {
-                                    return tableToolLink("/twitter/user/" + row["pk"],
-                                            truncate_text(row['name'], 30, true));
-                                }
-                            }
-                        },
-                        {
-                            "colStr": "Nom d'utilisateur",
-                            "fields": ["screen_name","_error_on_update"],
-                            "render": function (data, type, row) {
-                                var str = "<span>"+row['screen_name']+"</span>";
-                                if (row['_error_on_update']){
-                                    str = `<span style="cursor:pointer;" title="Cet utilisateur n'existe pas ou ses informations sont privées.">
-                                    {% include 'tool/icons.html' with x=3 y=5 style="height:12px;width:12px;"%}
-                                        </span>`+str;
-                                }
-                                return str;
-                            }
-                        },
-                        {
-                            "colStr": "Nombre d'abonnés",
-                            "fields": ["followers_count"],
-                            "render": function (data, type, row) {
-                                if (row['followers_count'] == null) {
-                                    return ""
-                                }
-                                ;
-                                return "<center>" + row['followers_count'] + "</center>";
-                            }
-                        },
-                        {
-                            "colStr": "Nombre d'abonnements",
-                            "fields": ["friends_count"],
-                            "render": function (data, type, row) {
-                                if (row['friends_count'] == null) {
-                                    return ""
-                                }
-                                ;
-                                return "<center>" + row['friends_count'] + "</center>";
-                            }
-                        },
-                        {
-                            "colStr": "Nombre de status",
-                            "fields": ["statuses_count"],
-                            "render": function (data, type, row) {
-                                if (row['statuses_count'] == null) {
-                                    return ""
-                                }
-                                ;
-                                return "<center>" + row['statuses_count'] + "</center>";
-                            }
-                        },
-                        {
-                            "colStr": "Location",
-                            "fields": ["location"],
-                            "render": function (data, type, row) {
-                                if (row['location'] == null) {
-                                    return ""
-                                }
-                                ;
-                                return truncate_text(row['location'],50,true);
-                            }
-                        },
-                    ]
-                </script>
-            </table>
-        </div>
-    </div>
-        </section>
+{% if source == "TwitterBase" %}
+<section class="tableContainer">
+  <div class="section_menu">
+    <span class="section_title toggleableSection">
+      <b>Utilisateurs collectés</b>
+    </span>
+    <div class="section_options">
 
-    {% elif source == "TwitterUserFollowers" %}
-        <section class="tableContainer">
-            <div class="">
-        <div class="section_menu">
-                <span class="section_title">
-                    <b>Abonnés</b>
-                </span>
-            <div class="section_options">
-                <span>|</span>
-                <span id="downloadAllUsers" class="section_menuItem tableDownloader" filename="{{twUser}}_followers"
-                      title="Télécharger la sélection">
-                    {% include "tool/icons.html" with x=5 y=4 className="tableOptionIcon" %}
-                    <!-- DOWNLOAD FIELDS -->
-                    <div class="downloadFields">
-                        {% for key,val in 'follower'|getFields %}
-                        <div field="{{key}}" helper="{{val.description}}">{{ val.name }}</div>
-                        {% endfor %}
-                        {% for key,val in 'TWUser'|getFields %}
-                        <div field="value__{{key}}" helper="{{val.description}}">{{ val.name }}</div>
-                        {% endfor %}
-                    </div>
-                </span>
-                {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
-            </div>
-            {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
-        </div>
-        <div class="section_content">
-            <table class="display" id="TWFollowersTable" width="100%" drawn='False'>
-                <script class="tableVars">
-                    var modelName = "follower";
-                    var srcs = [
-                        {
-                            modelName: "TWUser",
-                            attr: "followers",
-                            id: "{{ twUser.pk }}",
-                        },
-                    ]
-                    var columns = [
-                        {
-                            "colStr": "Nom",
-                            "fields": ["value__name"],
-                            "render": function (data, type, row) {
-                                if (row['value__name'] == null) {
-                                    return undefinedTag();
-                                } else {
-                                    return row["value__name"];
-                                }
-                            }
-                        },
-                        {
-                            "colStr": "Nom d'utilisateur",
-                            "fields": ["value__screen_name", "value__pk"],
-                            "render": function (data, type, row) {
-                                if (row['value__pk'] == null) {
-                                    return "<i>Utilisateur indéfini</i>"
-                                }
-                                ;
-                                return tableToolLink("/twitter/user/" + row["value__pk"], row["value__screen_name"]);
-                            }
-                        },
-                        {
-                            "colStr": "Location",
-                            "fields": ["value__location",],
-                            "render": function (data, type, row) {
-                                if (row['value__location'] == null) {
-                                    return ""
-                                }
-                                ;
-                                return truncate_text(row['value__location'], 30, true);
-                            }
-                        },
-                        {
-                            "colStr": "Depuis (au minimum)",
-                            "fields": ["recorded_time"],
-                            "render": function (data, type, row) {
-                                if (row['recorded_time'] == null) {
-                                    return ""
-                                }
-                                ;
-                                return "<center>" + row["recorded_time"] + "</center>";
-                            }
-                        },
-                        {
-                            "colStr": "Jusqu'à",
-                            "fields": ["ended"],
-                            "render": function (data, type, row) {
-                                if (row['ended'] == null) {
-                                    return ""
-                                }
-                                ;
-                                return row["recorded_time"];
-                            }
-                        },
-                    ]
-                </script>
-            </table>
-        </div>
-    </div>
-        </section>
+      <span>|</span>
 
-    {% elif source == "TwitterUserFriends" %}
-        <section class="tableContainer">
-            <div class="">
-        <div class="section_menu">
-                <span class="section_title">
-                    <b>Abonnements</b>
-                </span>
-            <div class="section_options">
-                <span>|</span>
-                <span id="downloadAllUsers" class="section_menuItem tableDownloader" filename="{{twUser}}_following"
-                      title="Télécharger la sélection">
-                    {% include "tool/icons.html" with x=5 y=4 className="tableOptionIcon" %}
-                    <!-- DOWNLOAD FIELDS -->
-                    <div class="downloadFields">
-                        {% for key,val in 'follower'|getFields %}
-                        <div field="{{key}}" helper="{{val.description}}">{{ val.name }}</div>
-                        {% endfor %}
-                        {% for key,val in 'TWUser'|getFields %}
-                        <div field="twuser__{{key}}" helper="{{val.description}}">{{ val.name }}</div>
-                        {% endfor %}
-                    </div>
-                </span>
-                {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
-            </div>
-            {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+      <!-- ADD NEW TWUSER -->
+      <span id="new_user" class="section_menuItem">
+        <a onclick="addTWUserFormPopup()">Ajouter</a>
+      </span>
+      <div class="popup" id="addNewTwitterUser">
+        <div id="title">Ajouter un nouvel utilisateur</div>
+        <div id="help">
+          Ajoutez un nouvel utilisateur Twitter à votre liste en écrivant leur nom d'utilisateur
+          (screen_name), ou en téléchargeant un fichier .csv, dans lequel chaque ligne correspond
+          à un nom d'utilisateur distinct et valide.
         </div>
-        <div class="section_content">
-            <table class="display" id="TWFriendsTable" width="100%" drawn='False'>
-                <script class="tableVars">
-                    var modelName = "follower";
-                    var srcs = [
-                        {
-                            modelName: "TWUser",
-                            attr: "friends",
-                            id: "{{ twUser.pk }}",
-                        },
-                    ]
-                    var columns = [
-                        {
-                            "colStr": "Nom",
-                            "fields": ["twuser__name"],
-                            "render": function (data, type, row) {
-                                if (row['twuser__name'] == null) {
-                                    return undefinedTag();
-                                } else {
-                                    return row["twuser__name"];
-                                }
-                            }
-                        },
-                        {
-                            "colStr": "Nom d'utilisateur",
-                            "fields": ["twuser__screen_name", "twuser__pk"],
-                            "render": function (data, type, row) {
-                                if (row['twuser__pk'] == null) {
-                                    return "<i>Utilisateur indéfini</i>"
-                                }
-                                ;
-                                return tableToolLink("/twitter/user/" + row["twuser__pk"], row["twuser__screen_name"]);
-                            }
-                        },
-                        {
-                            "colStr": "Location",
-                            "fields": ["twuser__location",],
-                            "render": function (data, type, row) {
-                                if (row['twuser__location'] == null) {
-                                    return ""
-                                }
-                                ;
-                                return truncate_text(row['twuser__location'], 30, true);
-                            }
-                        },
-                        {
-                            "colStr": "Depuis (au minimum)",
-                            "fields": ["recorded_time"],
-                            "render": function (data, type, row) {
-                                if (row['recorded_time'] == null) {
-                                    return ""
-                                }
-                                ;
-                                return "<center>" + row["recorded_time"] + "</center>";
-                            }
-                        },
-                        {
-                            "colStr": "Jusqu'à",
-                            "fields": ["ended"],
-                            "render": function (data, type, row) {
-                                if (row['ended'] == null) {
-                                    return ""
-                                }
-                                ;
-                                return row["recorded_time"];
-                            }
-                        },
-                    ]
-                </script>
-            </table>
+        <div id="content">
+          <form style="max-width:450px;" method="post" action="/twitter/addUser"
+                enctype="multipart/form-data" id="newUserForm">
+            {% csrf_token %}
+            <p>Écrivez tous les noms d'utilisateurs (les "screen_name") ainsi que les
+              dates voulus:</p>
+            <center>
+              <input id='slot_1' type="text" name="screen_name" placeholder="Nom d'utilisateur" value="">
+              <br>
+              Date de debut :<input type="date">
+              <br>
+              Date de fin : <input type="date">
+              <p></p>
+              <br>
+              <br>
+              <div class="plusIconInput" onclick="addUserLine(this)">
+                {% include "tool/icons.html" with x=3 y=3 %}
+              </div>
+            </center>
+            <hr>
+            <p>Alternativement, sélectionnez un fichier .csv:</p>
+            <input type="file" name="Browse" size="chars">
+            <br><br>
+            <center><input type="submit" value="Soumettre" style="right:0px;"></center>
+          </form>
         </div>
-    </div>
-        </section>
+        <script id="functions">
+          function addUserLine(elem) {
+            $(elem).parent().children('p').last().after(function () {
+              return $(
+                '<input type=\'text\' name=\'screen_name\' placeholder="Nom d\'utilisateur">'
+                + '<br>'
+                + 'Date de debut :<input type="date">'
+                + '<br>'
+                + 'Date de fin : <input type="date">'
+                + '<p></p>');
+            });
+          }
 
-    {% elif source == "TwitterTweetMentions" %}
-        <section class="tableContainer">
-            <div class="">
-        <div class="section_menu">
-            <span class="section_title">
-                <b>Utilisateurs mentionnés</b>
-            </span>
-            <div class="section_options">
-                {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="TWUser" filename="Tweet_"|join:tweet.get_ident|join:"_user_mentions" %}
-                {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
-            </div>
-            {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+          function addTWUserFormPopup() {
+            displayCenterPopup('addNewTwitterUser');
+            $('#centerPopupContent').find('#newUserForm').unbind('submit');
+            $('#centerPopupContent').find('#newUserForm').submit(function (event) {
+              event.preventDefault();
+              var formData = new FormData($(this)[0]);
+              $('#centerPopupInner').addClass('waitingMask');
+              $('#centerPopupContent').addClass('unselectable');
+              $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                  $('#centerPopupInner').removeClass('waitingMask');
+                  $('#centerPopupContent').removeClass('unselectable');
+                  $('#centerPopupOutter').hide();
+                  reloadTable('#TWUserTable');
+                  if (typeof response['messages'] != 'undefined') {
+                    displayNewMessages(response['messages']);
+                  }
+                  if (typeof response['errors'] != 'undefined') {
+                    displayNewErrors(response['errors']);
+                  }
+                  ;
+                },
+              });
+            });
+          }
+        </script>
+      </div>
+
+      <span>|</span>
+
+      <!-- REMOVE TWUSER -->
+      <span id="delete_user" class="section_menuItem"><a onclick="removeSelectedUsers()">Retirer</a></span>
+      <div class="popup" id="removeTwitterUser">
+        <div id="title">Retirer</div>
+        <div id="help">
+          Retire les utilisateurs Twitter actuellement sélectionnés de votre liste de collecte. Les
+          informations
+          ne seront pas supprimées, mais vous ne les verrez plus apparaitre dans votre liste
+          d'"Utilisateurs
+          Collectés".
         </div>
-        <div class="section_content">
-        <table class="display" id="TWMentionnedUsersTable" width="100%" drawn='False'>
-            <script class="tableVars">
-                var modelName = "TWUser";
-                var srcs = [
-                    {
-                        modelName: "Tweet",
-                        attr: "user_mentions",
-                        id: "{{ tweet.pk }}",
-                    },
-                ]
-                var columns = [
-                    {
-                        "colStr": "Nom",
-                        "fields": ["name"],
-                        "render": function (data, type, row) {
-                            if (row['name'] == null) {
-                                return undefinedTag();
-                            } else {
-                                return row["name"];
-                            }
-                        }
-                    },
-                    {
-                        "colStr": "Nom d'utilisateur",
-                        "fields": ["screen_name", "pk"],
-                        "render": function (data, type, row) {
-                            if (row['pk'] == null) {
-                                return "<i>Utilisateur indéfini</i>"
-                            }
-                            ;
-                            return tableToolLink("/twitter/user/" + row["pk"], row["screen_name"]);
-                        }
-                    },
-                    {
-                        "colStr": "Location",
-                        "fields": ["location",],
-                        "render": function (data, type, row) {
-                            if (row['location'] == null) {
-                                return ""
-                            }
-                            ;
-                            return truncate_text(row['location'], 30, true);
-                        }
-                    },
-                ]
-            </script>
-        </table>
-    </div>
-    </div>
-        </section>
-
-    {% elif source == "TwitterTweetFavoritedBy" %}
-        <section class="tableContainer">
-            <div class="">
-            <div class="section_menu">
-                <span class="section_title">
-                    <b>Favorité par</b>
-                </span>
-                <div class="section_options">
-                    <span>|</span>
-                    <span id="downloadTweets" class="section_menuItem tableDownloader"
-                          filename="Tweet_{{ tweet.get_ident }}_favorited_by" title="Télécharger la sélection">
-                        {% include "tool/icons.html" with x=5 y=4 className="tableOptionIcon" %}
-                        <!-- DOWNLOAD FIELDS -->
-                        <div class="downloadFields">
-                            {% for key,val in 'favorite_tweet'|getFields %}
-                            <div field="{{key}}" helper="{{val.description}}">{{ val.name }}</div>
-                            {% endfor %}
-                            {% for key,val in 'TWUser'|getFields %}
-                            <div field="twuser__{{key}}" helper="{{val.description}}">{{ val.name }}</div>
-                            {% endfor %}
-                        </div>
-                    </span>
-                    {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
-                </div>
-                {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
-            </div>
-            <div class="section_content">
-            <table class="display" id="TWFavoritedByTable" width="100%" drawn='False'>
-                <script class="tableVars">
-                    var modelName = "favorite_tweet";
-                    var srcs = [
-                        {
-                            modelName: "Tweet",
-                            attr: "favorited_by",
-                            id: "{{ tweet.pk }}",
-                        },
-                    ]
-                    var columns = [
-                        {
-                            "colStr": "Nom",
-                            "fields": ["twuser__name"],
-                            "render": function (data, type, row) {
-                                if (row['twuser__name'] == null) {
-                                    return undefinedTag();
-                                } else {
-                                    return row["twuser__name"];
-                                }
-                            }
-                        },
-                        {
-                            "colStr": "Nom d'utilisateur",
-                            "fields": ["twuser__screen_name", "twuser__pk"],
-                            "render": function (data, type, row) {
-                                if (row['twuser__pk'] == null) {
-                                    return "<i>Utilisateur indéfini</i>"
-                                }
-                                ;
-                                return tableToolLink("/twitter/user/" + row["twuser__pk"], row["twuser__screen_name"]);
-                            }
-                        },
-                        {
-                            "colStr": "Location",
-                            "fields": ["twuser__location",],
-                            "render": function (data, type, row) {
-                                if (row['twuser__location'] == null) {
-                                    return ""
-                                }
-                                ;
-                                return truncate_text(row['twuser__location'], 30, true);
-                            }
-                        },
-                        {
-                            "colStr": "Depuis (au minimum)",
-                            "fields": ["recorded_time"],
-                            "render": function (data, type, row) {
-                                if (row['recorded_time'] == null) {
-                                    return ""
-                                }
-                                ;
-                                return "<center>" + row["recorded_time"] + "</center>";
-                            }
-                        },
-                        {
-                            "colStr": "Jusqu'à",
-                            "fields": ["ended"],
-                            "render": function (data, type, row) {
-                                if (row['ended'] == null) {
-                                    return ""
-                                }
-                                ;
-                                return row["recorded_time"];
-                            }
-                        },
-                    ]
-                </script>
-            </table>
+        <div id="content">
+          <center>Êtes-vous sûr de vouloir supprimer les <br> utilisateurs Twitter de votre liste de
+            collecte?
+            <br><br>
+            <div id="selectedTWUsers">0 lignes selectionnées</div>
+            <br>
+            <input type="submit" value="Remove" onclick="submitForm()"></input>
+          </center>
         </div>
+        <script id="functions">
+          function removeSelectedUsers() {
+            lastPopupId = null;
+            var displayer = $('#removeTwitterUser').children('#content').children().children('#selectedTWUsers');
+            var length = selectedCounts['#TWUserTable'];
+            if (!length) {
+              alert('Vous devez d\'abpord sélectioner une ligne du tableau.');
+            }
+            else {
+              displayer.html('' + length + ' row' + (length > 1 ? 's' : '') + ' selected');
+              displayCenterPopup('removeTwitterUser');
+            }
+          }
+
+          function submitForm() {
+            url = '/removeSelectedItems?pageURL=' +
+              window.location.pathname + '&tableId=TWUserTable' +
+              '&listToRemoveFrom=twitterUsersToHarvest';
+            executeAjaxAndDisplayMessages(url, '#TWUserTable');
+          }
+        </script>
+      </div>
+
+      <!-- ADD TO COLLECTION -->
+      {% with name="add_to_collection" model_name="TWUser" table_id="TWUserTable" %}
+      {% include "tool/tables/tableMenuItems.html" %}
+      {% endwith %}
+
+      <!-- DOWNLOAD_FIELDS -->
+      {% with name="downloadFields" className="TWUser" filename="Harvested_Twitter_Users" %}
+      {% include "tool/tables/tableMenuItems.html" %}
+      {% endwith %}
+
+      {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+
+    </div>
+    {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+  </div>
+  <div class="section_content">
+    <table class="display" id="TWUserTable" width="100%" drawn='False'>
+      <script class="tableVars">
+        var modelName = 'TWUser';
+        var srcs = [
+          {
+            attr: 'twitterUsersToHarvest',
+          },
+        ];
+        var columns = [
+          {
+            'colStr': 'Nom',
+            'fields': ['name', 'pk'],
+            'render': function (data, type, row) {
+              if (row['name'] == null) {
+                return undefinedTag();
+              } else {
+                return tableToolLink('/twitter/user/' + row['pk'],
+                  truncate_text(row['name'], 30, true));
+              }
+            },
+          },
+          {
+            'colStr': 'Nom d\'utilisateur',
+            'fields': ['screen_name', '_error_on_update'],
+            'render': function (data, type, row) {
+              var str = '<span>' + row['screen_name'] + '</span>';
+              if (row['_error_on_update']) {
+                str = `<span style="cursor:pointer;" title="Cet utilisateur n'existe pas ou ses informations sont privées.">
+                  {% include 'tool/icons.html' with x=3 y=5 style="height:12px;width:12px;"%}
+                    </span>` + str;
+              }
+              return str;
+            },
+          },
+          {
+            'colStr': 'Nombre d\'abonnés',
+            'fields': ['followers_count'],
+            'render': function (data, type, row) {
+              if (row['followers_count'] == null) {
+                return '';
+              }
+              ;
+              return '<center>' + row['followers_count'] + '</center>';
+            },
+          },
+          {
+            'colStr': 'Nombre d\'abonnements',
+            'fields': ['friends_count'],
+            'render': function (data, type, row) {
+              if (row['friends_count'] == null) {
+                return '';
+              }
+              ;
+              return '<center>' + row['friends_count'] + '</center>';
+            },
+          },
+          {
+            'colStr': 'Nombre de status',
+            'fields': ['statuses_count'],
+            'render': function (data, type, row) {
+              if (row['statuses_count'] == null) {
+                return '';
+              }
+              ;
+              return '<center>' + row['statuses_count'] + '</center>';
+            },
+          },
+          {
+            'colStr': 'Location',
+            'fields': ['location'],
+            'render': function (data, type, row) {
+              if (row['location'] == null) {
+                return '';
+              }
+              ;
+              return truncate_text(row['location'], 50, true);
+            },
+          },
+        ];
+      </script>
+    </table>
+  </div>
+</section>
+
+{% elif source == "TwitterUserFollowers" %}
+<section class="tableContainer">
+  <div class="section_menu">
+      <span class="section_title">
+        <b>Abonnés</b>
+      </span>
+    <div class="section_options">
+      <span>|</span>
+
+      <!-- DOWNLOAD FIELDS -->
+      <span id="downloadAllUsers" class="section_menuItem tableDownloader" filename="{{twUser}}_followers"
+            title="Télécharger la sélection">
+        {% include "tool/icons.html" with x=5 y=4 className="tableOptionIcon" %}
+        <div class="downloadFields">
+          {% for key,val in 'follower'|getFields %}
+          <div field="{{key}}" helper="{{val.description}}">{{ val.name }}</div>
+          {% endfor %}
+          {% for key,val in 'TWUser'|getFields %}
+          <div field="value__{{key}}" helper="{{val.description}}">{{ val.name }}</div>
+          {% endfor %}
         </div>
-        </section>
+      </span>
 
-    {% elif source == "ToolLinechart_userActivity" %}
-        <section class="tableContainer halfWidth">
-            <div class="">
-        <div class="section_menu">
-            <span class="section_title">
-                <b>Activité des utilisateurs Twitter</b>
-            </span>
-            <div class="section_options">
-                {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
-            </div>
-            {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+      {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+    </div>
+    {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+  </div>
+  <div class="section_content">
+    <table class="display" id="TWFollowersTable" width="100%" drawn='False'>
+      <script class="tableVars">
+        var modelName = 'follower';
+        var srcs = [
+          {
+            modelName: 'TWUser',
+            attr: 'followers',
+            id: '{{ twUser.pk }}',
+          },
+        ];
+        var columns = [
+          {
+            'colStr': 'Nom',
+            'fields': ['value__name'],
+            'render': function (data, type, row) {
+              if (row['value__name'] == null) {
+                return undefinedTag();
+              } else {
+                return row['value__name'];
+              }
+            },
+          },
+          {
+            'colStr': 'Nom d\'utilisateur',
+            'fields': ['value__screen_name', 'value__pk'],
+            'render': function (data, type, row) {
+              if (row['value__pk'] == null) {
+                return '<i>Utilisateur indéfini</i>';
+              }
+              ;
+              return tableToolLink('/twitter/user/' + row['value__pk'], row['value__screen_name']);
+            },
+          },
+          {
+            'colStr': 'Location',
+            'fields': ['value__location'],
+            'render': function (data, type, row) {
+              if (row['value__location'] == null) {
+                return '';
+              }
+              ;
+              return truncate_text(row['value__location'], 30, true);
+            },
+          },
+          {
+            'colStr': 'Depuis (au minimum)',
+            'fields': ['recorded_time'],
+            'render': function (data, type, row) {
+              if (row['recorded_time'] == null) {
+                return '';
+              }
+              ;
+              return '<center>' + row['recorded_time'] + '</center>';
+            },
+          },
+          {
+            'colStr': 'Jusqu\'à',
+            'fields': ['ended'],
+            'render': function (data, type, row) {
+              if (row['ended'] == null) {
+                return '';
+              }
+              ;
+              return row['recorded_time'];
+            },
+          },
+        ];
+      </script>
+    </table>
+  </div>
+</section>
+
+{% elif source == "TwitterUserFriends" %}
+<section class="tableContainer">
+  <div class="section_menu">
+      <span class="section_title">
+        <b>Abonnements</b>
+      </span>
+    <div class="section_options">
+      <span>|</span>
+
+      <!-- DOWNLOAD FIELDS -->
+      <span id="downloadAllUsers" class="section_menuItem tableDownloader" filename="{{twUser}}_following"
+            title="Télécharger la sélection">
+        {% include "tool/icons.html" with x=5 y=4 className="tableOptionIcon" %}
+        <div class="downloadFields">
+          {% for key,val in 'follower'|getFields %}
+          <div field="{{key}}" helper="{{val.description}}">{{ val.name }}</div>
+          {% endfor %}
+          {% for key,val in 'TWUser'|getFields %}
+          <div field="twuser__{{key}}" helper="{{val.description}}">{{ val.name }}</div>
+          {% endfor %}
         </div>
-        <div class="section_content">
-        <table class="display" id="TWUserTable" width="100%" drawn='False'>
-            <script class="tableVars">
-                var modelName = "TWUser";
-                var srcs = [
-                    {
-                        attr: "twitterUsersToHarvest",
-                    }
-                ]
-                var columns = [
-                    {
-                        "colStr": "Nom",
-                        "fields": ["name", "pk"],
-                        "render": function (data, type, row) {
-                            if (row['name'] == null) {
-                                return undefinedTag();
-                            } else {
-                                return tableToolLink("/twitter/user/" + row["pk"],
-                                        truncate_text(row['name'], 30, true));
-                            }
-                        }
-                    },
-                    {
-                        "colStr": "Nom d'utilisateur",
-                        "fields": ["screen_name"],
-                        "render": function (data, type, row) {
-                            if (row['screen_name'] == null) {
-                                return ""
-                            }
-                            ;
-                            return row['screen_name'];
-                        },
-                    },
-                    {
-                        "colStr": "Nombre d'abonnés actuels",
-                        "fields": ["followers_count"],
-                        "render": function (data, type, row) {
-                            if (row['followers_count'] == null) {
-                                return ""
-                            }
-                            ;
-                            return centeredTag(row['followers_count']);
-                        },
-                        "searchable":false,
-                    },
-                    /*{
-                        "colStr": "Nombre d'abonnements",
-                        "fields": ["friends_count"],
-                        "render": function (data, type, row) {
-                            if (row['friends_count'] == null) {
-                                return ""
-                            }
-                            ;
-                            return centeredTag(row['friends_count']);
-                        },
-                        "searchable":false,
-                    },*/
-                    /*{
-                        "colStr": "Nombre de status",
-                        "fields": ["statuses_count","tweets__count"],
-                        "render": function (data, type, row) {
-                            if (row['statuses_count'] == null) {
-                                return ""
-                            }
-                            ;
-                            var str = row['statuses_count'];
-                            if (row["tweets__count"] != 0){
-                                str+=" ("+row["tweets__count"]+" collectés)";
-                            }else{
-                                str+=" (0 collectés)";
-                            }
-                            return centeredTag(str);
-                        },
-                        "searchable":false,
-                    },*/
-                    /*{
-                        "colStr": "Location",
-                        "fields": ["location"],
-                        "render": function (data, type, row) {
-                            if (row['location'] == null) {
-                                return ""
-                            }
-                            ;
-                            return truncate_text(row['location'], 50, true);
-                        }
-                    },*/
-                ]
-            </script>
-        </table>
-    </div>
-    </div>
-        </section>
+      </span>
 
-    {% elif source == "ToolLinechart_userFollowers" %}
-        <section class="tableContainer halfWidth">
-            <div class="">
-        <div class="section_menu">
-                <span class="section_title">
-                    <b>Nombre d'abonnés d'utilisateurs Twitter</b>
-                </span>
-            <div class="section_options">
-                {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
-            </div>
-            {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+      {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+    </div>
+    {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+  </div>
+  <div class="section_content">
+    <table class="display" id="TWFriendsTable" width="100%" drawn='False'>
+      <script class="tableVars">
+        var modelName = 'follower';
+        var srcs = [
+          {
+            modelName: 'TWUser',
+            attr: 'friends',
+            id: '{{ twUser.pk }}',
+          },
+        ];
+        var columns = [
+          {
+            'colStr': 'Nom',
+            'fields': ['twuser__name'],
+            'render': function (data, type, row) {
+              if (row['twuser__name'] == null) {
+                return undefinedTag();
+              } else {
+                return row['twuser__name'];
+              }
+            },
+          },
+          {
+            'colStr': 'Nom d\'utilisateur',
+            'fields': ['twuser__screen_name', 'twuser__pk'],
+            'render': function (data, type, row) {
+              if (row['twuser__pk'] == null) {
+                return '<i>Utilisateur indéfini</i>';
+              }
+              ;
+              return tableToolLink('/twitter/user/' + row['twuser__pk'], row['twuser__screen_name']);
+            },
+          },
+          {
+            'colStr': 'Location',
+            'fields': ['twuser__location'],
+            'render': function (data, type, row) {
+              if (row['twuser__location'] == null) {
+                return '';
+              }
+              ;
+              return truncate_text(row['twuser__location'], 30, true);
+            },
+          },
+          {
+            'colStr': 'Depuis (au minimum)',
+            'fields': ['recorded_time'],
+            'render': function (data, type, row) {
+              if (row['recorded_time'] == null) {
+                return '';
+              }
+              ;
+              return '<center>' + row['recorded_time'] + '</center>';
+            },
+          },
+          {
+            'colStr': 'Jusqu\'à',
+            'fields': ['ended'],
+            'render': function (data, type, row) {
+              if (row['ended'] == null) {
+                return '';
+              }
+              ;
+              return row['recorded_time'];
+            },
+          },
+        ];
+      </script>
+    </table>
+  </div>
+</section>
+
+{% elif source == "TwitterTweetMentions" %}
+<section class="tableContainer">
+  <div class="section_menu">
+    <span class="section_title">
+      <b>Utilisateurs mentionnés</b>
+    </span>
+    <div class="section_options">
+      <!-- DOWNLOAD FILEDS -->
+      {% with name="downloadFields" className="TWUser" %}
+      {% with filename="Tweet_"|join:tweet.get_ident|join:"_user_mentions" %}
+      {% include "tool/tables/tableMenuItems.html" %}
+      {% endwith %}{% endwith %}
+
+      {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+    </div>
+    {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+  </div>
+  <div class="section_content">
+    <table class="display" id="TWMentionnedUsersTable" width="100%" drawn='False'>
+      <script class="tableVars">
+        var modelName = 'TWUser';
+        var srcs = [
+          {
+            modelName: 'Tweet',
+            attr: 'user_mentions',
+            id: '{{ tweet.pk }}',
+          },
+        ];
+        var columns = [
+          {
+            'colStr': 'Nom',
+            'fields': ['name'],
+            'render': function (data, type, row) {
+              if (row['name'] == null) {
+                return undefinedTag();
+              } else {
+                return row['name'];
+              }
+            },
+          },
+          {
+            'colStr': 'Nom d\'utilisateur',
+            'fields': ['screen_name', 'pk'],
+            'render': function (data, type, row) {
+              if (row['pk'] == null) {
+                return '<i>Utilisateur indéfini</i>';
+              }
+              ;
+              return tableToolLink('/twitter/user/' + row['pk'], row['screen_name']);
+            },
+          },
+          {
+            'colStr': 'Location',
+            'fields': ['location'],
+            'render': function (data, type, row) {
+              if (row['location'] == null) {
+                return '';
+              }
+              ;
+              return truncate_text(row['location'], 30, true);
+            },
+          },
+        ];
+      </script>
+    </table>
+  </div>
+</section>
+
+{% elif source == "TwitterTweetFavoritedBy" %}
+<section class="tableContainer">
+  <div class="section_menu">
+    <span class="section_title">
+      <b>Favorité par</b>
+    </span>
+    <div class="section_options">
+      <span>|</span>
+
+      <!-- DOWNLOAD FIELDS -->
+      <span id="downloadTweets" class="section_menuItem tableDownloader"
+            filename="Tweet_{{ tweet.get_ident }}_favorited_by" title="Télécharger la sélection">
+        {% include "tool/icons.html" with x=5 y=4 className="tableOptionIcon" %}
+        <div class="downloadFields">
+          {% for key,val in 'favorite_tweet'|getFields %}
+          <div field="{{key}}" helper="{{val.description}}">{{ val.name }}</div>
+          {% endfor %}
+          {% for key,val in 'TWUser'|getFields %}
+          <div field="twuser__{{key}}" helper="{{val.description}}">{{ val.name }}</div>
+          {% endfor %}
         </div>
-        <div class="section_content">
-        <table class="display" id="TWUserTable" width="100%" drawn='False'>
-            <script class="tableVars">
-                var modelName = "TWUser";
-                var srcs = [
-                    {
-                        attr: "twitterUsersToHarvest",
-                    }
-                ]
-                var columns = [
-                    {
-                        "colStr": "Nom",
-                        "fields": ["name", "pk"],
-                        "render": function (data, type, row) {
-                            if (row['name'] == null) {
-                                return undefinedTag();
-                            } else {
-                                return tableToolLink("/twitter/user/" + row["pk"],
-                                        truncate_text(row['name'], 30, true));
-                            }
-                        }
-                    },
-                    {
-                        "colStr": "Nom d'utilisateur",
-                        "fields": ["screen_name"],
-                        "render": function (data, type, row) {
-                            if (row['screen_name'] == null) {
-                                return ""
-                            }
-                            ;
-                            return row['screen_name'];
-                        }
-                    },
-                    {
-                        "colStr": "Nombre d'abonnés",
-                        "fields": ["followers_count"],
-                        "render": function (data, type, row) {
-                            if (row['followers_count'] == null) {
-                                return ""
-                            }
-                            ;
-                            return "<center>" + row['followers_count'] + "</center>";
-                        }
-                    },
-                    {
-                        "colStr": "Nombre d'abonnements",
-                        "fields": ["friends_count"],
-                        "render": function (data, type, row) {
-                            if (row['friends_count'] == null) {
-                                return ""
-                            }
-                            ;
-                            return "<center>" + row['friends_count'] + "</center>";
-                        }
-                    },
-                    {
-                        "colStr": "Nombre de status",
-                        "fields": ["statuses_count"],
-                        "render": function (data, type, row) {
-                            if (row['statuses_count'] == null) {
-                                return ""
-                            }
-                            ;
-                            return "<center>" + row['statuses_count'] + "</center>";
-                        }
-                    },
-                    {
-                        "colStr": "Location",
-                        "fields": ["location"],
-                        "render": function (data, type, row) {
-                            if (row['location'] == null) {
-                                return ""
-                            }
-                            ;
-                            return truncate_text(row['location'], 50, true);
-                        }
-                    },
-                ]
-            </script>
-        </table>
-    </div>
-    </div>
-        </section>
+      </span>
 
-    {% elif source == "ToolPiechartFollowerLocation" %}
-        <section class="tableContainer halfWidth">
-             <div class="">
-        <div class="section_menu">
-            <span class="section_title">
-                <b>Location des abonnés d'utilisateurs Twitter</b>
-            </span>
-        <div class="section_options">
-            {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+      {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+    </div>
+    {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+  </div>
+  <div class="section_content">
+    <table class="display" id="TWFavoritedByTable" width="100%" drawn='False'>
+      <script class="tableVars">
+        var modelName = 'favorite_tweet';
+        var srcs = [
+          {
+            modelName: 'Tweet',
+            attr: 'favorited_by',
+            id: '{{ tweet.pk }}',
+          },
+        ];
+        var columns = [
+          {
+            'colStr': 'Nom',
+            'fields': ['twuser__name'],
+            'render': function (data, type, row) {
+              if (row['twuser__name'] == null) {
+                return undefinedTag();
+              } else {
+                return row['twuser__name'];
+              }
+            },
+          },
+          {
+            'colStr': 'Nom d\'utilisateur',
+            'fields': ['twuser__screen_name', 'twuser__pk'],
+            'render': function (data, type, row) {
+              if (row['twuser__pk'] == null) {
+                return '<i>Utilisateur indéfini</i>';
+              }
+              ;
+              return tableToolLink('/twitter/user/' + row['twuser__pk'], row['twuser__screen_name']);
+            },
+          },
+          {
+            'colStr': 'Location',
+            'fields': ['twuser__location'],
+            'render': function (data, type, row) {
+              if (row['twuser__location'] == null) {
+                return '';
+              }
+              ;
+              return truncate_text(row['twuser__location'], 30, true);
+            },
+          },
+          {
+            'colStr': 'Depuis (au minimum)',
+            'fields': ['recorded_time'],
+            'render': function (data, type, row) {
+              if (row['recorded_time'] == null) {
+                return '';
+              }
+              ;
+              return '<center>' + row['recorded_time'] + '</center>';
+            },
+          },
+          {
+            'colStr': 'Jusqu\'à',
+            'fields': ['ended'],
+            'render': function (data, type, row) {
+              if (row['ended'] == null) {
+                return '';
+              }
+              ;
+              return row['recorded_time'];
+            },
+          },
+        ];
+      </script>
+    </table>
+  </div>
+</section>
+
+{% elif source == "ToolLinechart_userActivity" %}
+<section class="tableContainer halfWidth">
+  <div class="section_menu">
+    <span class="section_title">
+      <b>Activité des utilisateurs Twitter</b>
+    </span>
+    <div class="section_options">
+      {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+    </div>
+    {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+  </div>
+  <div class="section_content">
+    <table class="display" id="TWUserTable" width="100%" drawn='False'>
+      <script class="tableVars">
+        var modelName = 'TWUser';
+        var srcs = [
+          {
+            attr: 'twitterUsersToHarvest',
+          },
+        ];
+        var columns = [
+          {
+            'colStr': 'Nom',
+            'fields': ['name', 'pk'],
+            'render': function (data, type, row) {
+              if (row['name'] == null) {
+                return undefinedTag();
+              } else {
+                return tableToolLink('/twitter/user/' + row['pk'],
+                  truncate_text(row['name'], 30, true));
+              }
+            },
+          },
+          {
+            'colStr': 'Nom d\'utilisateur',
+            'fields': ['screen_name'],
+            'render': function (data, type, row) {
+              if (row['screen_name'] == null) {
+                return '';
+              }
+              ;
+              return row['screen_name'];
+            },
+          },
+          {
+            'colStr': 'Nombre d\'abonnés actuels',
+            'fields': ['followers_count'],
+            'render': function (data, type, row) {
+              if (row['followers_count'] == null) {
+                return '';
+              }
+              ;
+              return centeredTag(row['followers_count']);
+            },
+            'searchable': false,
+          },
+          /*{
+            "colStr": "Nombre d'abonnements",
+            "fields": ["friends_count"],
+            "render": function (data, type, row) {
+              if (row['friends_count'] == null) {
+                return ""
+              }
+              ;
+              return centeredTag(row['friends_count']);
+            },
+            "searchable":false,
+          },*/
+          /*{
+            "colStr": "Nombre de status",
+            "fields": ["statuses_count","tweets__count"],
+            "render": function (data, type, row) {
+              if (row['statuses_count'] == null) {
+                return ""
+              }
+              ;
+              var str = row['statuses_count'];
+              if (row["tweets__count"] != 0){
+                str+=" ("+row["tweets__count"]+" collectés)";
+              }else{
+                str+=" (0 collectés)";
+              }
+              return centeredTag(str);
+            },
+            "searchable":false,
+          },*/
+          /*{
+            "colStr": "Location",
+            "fields": ["location"],
+            "render": function (data, type, row) {
+              if (row['location'] == null) {
+                return ""
+              }
+              ;
+              return truncate_text(row['location'], 50, true);
+            }
+          },*/
+        ];
+      </script>
+    </table>
+  </div>
+</section>
+
+{% elif source == "ToolLinechart_userFollowers" %}
+<section class="tableContainer halfWidth">
+  <div class="section_menu">
+      <span class="section_title">
+        <b>Nombre d'abonnés d'utilisateurs Twitter</b>
+      </span>
+    <div class="section_options">
+      {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+    </div>
+    {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+  </div>
+  <div class="section_content">
+    <table class="display" id="TWUserTable" width="100%" drawn='False'>
+      <script class="tableVars">
+        var modelName = 'TWUser';
+        var srcs = [
+          {
+            attr: 'twitterUsersToHarvest',
+          },
+        ];
+        var columns = [
+          {
+            'colStr': 'Nom',
+            'fields': ['name', 'pk'],
+            'render': function (data, type, row) {
+              if (row['name'] == null) {
+                return undefinedTag();
+              } else {
+                return tableToolLink('/twitter/user/' + row['pk'],
+                  truncate_text(row['name'], 30, true));
+              }
+            },
+          },
+          {
+            'colStr': 'Nom d\'utilisateur',
+            'fields': ['screen_name'],
+            'render': function (data, type, row) {
+              if (row['screen_name'] == null) {
+                return '';
+              }
+              ;
+              return row['screen_name'];
+            },
+          },
+          {
+            'colStr': 'Nombre d\'abonnés',
+            'fields': ['followers_count'],
+            'render': function (data, type, row) {
+              if (row['followers_count'] == null) {
+                return '';
+              }
+              ;
+              return '<center>' + row['followers_count'] + '</center>';
+            },
+          },
+          {
+            'colStr': 'Nombre d\'abonnements',
+            'fields': ['friends_count'],
+            'render': function (data, type, row) {
+              if (row['friends_count'] == null) {
+                return '';
+              }
+              ;
+              return '<center>' + row['friends_count'] + '</center>';
+            },
+          },
+          {
+            'colStr': 'Nombre de status',
+            'fields': ['statuses_count'],
+            'render': function (data, type, row) {
+              if (row['statuses_count'] == null) {
+                return '';
+              }
+              ;
+              return '<center>' + row['statuses_count'] + '</center>';
+            },
+          },
+          {
+            'colStr': 'Location',
+            'fields': ['location'],
+            'render': function (data, type, row) {
+              if (row['location'] == null) {
+                return '';
+              }
+              ;
+              return truncate_text(row['location'], 50, true);
+            },
+          },
+        ];
+      </script>
+    </table>
+  </div>
+</section>
+
+{% elif source == "ToolPiechartFollowerLocation" %}
+<section class="tableContainer halfWidth">
+  <div class="section_menu">
+    <span class="section_title">
+      <b>Location des abonnés d'utilisateurs Twitter</b>
+    </span>
+    <div class="section_options">
+      {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+    </div>
+    {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+  </div>
+  <div class="section_content">
+    <table class="display" id="TWUserTableFollowerLoc" width="100%" drawn='False'>
+
+      <script class="tableVars">
+        var modelName = 'TWUser';
+        var srcs = [
+          {
+            attr: 'twitterUsersToHarvest',
+          },
+        ];
+        var columns = [
+          {
+            'colStr': 'Nom',
+            'fields': ['name', 'pk'],
+            'render': function (data, type, row) {
+              if (row['name'] == null) {
+                return undefinedTag();
+              } else {
+                return tableToolLink('/twitter/user/' + row['pk'],
+                  truncate_text(row['name'], 30, true));
+              }
+            },
+          },
+          {
+            'colStr': 'Nom d\'utilisateur',
+            'fields': ['screen_name'],
+            'render': function (data, type, row) {
+              if (row['screen_name'] == null) {
+                return '';
+              }
+              ;
+              return row['screen_name'];
+            },
+          },
+          {
+            'colStr': 'Nombre d\'abonnés',
+            'fields': ['followers_count'],
+            'render': function (data, type, row) {
+              if (row['followers_count'] == null) {
+                return '';
+              }
+              ;
+              return '<center>' + row['followers_count'] + '</center>';
+            },
+          },
+          {
+            'colStr': 'Nombre d\'abonnements',
+            'fields': ['friends_count'],
+            'render': function (data, type, row) {
+              if (row['friends_count'] == null) {
+                return '';
+              }
+              ;
+              return '<center>' + row['friends_count'] + '</center>';
+            },
+          },
+          {
+            'colStr': 'Nombre de status',
+            'fields': ['statuses_count'],
+            'render': function (data, type, row) {
+              if (row['statuses_count'] == null) {
+                return '';
+              }
+              ;
+              return '<center>' + row['statuses_count'] + '</center>';
+            },
+          },
+          {
+            'colStr': 'Location',
+            'fields': ['location'],
+            'render': function (data, type, row) {
+              if (row['location'] == null) {
+                return '';
+              }
+              ;
+              return truncate_text(row['location'], 50, true);
+            },
+          },
+        ];
+      </script>
+    </table>
+  </div>
+</section>
+
+{% elif source == "searchResult" %}
+<section class="tableContainer">
+  <div class="section_menu">
+  <span class="section_title">
+    <b>Utilisateurs Twitter</b>
+  </span>
+    <div class="section_options">
+      <!-- DOWNLOAD FIELDS -->
+      {% with name="downloadFields" className="TWUser" %}
+      {% with filename="TwitterUsersSearchResults_"|join:query %}
+      {% include "tool/tables/tableMenuItems.html" %}
+      {% endwith %}{% endwith %}
+
+      {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+    </div>
+    {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+  </div>
+  <div class="section_content">
+    <table class="display" id="twitterUsers" width="100%" drawn='False'>
+
+      <script class="tableVars">
+        var modelName = 'TWUser';
+        var srcs = [
+          {
+            query: '{% autoescape off %}{{ query }}{% endautoescape %}',
+          },
+        ];
+        var columns = [
+          {
+            'colStr': 'Nom',
+            'fields': ['name', 'pk'],
+            'render': function (data, type, row) {
+              if (row['name'] == null) {
+                return undefinedTag();
+              } else {
+                return tableToolLink('/twitter/user/' + row['pk'],
+                  truncate_text(row['name'], 30, true));
+              }
+            },
+          },
+          {
+            'colStr': 'Nom d\'utilisateur',
+            'fields': ['screen_name'],
+            'render': function (data, type, row) {
+              if (row['screen_name'] == null) {
+                return '';
+              }
+              ;
+              return row['screen_name'];
+            },
+          },
+          {
+            'colStr': 'Nombre d\'abonnés',
+            'fields': ['followers_count'],
+            'render': function (data, type, row) {
+              if (row['followers_count'] == null) {
+                return '';
+              }
+              ;
+              return '<center>' + row['followers_count'] + '</center>';
+            },
+          },
+          {
+            'colStr': 'Nombre d\'abonnements',
+            'fields': ['friends_count'],
+            'render': function (data, type, row) {
+              if (row['friends_count'] == null) {
+                return '';
+              }
+              ;
+              return '<center>' + row['friends_count'] + '</center>';
+            },
+          },
+          {
+            'colStr': 'Nombre de status',
+            'fields': ['statuses_count'],
+            'render': function (data, type, row) {
+              if (row['statuses_count'] == null) {
+                return '';
+              }
+              ;
+              return '<center>' + row['statuses_count'] + '</center>';
+            },
+          },
+          {
+            'colStr': 'Location',
+            'fields': ['location'],
+            'render': function (data, type, row) {
+              if (row['location'] == null) {
+                return '';
+              }
+              ;
+              return truncate_text(row['location'], 50, true);
+            },
+          },
+        ];
+      </script>
+    </table>
+  </div>
+</section>
+
+{% elif source == "collection_details" %}
+<section class="tableContainer">
+  <div class="section_menu">
+  <span class="section_title">
+  <b>Utilisateurs Twitter</b>
+  </span>
+    <div class="section_options">
+      <span>|</span>
+
+      <!-- DOWNLOAD FIELDS -->
+      <span class="section_menuItem tableDownloader"
+            filename="Collecte_twitter_users" title="Télécharger la sélection">
+        {% include "tool/icons.html" with x=5 y=4 className="tableOptionIcon" %}
+        <div class="downloadFields">
+          {% for key,val in 'TWUser'|getFields %}
+          <div field="twitter_user__{{key}}" helper="{{val.description}}">{{ val.name }}</div>
+          {% endfor %}
         </div>
-            {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+      </span>
+
+      {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
     </div>
-        <div class="section_content">
-        <table class="display" id="TWUserTableFollowerLoc" width="100%" drawn='False'>
+    {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+  </div>
+  <div class="section_content">
+    <table class="display" id="collection_twitter_users_table" width="100%" drawn='False'>
 
-            <script class="tableVars">
-                var modelName = "TWUser";
-                var srcs = [
-                    {
-                        attr: "twitterUsersToHarvest",
-                    }
-                ]
-                var columns = [
-                    {
-                        "colStr": "Nom",
-                        "fields": ["name", "pk"],
-                        "render": function (data, type, row) {
-                            if (row['name'] == null) {
-                                return undefinedTag();
-                            } else {
-                                return tableToolLink("/twitter/user/" + row["pk"],
-                                        truncate_text(row['name'], 30, true));
-                            }
-                        }
-                    },
-                    {
-                        "colStr": "Nom d'utilisateur",
-                        "fields": ["screen_name"],
-                        "render": function (data, type, row) {
-                            if (row['screen_name'] == null) {
-                                return ""
-                            }
-                            ;
-                            return row['screen_name'];
-                        }
-                    },
-                    {
-                        "colStr": "Nombre d'abonnés",
-                        "fields": ["followers_count"],
-                        "render": function (data, type, row) {
-                            if (row['followers_count'] == null) {
-                                return ""
-                            }
-                            ;
-                            return "<center>" + row['followers_count'] + "</center>";
-                        }
-                    },
-                    {
-                        "colStr": "Nombre d'abonnements",
-                        "fields": ["friends_count"],
-                        "render": function (data, type, row) {
-                            if (row['friends_count'] == null) {
-                                return ""
-                            }
-                            ;
-                            return "<center>" + row['friends_count'] + "</center>";
-                        }
-                    },
-                    {
-                        "colStr": "Nombre de status",
-                        "fields": ["statuses_count"],
-                        "render": function (data, type, row) {
-                            if (row['statuses_count'] == null) {
-                                return ""
-                            }
-                            ;
-                            return "<center>" + row['statuses_count'] + "</center>";
-                        }
-                    },
-                    {
-                        "colStr": "Location",
-                        "fields": ["location"],
-                        "render": function (data, type, row) {
-                            if (row['location'] == null) {
-                                return ""
-                            }
-                            ;
-                            return truncate_text(row['location'], 50, true);
-                        }
-                    },
-                ]
-            </script>
-        </table>
-    </div>
-    </div>
-        </section>
+      <script class="tableVars">
+        var modelName = 'CollectionItem';
+        var srcs = [
+          {
+            modelName: 'Collection',
+            attr: 'items_twitter_users',
+            id: '{{ collection.pk }}',
+          },
+        ];
+        var columns = [
+          {
+            'colStr': 'Nom',
+            'fields': ['twitter_user__name', 'twitter_user__pk'],
+            'render': function (data, type, row) {
+              if (row['twitter_user__name'] == null) {
+                return undefinedTag();
+              } else {
+                return tableToolLink('/twitter/user/' + row['twitter_user__pk'],
+                  truncate_text(row['twitter_user__name'], 30, true));
+              }
+            }
+          },
+        ]
+      </script>
+    </table>
+  </div>
+</section>
 
-    {% elif source == "searchResult" %}
-        <section class="tableContainer">
-             <div class="">
-            <div class="section_menu">
-            <span class="section_title">
-                <b>Utilisateurs Twitter</b>
-            </span>
-                <div class="section_options">
-                    {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="TWUser" filename="TwitterUsersSearchResults_"|join:query %}
-                    {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
-                </div>
-                {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
-            </div>
-            <div class="section_content">
-                <table class="display" id="twitterUsers" width="100%" drawn='False'>
-
-                    <script class="tableVars">
-                        var modelName = "TWUser";
-                        var srcs = [
-                            {
-                                query: '{% autoescape off %}{{ query }}{% endautoescape %}',
-                            }
-                        ];
-                        var columns = [
-                            {
-                                "colStr": "Nom",
-                                "fields": ["name", "pk"],
-                                "render": function (data, type, row) {
-                                    if (row['name'] == null) {
-                                        return undefinedTag();
-                                    } else {
-                                        return tableToolLink("/twitter/user/" + row["pk"],
-                                                truncate_text(row['name'], 30, true));
-                                    }
-                                }
-                            },
-                            {
-                                "colStr": "Nom d'utilisateur",
-                                "fields": ["screen_name"],
-                                "render": function (data, type, row) {
-                                    if (row['screen_name'] == null) {
-                                        return ""
-                                    }
-                                    ;
-                                    return row['screen_name'];
-                                }
-                            },
-                            {
-                                "colStr": "Nombre d'abonnés",
-                                "fields": ["followers_count"],
-                                "render": function (data, type, row) {
-                                    if (row['followers_count'] == null) {
-                                        return ""
-                                    }
-                                    ;
-                                    return "<center>" + row['followers_count'] + "</center>";
-                                }
-                            },
-                            {
-                                "colStr": "Nombre d'abonnements",
-                                "fields": ["friends_count"],
-                                "render": function (data, type, row) {
-                                    if (row['friends_count'] == null) {
-                                        return ""
-                                    }
-                                    ;
-                                    return "<center>" + row['friends_count'] + "</center>";
-                                }
-                            },
-                            {
-                                "colStr": "Nombre de status",
-                                "fields": ["statuses_count"],
-                                "render": function (data, type, row) {
-                                    if (row['statuses_count'] == null) {
-                                        return ""
-                                    }
-                                    ;
-                                    return "<center>" + row['statuses_count'] + "</center>";
-                                }
-                            },
-                            {
-                                "colStr": "Location",
-                                "fields": ["location"],
-                                "render": function (data, type, row) {
-                                    if (row['location'] == null) {
-                                        return ""
-                                    }
-                                    ;
-                                    return truncate_text(row['location'], 50, true);
-                                }
-                            },
-                        ]
-                    </script>
-                </table>
-            </div>
-        </div>
-        </section>
-
-    {% endif %}
+{% endif %}

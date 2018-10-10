@@ -3,426 +3,426 @@
 
 <section class="tableContainer">
 
-    {% if source == "YoutubeBase" %}
-    <div class="">
-        <div class="section_menu">
-            <span class="section_title">
-                <b>Videos collectées</b>
-            </span>
-            <div class="section_options">
-                {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="YTVideo" filename="Harvested_YTVideos" %}
-                {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
-            </div>
-            {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
-        </div>
-        <div class="section_content">
-            <table class="display" id="YTVideosTable" width="100%" drawn='False'>
-                <script class="tableVars">
-                    var modelName = "YTVideo";
-                    var dynamic = true;
-                    var srcs = [
-                        {
-                            modelName: "YTChannel",
-                            attr: "videos",
-                            tableId: "YTChannelTable",
-                        },
-                        {
-                            modelName: "YTPlaylist",
-                            attr: "videos",
-                            tableId: "YTPlaylistTable",
-                        },
-                    ]
-                    var columns = [
-                        {
-                            "fields": ["title", "pk"],
-                            "colStr": "Titre",
-                            "render": function (data, type, row) {
-                                if (row['title'] == null) {
-                                    return undefinedTag();
-                                }
-                                ;
-                                return tableToolLink("/youtube/video/" + row["pk"],
-                                        truncate_text(row["title"], 50, true));
-                            }
-                        },
-                        {
-                            "fields": ["channel__title", "channel__pk"],
-                            "colStr": "Chaîne",
-                            "render": function (data, type, row) {
-                                if (row['channel__pk'] == null) {
-                                    return undefinedTag();
-                                }
-                                ;
-                                return tableToolLink("/youtube/channel/"+row["channel__pk"],
-                                    truncate_text(row['channel__title'], 40, true));
-                            }
-                        },
-                        {
-                            "fields": ["description"],
-                            "colStr": "Description",
-                            "render": function (data, type, row) {
-                                if (row['description'] == null) {
-                                    return "";
-                                }
-                                ;
-                                return truncate_text(row['description'],100,true);
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "fields": ["view_count"],
-                            "colStr": "Vues",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['view_count']);
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "fields": ["like_count"],
-                            "colStr": "Likes",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['like_count']);
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "fields": ["dislike_count"],
-                            "colStr": "Dislikes",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['dislike_count']);
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "fields": ["favorite_count"],
-                            "colStr": "Favoris",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['favorite_count']);
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "fields": ["comment_count"],
-                            "colStr": "Commentaires",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['comment_count']);
-                            }
-                        },
-                    ]
-                </script>
-            </table>
-        </div>
+  {% if source == "YoutubeBase" %}
+  <div class="">
+    <div class="section_menu">
+      <span class="section_title">
+        <b>Videos collectées</b>
+      </span>
+      <div class="section_options">
+        {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="YTVideo" filename="Harvested_YTVideos" %}
+        {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+      </div>
+      {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
     </div>
-
-    {% elif source == "YoutubeChannel_vids" %}
-    <div class="">
-        <div class="section_menu">
-            <span class="section_title">
-                <b>Videos</b>
-            </span>
-            <div class="section_options">
-                {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="YTVideo" filename=channel.title|join:"_yt_videos" %}
-                {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
-            </div>
-            {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
-        </div>
-        <div class="section_content">
-            <table class="display" id="YTChannelVideosTable" width="100%" drawn='False'>
-                <script class="tableVars">
-                    var modelName = "YTVideo";
-                    var srcs = [
-                        {
-                            modelName: "YTChannel",
-                            attr: "videos",
-                            id: "{{ channel.pk }}",
-                        },
-                    ]
-                    var columns = [
-                        {
-                            "fields": ["title", "pk"],
-                            "colStr": "Titre",
-                            "render": function (data, type, row) {
-                                if (row['title'] == null) {
-                                    return undefinedTag();
-                                }
-                                ;
-                                return tableToolLink("/youtube/video/" + row["pk"],
-                                        truncate_text(row["title"], 50, true));
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "fields": ["publishedAt"],
-                            "colStr": "Publication",
-                            "render": function (data, type, row) {
-                                if (row['publishedAt'] == null) {
-                                    return "";
-                                }
-                                ;
-                                return row['publishedAt'];
-                            }
-                        },
-                        {
-                            "fields": ["description"],
-                            "colStr": "Description",
-                            "render": function (data, type, row) {
-                                if (row['description'] == null) {
-                                    return "";
-                                }
-                                ;
-                                return truncate_text(row['description'], 100, true);
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "fields": ["view_count"],
-                            "colStr": "Vues",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['view_count']);
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "fields": ["like_count"],
-                            "colStr": "Likes",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['like_count']);
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "fields": ["dislike_count"],
-                            "colStr": "Dislikes",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['dislike_count']);
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "fields": ["favorite_count"],
-                            "colStr": "Favoris",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['favorite_count']);
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "fields": ["comment_count"],
-                            "colStr": "Commentaires",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['comment_count']);
-                            }
-                        },
-                    ]
-                </script>
-            </table>
-        </div>
+    <div class="section_content">
+      <table class="display" id="YTVideosTable" width="100%" drawn='False'>
+        <script class="tableVars">
+          var modelName = "YTVideo";
+          var dynamic = true;
+          var srcs = [
+            {
+              modelName: "YTChannel",
+              attr: "videos",
+              tableId: "YTChannelTable",
+            },
+            {
+              modelName: "YTPlaylist",
+              attr: "videos",
+              tableId: "YTPlaylistTable",
+            },
+          ]
+          var columns = [
+            {
+              "fields": ["title", "pk"],
+              "colStr": "Titre",
+              "render": function (data, type, row) {
+                if (row['title'] == null) {
+                  return undefinedTag();
+                }
+                ;
+                return tableToolLink("/youtube/video/" + row["pk"],
+                    truncate_text(row["title"], 50, true));
+              }
+            },
+            {
+              "fields": ["channel__title", "channel__pk"],
+              "colStr": "Chaîne",
+              "render": function (data, type, row) {
+                if (row['channel__pk'] == null) {
+                  return undefinedTag();
+                }
+                ;
+                return tableToolLink("/youtube/channel/"+row["channel__pk"],
+                  truncate_text(row['channel__title'], 40, true));
+              }
+            },
+            {
+              "fields": ["description"],
+              "colStr": "Description",
+              "render": function (data, type, row) {
+                if (row['description'] == null) {
+                  return "";
+                }
+                ;
+                return truncate_text(row['description'],100,true);
+              }
+            },
+            {
+              "searchable": false,
+              "fields": ["view_count"],
+              "colStr": "Vues",
+              "render": function (data, type, row) {
+                return centeredTag(row['view_count']);
+              }
+            },
+            {
+              "searchable": false,
+              "fields": ["like_count"],
+              "colStr": "Likes",
+              "render": function (data, type, row) {
+                return centeredTag(row['like_count']);
+              }
+            },
+            {
+              "searchable": false,
+              "fields": ["dislike_count"],
+              "colStr": "Dislikes",
+              "render": function (data, type, row) {
+                return centeredTag(row['dislike_count']);
+              }
+            },
+            {
+              "searchable": false,
+              "fields": ["favorite_count"],
+              "colStr": "Favoris",
+              "render": function (data, type, row) {
+                return centeredTag(row['favorite_count']);
+              }
+            },
+            {
+              "searchable": false,
+              "fields": ["comment_count"],
+              "colStr": "Commentaires",
+              "render": function (data, type, row) {
+                return centeredTag(row['comment_count']);
+              }
+            },
+          ]
+        </script>
+      </table>
     </div>
+  </div>
 
-    {% elif source == "YoutubePlaylist_vids" %}
-    <div class="">
-        <div class="section_menu">
-            <span class="section_title">
-                <b>Videos</b>
-            </span>
-            <div class="section_options">
-                {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="YTPlaylistItem" filename="YTPlaylist_"|join:playlist|join:"_videos" %}
-                {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
-            </div>
-            {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
-        </div>
-        <div class="section_content">
-            <table class="display" id="YTPlaylistVideosTable" width="100%" drawn='False'>
-                <script class="tableVars">
-                    var modelName = "YTPlaylistItem";
-                    var srcs = [
-                        {
-                            modelName: "YTPlaylist",
-                            attr: "items",
-                            id: "{{ playlist.pk }}",
-                        },
-                    ]
-                    var columns = [
-                        {
-                            "searchable": false,
-                            "fields": ["playlistOrder"],
-                            "colStr": "#",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['playlistOrder']);
-                            }
-                        },
-                        {
-                            "fields": ["video__title", "video__pk"],
-                            "colStr": "Titre",
-                            "render": function (data, type, row) {
-                                if (row['video__title'] == null) {
-                                    return undefinedTag();
-                                }
-                                ;
-                                return tableToolLink("/youtube/video/" + row["video__pk"],
-                                        truncate_text(row["video__title"], 50, true));
-                            }
-                        },
-                        {
-                            "fields": ["video__description"],
-                            "colStr": "Description",
-                            "render": function (data, type, row) {
-                                if (row['video__description'] == null) {
-                                    return "";
-                                }
-                                ;
-                                return truncate_text(row['video__description'], 100, true);
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "fields": ["video__view_count"],
-                            "colStr": "Vues",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['video__view_count']);
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "fields": ["video__like_count"],
-                            "colStr": "Likes",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['video__like_count']);
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "fields": ["video__dislike_count"],
-                            "colStr": "Dislikes",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['video__dislike_count']);
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "fields": ["video__favorite_count"],
-                            "colStr": "Favoris",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['video__favorite_count']);
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "fields": ["video__comment_count"],
-                            "colStr": "Commentaires",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['video__comment_count']);
-                            }
-                        },
-                    ]
-                </script>
-            </table>
-        </div>
+  {% elif source == "YoutubeChannel_vids" %}
+  <div class="">
+    <div class="section_menu">
+      <span class="section_title">
+        <b>Videos</b>
+      </span>
+      <div class="section_options">
+        {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="YTVideo" filename=channel.title|join:"_yt_videos" %}
+        {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+      </div>
+      {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
     </div>
-
-    {% elif source == "searchResult" %}
-    <div class="">
-        <div class="section_menu">
-            <span class="section_title">
-                <b>Vidéos Youtube</b>
-            </span>
-            <div class="section_options">
-                {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="YTVideo" filename="Youtube_Videos_Search_Results_"|join:query %}
-                {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
-            </div>
-            {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
-        </div>
-        <div class="section_content">
-            <table class="display" id="YoutubeVideos" width="100%" drawn='False'>
-                <script class="tableVars">
-                    var modelName = "YTVideo";
-                    var srcs = [
-                        {
-                            query: '{% autoescape off %}{{ query }}{% endautoescape %}'
-                        },
-                    ]
-                    var columns = [
-                        {
-                            "fields": ["title", "pk"],
-                            "colStr": "Titre",
-                            "render": function (data, type, row) {
-                                if (row['title'] == null) {
-                                    return undefinedTag();
-                                }
-                                ;
-                                return tableToolLink("/youtube/video/" + row["pk"],
-                                        truncate_text(row["title"], 50, true));
-                            }
-                        },
-                        {
-                            "fields": ["channel__title", "channel__pk"],
-                            "colStr": "Chaîne",
-                            "render": function (data, type, row) {
-                                if (row['channel__pk'] == null) {
-                                    return undefinedTag();
-                                }
-                                ;
-                                return tableToolLink("/youtube/channel/" + row["channel__pk"],
-                                        truncate_text(row['channel__title'], 40, true));
-                            }
-                        },
-                        {
-                            "fields": ["description"],
-                            "colStr": "Description",
-                            "render": function (data, type, row) {
-                                if (row['description'] == null) {
-                                    return "";
-                                }
-                                ;
-                                return truncate_text(row['description'], 100, true);
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "fields": ["view_count"],
-                            "colStr": "Vues",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['view_count']);
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "fields": ["like_count"],
-                            "colStr": "Likes",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['like_count']);
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "fields": ["dislike_count"],
-                            "colStr": "Dislikes",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['dislike_count']);
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "fields": ["favorite_count"],
-                            "colStr": "Favoris",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['favorite_count']);
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "fields": ["comment_count"],
-                            "colStr": "Commentaires",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['comment_count']);
-                            }
-                        },
-                    ]
-                </script>
-            </table>
-        </div>
+    <div class="section_content">
+      <table class="display" id="YTChannelVideosTable" width="100%" drawn='False'>
+        <script class="tableVars">
+          var modelName = "YTVideo";
+          var srcs = [
+            {
+              modelName: "YTChannel",
+              attr: "videos",
+              id: "{{ channel.pk }}",
+            },
+          ]
+          var columns = [
+            {
+              "fields": ["title", "pk"],
+              "colStr": "Titre",
+              "render": function (data, type, row) {
+                if (row['title'] == null) {
+                  return undefinedTag();
+                }
+                ;
+                return tableToolLink("/youtube/video/" + row["pk"],
+                    truncate_text(row["title"], 50, true));
+              }
+            },
+            {
+              "searchable": false,
+              "fields": ["publishedAt"],
+              "colStr": "Publication",
+              "render": function (data, type, row) {
+                if (row['publishedAt'] == null) {
+                  return "";
+                }
+                ;
+                return row['publishedAt'];
+              }
+            },
+            {
+              "fields": ["description"],
+              "colStr": "Description",
+              "render": function (data, type, row) {
+                if (row['description'] == null) {
+                  return "";
+                }
+                ;
+                return truncate_text(row['description'], 100, true);
+              }
+            },
+            {
+              "searchable": false,
+              "fields": ["view_count"],
+              "colStr": "Vues",
+              "render": function (data, type, row) {
+                return centeredTag(row['view_count']);
+              }
+            },
+            {
+              "searchable": false,
+              "fields": ["like_count"],
+              "colStr": "Likes",
+              "render": function (data, type, row) {
+                return centeredTag(row['like_count']);
+              }
+            },
+            {
+              "searchable": false,
+              "fields": ["dislike_count"],
+              "colStr": "Dislikes",
+              "render": function (data, type, row) {
+                return centeredTag(row['dislike_count']);
+              }
+            },
+            {
+              "searchable": false,
+              "fields": ["favorite_count"],
+              "colStr": "Favoris",
+              "render": function (data, type, row) {
+                return centeredTag(row['favorite_count']);
+              }
+            },
+            {
+              "searchable": false,
+              "fields": ["comment_count"],
+              "colStr": "Commentaires",
+              "render": function (data, type, row) {
+                return centeredTag(row['comment_count']);
+              }
+            },
+          ]
+        </script>
+      </table>
     </div>
+  </div>
+
+  {% elif source == "YoutubePlaylist_vids" %}
+  <div class="">
+    <div class="section_menu">
+      <span class="section_title">
+        <b>Videos</b>
+      </span>
+      <div class="section_options">
+        {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="YTPlaylistItem" filename="YTPlaylist_"|join:playlist|join:"_videos" %}
+        {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+      </div>
+      {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+    </div>
+    <div class="section_content">
+      <table class="display" id="YTPlaylistVideosTable" width="100%" drawn='False'>
+        <script class="tableVars">
+          var modelName = "YTPlaylistItem";
+          var srcs = [
+            {
+              modelName: "YTPlaylist",
+              attr: "items",
+              id: "{{ playlist.pk }}",
+            },
+          ]
+          var columns = [
+            {
+              "searchable": false,
+              "fields": ["playlistOrder"],
+              "colStr": "#",
+              "render": function (data, type, row) {
+                return centeredTag(row['playlistOrder']);
+              }
+            },
+            {
+              "fields": ["video__title", "video__pk"],
+              "colStr": "Titre",
+              "render": function (data, type, row) {
+                if (row['video__title'] == null) {
+                  return undefinedTag();
+                }
+                ;
+                return tableToolLink("/youtube/video/" + row["video__pk"],
+                    truncate_text(row["video__title"], 50, true));
+              }
+            },
+            {
+              "fields": ["video__description"],
+              "colStr": "Description",
+              "render": function (data, type, row) {
+                if (row['video__description'] == null) {
+                  return "";
+                }
+                ;
+                return truncate_text(row['video__description'], 100, true);
+              }
+            },
+            {
+              "searchable": false,
+              "fields": ["video__view_count"],
+              "colStr": "Vues",
+              "render": function (data, type, row) {
+                return centeredTag(row['video__view_count']);
+              }
+            },
+            {
+              "searchable": false,
+              "fields": ["video__like_count"],
+              "colStr": "Likes",
+              "render": function (data, type, row) {
+                return centeredTag(row['video__like_count']);
+              }
+            },
+            {
+              "searchable": false,
+              "fields": ["video__dislike_count"],
+              "colStr": "Dislikes",
+              "render": function (data, type, row) {
+                return centeredTag(row['video__dislike_count']);
+              }
+            },
+            {
+              "searchable": false,
+              "fields": ["video__favorite_count"],
+              "colStr": "Favoris",
+              "render": function (data, type, row) {
+                return centeredTag(row['video__favorite_count']);
+              }
+            },
+            {
+              "searchable": false,
+              "fields": ["video__comment_count"],
+              "colStr": "Commentaires",
+              "render": function (data, type, row) {
+                return centeredTag(row['video__comment_count']);
+              }
+            },
+          ]
+        </script>
+      </table>
+    </div>
+  </div>
+
+  {% elif source == "searchResult" %}
+  <div class="">
+    <div class="section_menu">
+      <span class="section_title">
+        <b>Vidéos Youtube</b>
+      </span>
+      <div class="section_options">
+        {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="YTVideo" filename="Youtube_Videos_Search_Results_"|join:query %}
+        {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+      </div>
+      {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+    </div>
+    <div class="section_content">
+      <table class="display" id="YoutubeVideos" width="100%" drawn='False'>
+        <script class="tableVars">
+          var modelName = "YTVideo";
+          var srcs = [
+            {
+              query: '{% autoescape off %}{{ query }}{% endautoescape %}'
+            },
+          ]
+          var columns = [
+            {
+              "fields": ["title", "pk"],
+              "colStr": "Titre",
+              "render": function (data, type, row) {
+                if (row['title'] == null) {
+                  return undefinedTag();
+                }
+                ;
+                return tableToolLink("/youtube/video/" + row["pk"],
+                    truncate_text(row["title"], 50, true));
+              }
+            },
+            {
+              "fields": ["channel__title", "channel__pk"],
+              "colStr": "Chaîne",
+              "render": function (data, type, row) {
+                if (row['channel__pk'] == null) {
+                  return undefinedTag();
+                }
+                ;
+                return tableToolLink("/youtube/channel/" + row["channel__pk"],
+                    truncate_text(row['channel__title'], 40, true));
+              }
+            },
+            {
+              "fields": ["description"],
+              "colStr": "Description",
+              "render": function (data, type, row) {
+                if (row['description'] == null) {
+                  return "";
+                }
+                ;
+                return truncate_text(row['description'], 100, true);
+              }
+            },
+            {
+              "searchable": false,
+              "fields": ["view_count"],
+              "colStr": "Vues",
+              "render": function (data, type, row) {
+                return centeredTag(row['view_count']);
+              }
+            },
+            {
+              "searchable": false,
+              "fields": ["like_count"],
+              "colStr": "Likes",
+              "render": function (data, type, row) {
+                return centeredTag(row['like_count']);
+              }
+            },
+            {
+              "searchable": false,
+              "fields": ["dislike_count"],
+              "colStr": "Dislikes",
+              "render": function (data, type, row) {
+                return centeredTag(row['dislike_count']);
+              }
+            },
+            {
+              "searchable": false,
+              "fields": ["favorite_count"],
+              "colStr": "Favoris",
+              "render": function (data, type, row) {
+                return centeredTag(row['favorite_count']);
+              }
+            },
+            {
+              "searchable": false,
+              "fields": ["comment_count"],
+              "colStr": "Commentaires",
+              "render": function (data, type, row) {
+                return centeredTag(row['comment_count']);
+              }
+            },
+          ]
+        </script>
+      </table>
+    </div>
+  </div>
 
 
-    {% endif %}
+  {% endif %}
 </section>

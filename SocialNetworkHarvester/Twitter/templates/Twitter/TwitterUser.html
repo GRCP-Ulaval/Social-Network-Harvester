@@ -1,4 +1,4 @@
-{% extends "MainPage.html" %}
+{% extends "main/containers/MainPage.html" %}
 {% load staticfiles %}
 {% load extratags %}
 
@@ -13,7 +13,7 @@
          style="background:url({{ twUser.profile_background_image_url }});background-size:100% 100%" {% endif %}>
     <div class="section_menu">
         <span class="section_title document_title">
-            <b><a href="https://twitter.com/{{twUser.screen_name}}" class="TableToolLink"
+            <b><a href="https://twitter.com/{{twUser.screen_name}}" class="dark_blue_link"
                                   target="_blank">
                 @{{ twUser.screen_name }}
             </a></b>

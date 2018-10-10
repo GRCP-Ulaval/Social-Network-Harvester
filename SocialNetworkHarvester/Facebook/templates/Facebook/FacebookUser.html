@@ -1,4 +1,4 @@
-{% extends "MainPage.html" %}
+{% extends "main/containers/MainPage.html" %}
 {% load staticfiles %}
 {% load extratags %}
 
@@ -14,7 +14,7 @@
         <div class="section_menu">
             <span class="section_title document_title">
                 {% if fbUser.permalink_url %}
-                <a href="{{ fbUser.permalink_url }}" class="TableToolLink" target="_blank">
+                <a href="{{ fbUser.permalink_url }}" class="dark_blue_link" target="_blank">
                     <b>{{ fbUser }}</b>
                 </a>
                 {% else %}

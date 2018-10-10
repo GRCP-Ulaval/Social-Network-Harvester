@@ -1,0 +1,33 @@
+<span class="section_menuItem" title="Cesser de suivre cette collecte.">
+  <a onclick=displayCenterPopup("stop_following_{{collection.pk}}")>
+    {% include "tool/icons.html" with x=6 y=1 className="tableOptionIcon" %}
+  </a>
+  <div class="popup" id="stop_following_{{collection.pk}}">
+    <div id="title">Désabonnement de la liste</div>
+    <div id="help">
+      Désabonnement de <b>{{ collection }} </b>. Cette action ne supprimera pas la collecte. Vous pourrez vous y réabonner à tout moment.
+    </div>
+    <div id="content">
+      <center>
+        Voulez-vous vous désabonner de la collecte <br><br>
+        <b>{{ collection.name }}</b>?<br><br>
+      </center>
+      <div style="width:300px; height:30px;">
+        <form id='unbsub_{{ collection.pk }}' action="/collection/form/unsubscribe" method="post">
+          {% csrf_token %}
+          <input type="hidden" name="collection" value="{{ collection.pk }}">
+          <input type="button" class="cancelButton" value="Annuler" onclick="cancelOperation()">
+          <input type="button" class="submitButton" value="Retirer" onclick="submitUnsubForm('unbsub_{{ collection.pk }}')">
+        </form>
+      </div>
+    </div>
+    <script id="functions">
+      function cancelOperation() {
+        closeCenterPopup();
+      }
+      function submitUnsubForm(form_id){
+        $('#'+form_id).submit()
+      }
+    </script>
+  </div>
+</span>

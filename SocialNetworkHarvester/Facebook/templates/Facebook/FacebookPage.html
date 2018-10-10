@@ -1,4 +1,4 @@
-{% extends "MainPage.html" %}
+{% extends "main/containers/MainPage.html" %}
 {% load staticfiles %}
 {% load extratags %}
 
@@ -15,8 +15,8 @@
     <div class="section_menu">
         <span class="section_title document_title">
             {% if page.link %}
-            <a class="TableToolLink" target="_blank"
-               href="{{ page.link }}" class="TableToolLink" target="_blank"><b>{{ page }}</b></a>
+            <a class="dark_blue_link" target="_blank"
+               href="{{ page.link }}" class="dark_blue_link" target="_blank"><b>{{ page }}</b></a>
             {% else %}
             <b>{{ page }}</b>
             {% endif %}

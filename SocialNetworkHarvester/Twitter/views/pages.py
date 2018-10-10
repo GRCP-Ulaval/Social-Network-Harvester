@@ -1,19 +1,18 @@
-from AspiraUser.views import addMessagesToContext
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, get_object_or_404, Http404
-from Twitter.models import *
+from django.shortcuts import render, Http404, render_to_response
+
 from AspiraUser.models import *
+
 
 @login_required()
 def twitterBaseView(request):
     context = {
         'user': request.user,
-        "navigator":[
+        "navigator": [
             ("Twitter", "/twitter"),
         ]
     }
     log(context)
-    request, context = addMessagesToContext(request, context)
     resetUserSelection(request)
     return render(request, 'Twitter/TwitterBase.html', context)
 
@@ -40,10 +39,10 @@ def twUserView(request, TWUser_value):
     twUser = queryset[0]
     context = {
         'user': request.user,
-        'twUser':twUser,
+        'twUser': twUser,
         'navigator': [
             ("Twitter", "/twitter"),
-            (str(twUser), "/twitter/user/"+TWUser_value),
+            (str(twUser), "/twitter/user/" + TWUser_value),
         ],
     }
     if 'snippet' in request.GET and request.GET['snippet'] == 'true':
@@ -54,7 +53,7 @@ def twUserView(request, TWUser_value):
     else:
         resetUserSelection(request)
 
-        return render(request,'Twitter/TwitterUser.html', context)
+        return render(request, 'Twitter/TwitterUser.html', context)
 
 
 @login_required()
@@ -72,11 +71,12 @@ def twHashtagView(request, TWHashtagTerm):
         'hashtag': hashtag,
         'navigator': [
             ("Twitter", "/twitter"),
-            ("#%s"%hashtag.term, ""),
+            ("#%s" % hashtag.term, ""),
         ],
     }
     resetUserSelection(request)
     return render(request, 'Twitter/TwitterHashtag.html', context)
+
 
 def twTweetView(request, tweetId):
     tweet = None
@@ -100,14 +100,4 @@ def twTweetView(request, tweetId):
         ],
     }
     resetUserSelection(request)
-    return render(request,'Twitter/TwitterTweet.html', context)
-
-
-
-
-
-
-
-
-
-
+    return render(request, 'Twitter/TwitterTweet.html', context)

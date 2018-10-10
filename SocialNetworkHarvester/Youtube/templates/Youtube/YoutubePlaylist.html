@@ -1,4 +1,4 @@
-{% extends "MainPage.html" %}
+{% extends "main/containers/MainPage.html" %}
 {% load staticfiles %}
 {% load extratags %}
 
@@ -12,7 +12,7 @@
 <section class="overviewContainer">
     <div class="section_menu">
         <span class="section_title document_title">
-            <b><a target="_blank" class="TableToolLink" href="https://www.youtube.com/watch?list={{ playlist.ident }}&v={{ playlist.videos.0.ident }}">{{ playlist }}</a></b>
+            <b><a target="_blank" class="dark_blue_link" href="https://www.youtube.com/watch?list={{ playlist.ident }}&v={{ playlist.videos.0.ident }}">{{ playlist }}</a></b>
         </span>
         {% include "tool/misc.html" with tool="addRemoveFromList" listName="ytPlaylistsToHarvest" list=user.userProfile.ytPlaylistsToHarvest.all item=playlist %}
     </div>

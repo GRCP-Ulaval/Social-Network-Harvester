@@ -1,14 +1,12 @@
-from django.db import models
-
-from SocialNetworkHarvester.models import Integer_time_label, Big_integer_time_label, Image_time_label, time_label
-
-from SocialNetworkHarvester.loggers.youtubeLogger import log
-from Youtube.management.commands.harvest.queues import *
 import re
-
 from datetime import datetime
+
+from django.db import models
 from django.utils.timezone import utc
 
+from SocialNetworkHarvester.loggers.youtubeLogger import log
+from SocialNetworkHarvester.models import Integer_time_label, Big_integer_time_label, Image_time_label, time_label
+from Youtube.management.commands.harvest.queues import *
 
 
 ####################### YTCHANNEL  #######################
@@ -118,6 +116,8 @@ class YTChannel(models.Model):
 
     class Meta:
         app_label = "Youtube"
+        verbose_name = 'Chaîne Youtube'
+        verbose_name_plural = 'Chaînes Youtube'
 
     def __str__(self):
         if self.title: return self.title
@@ -454,6 +454,8 @@ class YTVideo(models.Model):
 
     class Meta:
         app_label = "Youtube"
+        verbose_name = 'Video Youtube'
+        verbose_name_plural = 'Videos Youtube'
 
     def __str__(self):
         if self.channel:
@@ -762,6 +764,8 @@ class YTPlaylist(models.Model):
 
     class Meta:
         app_label = "Youtube"
+        verbose_name = 'Playlist Youtube'
+        verbose_name_plural = 'Playlists Youtube'
 
     def __str__(self):
         if self.title:
@@ -781,7 +785,9 @@ class YTPlaylist(models.Model):
     def get_embedded(self):
         if not self.videos().first():
             return ""
-        return '<iframe width="100%" height="172px" src="https://www.youtube.com/embed/' + self.videos().first()._ident + \
+        return '<iframe width="100%" height="172px" src="https://www.youtube.com/embed/' + self.videos().first(
+
+        )._ident + \
                '?list=' + self._ident + ' "frameborder="0" allowFullScreen></iframe>'
 
     def get_fields_description(self):
@@ -889,6 +895,9 @@ class YTPlaylist(models.Model):
             channelUpdateQueue.put(channel)
         self.channel = channel
 
+    def getLink(self):
+        return '/youtube/playlist/%s' % self.pk
+
 
 class YTPlaylistItem(models.Model):
     playlist = models.ForeignKey(YTPlaylist, related_name='items', on_delete=models.CASCADE)
@@ -912,6 +921,8 @@ class YTPlaylistItem(models.Model):
 
     class Meta:
         app_label = "Youtube"
+        verbose_name = 'Élément de playlis Youtube'
+        verbose_name_plural = 'Éléments de playlist Youtube'
 
 
 #######################  YTCOMMENT  ######################
@@ -1053,6 +1064,8 @@ class YTComment(models.Model):
 
     class Meta:
         app_label = "Youtube"
+        verbose_name = 'Commentaire Youtube'
+        verbose_name_plural = 'Commentaires Youtube'
 
     def __str__(self):
         target = self.parent_comment or self.video_target or self.channel_target or "an unidentified target"

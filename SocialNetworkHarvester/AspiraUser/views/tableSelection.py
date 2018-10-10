@@ -1,13 +1,13 @@
 from django.contrib.auth.decorators import login_required
 
 from AspiraUser.models import getUserSelection
-from SocialNetworkHarvester.loggers.viewsLogger import logError
 from SocialNetworkHarvester.jsonResponses import *
+from SocialNetworkHarvester.loggers.viewsLogger import logError
 
 
 @login_required()
 def removeSelectedItems(request):
-    aspiraErrors = []
+    errors = []
     userProfile = request.user.userProfile
     selection = getUserSelection(request)
     queryset = selection.getSavedQueryset(None, request.GET['tableId'])
@@ -19,12 +19,12 @@ def removeSelectedItems(request):
             successNum += 1
         except:
             logError('Une erreur est survenue lors du retrait de %s' % item)
-            aspiraErrors.append('Une erreur est survenue lors du retrait de %s' % item)
-    if aspiraErrors == []:
+            errors.append('Une erreur est survenue lors du retrait de %s' % item)
+    if errors == []:
         response = {'status': 'ok', 'messages': [
             'Retiré %i élément%s de votre liste de collecte' % (successNum, 's' if successNum > 1 else '')]}
     else:
-        response = {'status': 'exception', 'errors': aspiraErrors}
+        response = {'status': 'exception', 'errors': errors}
     selection.delete()
     return HttpResponse(json.dumps(response), content_type='application/json')
 

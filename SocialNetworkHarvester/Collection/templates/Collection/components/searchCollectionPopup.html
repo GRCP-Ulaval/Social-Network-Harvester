@@ -1,0 +1,125 @@
+<span
+    class="tableOpenCloseIcon main_menu_item"
+    title="Rechercher parmis les collectes existantes"
+    onclick="show_search_collection_popup()"
+>
+      {% include "tool/icons.html" with x=6 y=0 className="openCloseIcon" %}
+
+    <div class="popup" id="search_collection_popup">
+      <div id="title">Recherche de collectes existantes</div>
+      <div id="help">
+        Recherchez un theme de collecte naviguez parmis la liste
+      </div>
+      <div id="content">
+        <div style="text-align:right">
+          <span>Rechercher: </span>
+          <span>
+            <input type="text" id="collection_search_input" placeholder="Entrez un mot-clef" class="prettyInput">
+          </span>
+        </div>
+
+        <table id="collection_search_results_header" style="display:none">
+          <tr>
+            <th><input type="checkbox" title="Selectioner tout les résultats" id="selection_table_all_selector"></th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Créateur</th>
+            <th>Création</th>
+            <th>À partir de</th>
+            <th>Jusqu'à</th>
+          </tr>
+        </table>
+
+        <form id='collection_follow_form' action="/collection/form/subscribe" method="post">
+          {% csrf_token %}
+          <table id="collection_search_results"></table>
+
+          <div id="collection_search_results_spinner">
+            <img src="/static/medias/loader.gif">
+          </div>
+
+          <div id="follow_collection_submit_button">
+            <input type="submit" value="Ajouter à ma liste">
+          </div>
+
+          <div id="collection_list_no_results" style="text-align: center; padding:40px; display: none;">
+            Aucun résultats trouvés
+          </div>
+        </form>
+      </div>
+      <script id="functions">
+        function show_search_collection_popup() {
+          displayCenterPopup('search_collection_popup', function () {
+            search_collection('');
+          });
+        }
+
+        $('#centerPopupContent').find('#collection_search_input').keyup(function (event) {
+          debounce(function () {
+            search_collection(event.target.value);
+          }, 500);
+          addWheelListener($('#centerPopupContent')[0], function (event) {
+            log(event);
+          });
+        });
+
+        function search_collection(query) {
+          $('#centerPopupContent').find('#collection_search_results_spinner').show();
+          $('#centerPopupContent').find('#collection_search_results').hide();
+          $('#centerPopupContent').find('#follow_collection_submit_button').hide();
+          $('#centerPopupContent').find('#collection_list_no_results').hide();
+          $.get('/collection/ajax/search', {
+            'query': query,
+          }, function (response) {
+            $('#centerPopupContent').find('#collection_search_results_spinner').hide();
+            if (response.data.length > 0) {
+              display_collection_list(response.data);
+              $('#centerPopupContent').find('#collection_search_results').show();
+              $('#centerPopupContent').find('#follow_collection_submit_button').show();
+            } else {
+              $('#centerPopupContent').find('#collection_list_no_results').show();
+            }
+          });
+        }
+
+        function display_collection_list(collections) {
+          result_table = $('#centerPopupContent').find('#collection_search_results');
+          result_table.html($('#collection_search_results_header').html());
+          set_select_all_checkbox();
+          collections.forEach(function (item, i) {
+            let style = '';
+            if (i % 2 === 0) {
+              style = 'background-color: #DDD';
+            }
+            result_table.append(
+              '<tr style="' + style + '">\n' +
+              '  <td><input class="collection_selector" type="checkbox" name="collection_id_' + item.id + '"></td>\n' +
+              '  <td>' + tableToolLink('/collection/' + item.id, truncate_text(item.name, 30, true)) + '</td>\n' +
+              '  <td>' + truncate_text(item.description, 60, true) + '</td>' +
+              '  <td>' + item.created_by.first_name + ' ' + item.created_by.last_name + '</td>\n' +
+              '  <td>' + item.created_on + '</td>\n' +
+              '  <td>' + item.harvest_start + '</td>\n' +
+              '  <td>' + item.harvest_end + '</td>\n' +
+              '</tr>',
+            );
+          });
+        }
+
+        function set_select_all_checkbox() {
+          let master_select = $('#centerPopupContent').find('#selection_table_all_selector');
+          master_select.click(function (event) {
+            $('#centerPopupContent').find('.collection_selector').each(function (i, item) {
+              item.checked = event.target.checked;
+              $(item).click(function (event) {
+                master_select.attr('checked', false);
+              });
+            });
+          });
+        }
+
+        function submit_follow_collections() {
+          $('#centerPopupContent').find('#collection_follow_form').submit();
+        }
+      </script>
+        </div>
+    </span>
