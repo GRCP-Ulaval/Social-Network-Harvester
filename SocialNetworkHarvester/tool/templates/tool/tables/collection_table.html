@@ -24,21 +24,21 @@
     <div class="section_content">
       <table class="display" id='collection_table_{{ collection.pk }}' width="100%" drawn='False'>
         <script class="tableVars">
-          var modelName = 'Collection';
+          modelName='CollectionItem'
           var srcs = [
             {
               modelName: 'Collection',
-              attr: 'items',
+              attr: 'collection_items',
               id: '{{ collection.pk }}',
             },
           ];
           var columns = [
             {
-              'fields': ['__str__', 'get_link'],
+              'fields': ['str', 'getLink'],
               'colStr': 'Nom',
               'render': function (data, type, row) {
-                return tableToolLink(row['get_link'],
-                  truncate_text(row['__str__'], 50, true));
+                return tableToolLink(row['getLink'],
+                  truncate_text(row['str'], 50, true));
               },
             },
             {

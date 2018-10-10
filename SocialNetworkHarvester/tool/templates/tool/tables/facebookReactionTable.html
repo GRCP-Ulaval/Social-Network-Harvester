@@ -5,214 +5,214 @@
 <section class="tableContainer">
 
 {% if source == "statusReactions" %}
-    <div class="">
-    <div class="section_menu">
-            <span class="section_title">
-                <b>Réactions collectées</b>
-            </span>
-        <div class="section_options">
-            {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="FBReaction" filename="Harvested_facebook_reactions" %}
-            {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
-        </div>
-        {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+  <div class="">
+  <div class="section_menu">
+      <span class="section_title">
+        <b>Réactions collectées</b>
+      </span>
+    <div class="section_options">
+      {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="FBReaction" filename="Harvested_facebook_reactions" %}
+      {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
     </div>
-    <div class="section_content">
-        <table class="display" id="FBStatusReactionTable" width="100%" drawn='False'>
-            <script class="tableVars">
-                var modelName = "FBReaction";
-                var srcs = [
-                    {
-                        modelName   :   "FBPost",
-                        attr        :   "received_reactions",
-                        id            : "{{ fbPost.pk }}"
-                    }
-                ]
-                var columns = [
-                    {
-                        "searchable": false,
-                        "fields":["from_profile__pk","from_profile__getStr","from_profile__getLink"],
-                        "colStr":"Profil",
-                        "render": function (data, type, row) {
-                            if (row['from_profile__getLink'] == null) {
-                                return undefinedTag();
-                            };
-                            return tableToolLink(row["from_profile__getLink"],
-                                    truncate_text(row["from_profile__getStr"], 30, true));
-                        }
-                    },
-                    {
-                        "fields":["type"],
-                        "colStr":"Type",
-                        "render": function (data, type, row) {
-                            if (row['type'] == null) {
-                                return undefinedTag();
-                            };
-                            return row['type'];
-                        }
-                    },
-                    {
-                        "searchable": false,
-                        "fields":["from_time"],
-                        "colStr":"Depuis (Au moins)",
-                        "render": function (data, type, row) {
-                            if (row['from_time'] == null) {
-                                return undefinedTag();
-                            };
-                            return row['from_time'];
-                        }
-                    },
-                    {
-                        "searchable": false,
-                        "fields":["until_time"],
-                        "colStr":"Jusqu'à",
-                        "render": function (data, type, row) {
-                            return row['until_time'];
-                        }
-                    },
-                ]
-            </script>
-        </table>
-    </div>
+    {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+  </div>
+  <div class="section_content">
+    <table class="display" id="FBStatusReactionTable" width="100%" drawn='False'>
+      <script class="tableVars">
+        var modelName = "FBReaction";
+        var srcs = [
+          {
+            modelName   :   "FBPost",
+            attr    :   "received_reactions",
+            id      : "{{ fbPost.pk }}"
+          }
+        ]
+        var columns = [
+          {
+            "searchable": false,
+            "fields":["from_profile__pk","from_profile__getStr","from_profile__getLink"],
+            "colStr":"Profil",
+            "render": function (data, type, row) {
+              if (row['from_profile__getLink'] == null) {
+                return undefinedTag();
+              };
+              return tableToolLink(row["from_profile__getLink"],
+                  truncate_text(row["from_profile__getStr"], 30, true));
+            }
+          },
+          {
+            "fields":["type"],
+            "colStr":"Type",
+            "render": function (data, type, row) {
+              if (row['type'] == null) {
+                return undefinedTag();
+              };
+              return row['type'];
+            }
+          },
+          {
+            "searchable": false,
+            "fields":["from_time"],
+            "colStr":"Depuis (Au moins)",
+            "render": function (data, type, row) {
+              if (row['from_time'] == null) {
+                return undefinedTag();
+              };
+              return row['from_time'];
+            }
+          },
+          {
+            "searchable": false,
+            "fields":["until_time"],
+            "colStr":"Jusqu'à",
+            "render": function (data, type, row) {
+              return row['until_time'];
+            }
+          },
+        ]
+      </script>
+    </table>
+  </div>
 </div>
 
 {% elif source == "commentReactions" %}
-    <div class="">
-            <div class="section_menu">
-            <span class="section_title">
-                <b>Réactions collectées</b>
-            </span>
-                <div class="section_options">
-                    {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="FBReaction" filename="Harvested_facebook_reactions" %}
-                    {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
-                </div>
-                {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
-            </div>
-            <div class="section_content">
-                <table class="display" id="FBCommentReactionTable" width="50%" drawn='False'>
-                    <script class="tableVars">
-                        var modelName = "FBReaction";
-                        var srcs = [
-                            {
-                                modelName   :   "FBComment",
-                                attr        :   "received_reactions",
-                                id            : "{{ fbComment.pk }}"
-                            }
-                        ]
-                        var columns = [
-                            {
-                                "searchable": false,
-                                "fields":["from_profile__pk","from_profile__getStr","from_profile__getLink"],
-                                "colStr":"Profil",
-                                "render": function (data, type, row) {
-                                    if (row['from_profile__pk'] == null) {
-                                        return undefinedTag();
-                                    };
-                                    return tableToolLink(row["from_profile__getLink"],
-                                            truncate_text(row["from_profile__getStr"], 30, true));
-                                }
-                            },
-                            {
-                                "fields":["type"],
-                                "colStr":"Type",
-                                "render": function (data, type, row) {
-                                    if (row['type'] == null) {
-                                        return undefinedTag();
-                                    };
-                                    return row['type'];
-                                }
-                            },
-                            {
-                                "fields":["from_time"],
-                                "colStr":"Depuis (Au moins)",
-                                "render": function (data, type, row) {
-                                    if (row['from_time'] == null) {
-                                        return undefinedTag();
-                                    };
-                                    return row['from_time'];
-                                }
-                            },
-                            {
-                                "fields":["until_time"],
-                                "colStr":"Jusqu'à",
-                                "render": function (data, type, row) {
-                                    return row['until_time'];
-                                }
-                            },
-                        ]
-                    </script>
-                </table>
-            </div>
+  <div class="">
+      <div class="section_menu">
+      <span class="section_title">
+        <b>Réactions collectées</b>
+      </span>
+        <div class="section_options">
+          {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="FBReaction" filename="Harvested_facebook_reactions" %}
+          {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
         </div>
+        {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+      </div>
+      <div class="section_content">
+        <table class="display" id="FBCommentReactionTable" width="50%" drawn='False'>
+          <script class="tableVars">
+            var modelName = "FBReaction";
+            var srcs = [
+              {
+                modelName   :   "FBComment",
+                attr    :   "received_reactions",
+                id      : "{{ fbComment.pk }}"
+              }
+            ]
+            var columns = [
+              {
+                "searchable": false,
+                "fields":["from_profile__pk","from_profile__getStr","from_profile__getLink"],
+                "colStr":"Profil",
+                "render": function (data, type, row) {
+                  if (row['from_profile__pk'] == null) {
+                    return undefinedTag();
+                  };
+                  return tableToolLink(row["from_profile__getLink"],
+                      truncate_text(row["from_profile__getStr"], 30, true));
+                }
+              },
+              {
+                "fields":["type"],
+                "colStr":"Type",
+                "render": function (data, type, row) {
+                  if (row['type'] == null) {
+                    return undefinedTag();
+                  };
+                  return row['type'];
+                }
+              },
+              {
+                "fields":["from_time"],
+                "colStr":"Depuis (Au moins)",
+                "render": function (data, type, row) {
+                  if (row['from_time'] == null) {
+                    return undefinedTag();
+                  };
+                  return row['from_time'];
+                }
+              },
+              {
+                "fields":["until_time"],
+                "colStr":"Jusqu'à",
+                "render": function (data, type, row) {
+                  return row['until_time'];
+                }
+              },
+            ]
+          </script>
+        </table>
+      </div>
+    </div>
 
 {% elif source == "fbUserReactions" %}
   <div class="">
-    <div class="section_menu">
-            <span class="section_title">
-                <b>Réactions partagées</b>
-            </span>
-      <div class="section_options">
-        {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="FBReaction" filename="Harvested_facebook_reactions_of_user_"|join:user %}
-        {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
-      </div>
-      {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+  <div class="section_menu">
+      <span class="section_title">
+        <b>Réactions partagées</b>
+      </span>
+    <div class="section_options">
+    {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="FBReaction" filename="Harvested_facebook_reactions_of_user_"|join:user %}
+    {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
     </div>
-    <div class="section_content">
-      <table class="display" id="FBUserReactionTable" drawn='False'>
-        <script class="tableVars">
-          var modelName = "FBReaction";
-          var srcs = [
-            {
-              modelName   :   "FBUser",
-              attr        :   "fbProfile__posted_reactions",
-              id            : "{{ fbUser.pk }}"
-            }
-          ]
-          var columns = [
-            {
-              "fields":["to_post__getStr","to_post__getLink","to_comment__getStr", "to_comment__getLink"],
-              "colStr":"Cible",
-              "render": function (data, type, row) {
-                if (row['to_post__getStr']){
-                  return tableToolLink(row["to_post__getLink"],
-                    truncate_text(row["to_post__getStr"], 60, true));
-                } else if (row['to_comment__getStr']) {
-                  return tableToolLink(row["to_comment__getLink"],
-                    truncate_text(row["to_comment__getStr"], 60, true));
-                }
-                return undefinedTag()
-              }
-            },
-            {
-              "fields":["type"],
-              "colStr":"Type",
-              "render": function (data, type, row) {
-                if (row['type'] == null) {
-                  return undefinedTag();
-                };
-                return row['type'];
-              }
-            },
-            {
-              "fields":["from_time"],
-              "colStr":"Depuis (Au moins)",
-              "render": function (data, type, row) {
-                if (row['from_time'] == null) {
-                  return undefinedTag();
-                };
-                return row['from_time'];
-              }
-            },
-            {
-              "fields":["until_time"],
-              "colStr":"Jusqu'à",
-              "render": function (data, type, row) {
-                return row['until_time'];
-              }
-            },
-          ]
-        </script>
-      </table>
-    </div>
+    {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+  </div>
+  <div class="section_content">
+    <table class="display" id="FBUserReactionTable" drawn='False'>
+    <script class="tableVars">
+      var modelName = "FBReaction";
+      var srcs = [
+      {
+        modelName   :   "FBUser",
+        attr    :   "fbProfile__posted_reactions",
+        id      : "{{ fbUser.pk }}"
+      }
+      ]
+      var columns = [
+      {
+        "fields":["to_post__getStr","to_post__getLink","to_comment__getStr", "to_comment__getLink"],
+        "colStr":"Cible",
+        "render": function (data, type, row) {
+        if (row['to_post__getStr']){
+          return tableToolLink(row["to_post__getLink"],
+          truncate_text(row["to_post__getStr"], 60, true));
+        } else if (row['to_comment__getStr']) {
+          return tableToolLink(row["to_comment__getLink"],
+          truncate_text(row["to_comment__getStr"], 60, true));
+        }
+        return undefinedTag()
+        }
+      },
+      {
+        "fields":["type"],
+        "colStr":"Type",
+        "render": function (data, type, row) {
+        if (row['type'] == null) {
+          return undefinedTag();
+        };
+        return row['type'];
+        }
+      },
+      {
+        "fields":["from_time"],
+        "colStr":"Depuis (Au moins)",
+        "render": function (data, type, row) {
+        if (row['from_time'] == null) {
+          return undefinedTag();
+        };
+        return row['from_time'];
+        }
+      },
+      {
+        "fields":["until_time"],
+        "colStr":"Jusqu'à",
+        "render": function (data, type, row) {
+        return row['until_time'];
+        }
+      },
+      ]
+    </script>
+    </table>
+  </div>
   </div>
 
 {% endif %}

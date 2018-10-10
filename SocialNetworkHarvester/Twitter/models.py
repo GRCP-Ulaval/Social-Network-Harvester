@@ -1,3 +1,4 @@
+import re
 import time
 
 from django.core.exceptions import MultipleObjectsReturned
@@ -175,11 +176,17 @@ class HashtagHarvester(models.Model):
             until = "%s-%s-%s" % (self._harvest_until.year, self._harvest_until.month, self._harvest_until.day)
         return "#%s's harvester (%s to %s)" % (self.hashtag.term, since, until)
 
+    def str(self):
+        return str(self.hashtag)
+
     def harvest_count(self):
         return self.harvested_tweets.count()
 
     def get_obj_ident(self):
         return "HashtagHarvester__%s" % self.pk
+
+    def getLink(self):
+        return self.hashtag.getLink()
 
 
 ################### TWUSER ####################

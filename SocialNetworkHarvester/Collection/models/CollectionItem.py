@@ -10,7 +10,7 @@ from .Collection import Collection
 class CollectionItem(models.Model):
     collection = models.ForeignKey(
         Collection,
-        related_name='items',
+        related_name='collection_items',
         on_delete=models.PROTECT
     )
     twitter_user = models.ForeignKey(
@@ -44,39 +44,55 @@ class CollectionItem(models.Model):
         on_delete=models.PROTECT
     )
 
-    def clean(self):
-        if sum([
+    def foreign_keys(self):
+        return [
             self.twitter_hashtag,
             self.twitter_user,
             self.facebook_page,
             self.youtube_channel,
             self.youtube_playlist
-        ]) != 1:
+        ]
+
+    def clean(self):
+        if sum(self.foreign_keys()) != 1:
             raise Exception('A CollectionItem must have exactly one attribute set in ['
                             'twitter_hashtag, twitter_user, facebook_page, '
                             'youtube_channel, youtube_playlist]')
 
-    def __str__(self):
-        for attr in [
-            self.twitter_hashtag,
-            self.twitter_user,
-            self.facebook_page,
-            self.youtube_channel,
-            self.youtube_playlist
-        ]:
+    def get_item(self):
+        for attr in self.foreign_keys():
             if attr:
-                return str(attr)
+                return attr
+
+    def __str__(self):
+        return str(self.get_item())
+
+    def str(self):
+        return str(self)
 
     def object_class(self):
-        for attr in [
-            self.twitter_hashtag,
-            self.twitter_user,
-            self.facebook_page,
-            self.youtube_channel,
-            self.youtube_playlist
-        ]:
-            if attr:
-                return attr.model.__name__
+        return self.get_item().__class__._meta.model.__name__
 
-    def get_link(self):
-        return 'link'
+    def getLink(self):
+        return self.get_item().getLink()
+
+    def get_obj_ident(self):
+        return "CollectionItem__%s" % self.pk
+
+    @staticmethod
+    def create(collection, item):
+        foreign_key = {
+            TWUser: 'twitter_user',
+            HashtagHarvester: 'twitter_hashtag',
+            FBPage: 'facebook_page',
+            YTChannel: 'youtube_channel',
+            YTPlaylist: 'youtube_playlist'
+        }[item.__class__._meta.model]
+
+        current_items = collection.collection_items.filter(**{'%s__isnull' % foreign_key: False})
+
+        if not current_items.filter(**{foreign_key: item}).exists():
+            CollectionItem.objects.create(
+                collection=collection,
+                **{foreign_key: item}
+            )

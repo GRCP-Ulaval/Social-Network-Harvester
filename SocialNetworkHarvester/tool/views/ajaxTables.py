@@ -71,8 +71,12 @@ def getQueryset(request):
                             subqueryset = subqueryset()
                         queryset = queryset | subqueryset.all()
                 else:
-                    srcModel = get_object_or_404(getModel(srcModelName), pk=src['id'])
-                    queryset = queryset | reduce(getattr, attrs, srcModel).all()
+                    subqueryset = get_object_or_404(getModel(srcModelName), pk=src['id'])
+                    for attr in attrs:
+                        subqueryset = getattr(subqueryset, attr)
+                        if callable(subqueryset) and hasattr(subqueryset, '__self__'):
+                            subqueryset = subqueryset()
+                    queryset = queryset | subqueryset.all()
             else:
                 queryset = queryset | reduce(getattr, attrs, srcModel)
     options = userSelection.getQueryOptions(request.GET['tableId'])

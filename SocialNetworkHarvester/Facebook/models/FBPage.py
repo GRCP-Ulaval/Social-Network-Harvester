@@ -567,6 +567,9 @@ class FBPage(models.Model):
         'were_here_counts': ['were_here_count'],
     }
 
+    def getLink(self):
+        return '/facebook/page/%s'%self.pk
+
     # @facebookLogger.debug(showClass=True)
     def update(self, jObject):
         if not isinstance(jObject, dict):

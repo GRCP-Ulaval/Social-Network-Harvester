@@ -5,344 +5,350 @@
 
   {% if source == "YoutubeBase" %}
   <div class="">
-    <div class="section_menu">
-            <span class="section_title">
-                <b>Listes de lectures collectées (Playlists)</b>
-            </span>
-      <div class="section_options">
-        <span>|</span>
-        <span class="section_menuItem"><a onclick="addPlaylistPopup()">Ajouter</a></span>
-        <!-- ADD NEW PLAYLIST POPUP-->
-        <div class="popup" id="addNewPlaylist">
-          <div id="title">Ajouter une nouvelle liste de lecture</div>
-          <div id="help">
-            Ajoutez une nouvelle liste de lecture à votre liste de collecte
-          </div>
-          <div id="content">
-            <form style="max-width:450px;" method="post" action="/youtube/forms/YTAddPlaylist"
-                  enctype="multipart/form-data" id="addPlaylistPopupForm">
-              {% csrf_token %}
-              <p>Spécifiez toutes les urls de listes de lectures:</p>
-              <center>
-                <table>
-                  <tr>
-                  </tr>
-                </table>
-                <br>
-                <div onclick="addPlaylistLine()" id="addLineButton">
-                  <div class="plusIconInput">
-                    {% include "tool/icons.html" with x=3 y=3 %}
-                  </div>
-                </div>
-              </center>
-              <hr>
-              <p>Alternativement, sélectionnez un fichier .csv:</p>
-              <input type="file" name="Browse" size="chars">
-              <br><br>
-              <center><input type="submit" value="Submit" style="right:0px;"></input></center>
-            </form>
-          </div>
-          <script id="functions">
-            function addPlaylistLine() {
-              var container = getPopupContainer();
-              container.find('tr').last().after(function () {
-                return $(
-                  '<tr>' +
-                  '<td><input type="text" name="playlistURL" placeholder="url" value="" style="width:300px"></td>' +
-                  '</tr>',
-                );
-              });
-            }
-
-            function addPlaylistPopup() {
-              var addLine = lastPopupId != 'addNewPlaylist';
-              displayCenterPopup('addNewPlaylist', function () {
-                if (addLine) {
-                  addPlaylistLine();
-                }
-                ;
-              });
-              $('#centerPopupContent').find('#addPlaylistPopupForm').unbind('submit');
-              $('#centerPopupContent').find('#addPlaylistPopupForm').submit(function (event) {
-                event.preventDefault();
-                var formData = new FormData($(this)[0]);
-                $('#centerPopupInner').addClass('waitingMask');
-                $.ajax({
-                  url: $(this).attr('action'),
-                  type: 'POST',
-                  data: formData,
-                  processData: false,
-                  contentType: false,
-                  success: function (response) {
-                    $('#centerPopupInner').removeClass('waitingMask');
-                    $('#centerPopupOutter').hide();
-                    reloadTable('#YTPlaylistTable');
-                    if (response['status'] == 'ok') {
-                      displayNewMessages(response['messages']);
-                    } else if (response['status'] == 'exception') {
-                      displayNewErrors(response['errors']);
-                    }
-                    ;
-                  },
-                });
-              });
-            }
-          </script>
-        </div>
-        <span>|</span>
-        <span class="section_menuItem"><a onclick="displayRemovePlaylistPopup()">Retirer</a></span>
-        <!-- REMOVE PLAYLIST POPUP-->
-        <div class="popup" id="removePlaylist">
-          <div id="title">Retirer</div>
-          <div id="help">
-            Retirera les listes de lectures sélectionnées de votre liste de collecte.
-          </div>
-          <div id="content">
-            <center>êtes vous sûr de vouloir retirer les <br> listes sélectionnées de votre liste de collecte?
-              <br><br>
-              <div id="selectedPlaylistsCount">0 lignes sélectionnées</div>
-              <br>
-              <input type="submit" value="Remove" onclick="submitRemovePlaylistsForm()" />
-            </center>
-          </div>
-          <script id="functions">
-            function displayRemovePlaylistPopup() {
-              lastPopupId = null;
-              var displayer = $('#removePlaylist').children('#content').children().children('#selectedPlaylistsCount');
-              var length = selectedCounts['#YTPlaylistTable'];
-              if (!length) {
-                alert('Vous devez dabord sélectionner une ligne dans le tableau.');
-              }
-              else {
-                displayer.html('' + length + ' row' + (length > 1 ? 's' : '') + ' selected');
-                displayCenterPopup('removePlaylist');
-              }
-
-            }
-
-            function submitRemovePlaylistsForm() {
-              url = '/removeSelectedItems?pageURL=' +
-                window.location.pathname + '&tableId=YTPlaylistTable' +
-                '&listToRemoveFrom=ytPlaylistsToHarvest';
-              executeAjaxAndDisplayMessages(url, '#YTPlaylistTable');
-            }
-          </script>
-        </div>
-        {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="YTPlaylist"  filename="Harvested_YTPlaylists" %}
-        {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+  <div class="section_menu">
+      <span class="section_title">
+        <b>Listes de lectures collectées (Playlists)</b>
+      </span>
+    <div class="section_options">
+    <span>|</span>
+    <span class="section_menuItem"><a onclick="addPlaylistPopup()">Ajouter</a></span>
+    <!-- ADD NEW PLAYLIST POPUP-->
+    <div class="popup" id="addNewPlaylist">
+      <div id="title">Ajouter une nouvelle liste de lecture</div>
+      <div id="help">
+      Ajoutez une nouvelle liste de lecture à votre liste de collecte
       </div>
-      {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+      <div id="content">
+      <form style="max-width:450px;" method="post" action="/youtube/forms/YTAddPlaylist"
+          enctype="multipart/form-data" id="addPlaylistPopupForm">
+        {% csrf_token %}
+        <p>Spécifiez toutes les urls de listes de lectures:</p>
+        <center>
+        <table>
+          <tr>
+          </tr>
+        </table>
+        <br>
+        <div onclick="addPlaylistLine()" id="addLineButton">
+          <div class="plusIconInput">
+          {% include "tool/icons.html" with x=3 y=3 %}
+          </div>
+        </div>
+        </center>
+        <hr>
+        <p>Alternativement, sélectionnez un fichier .csv:</p>
+        <input type="file" name="Browse" size="chars">
+        <br><br>
+        <center><input type="submit" value="Submit" style="right:0px;"></input></center>
+      </form>
+      </div>
+      <script id="functions">
+      function addPlaylistLine() {
+        var container = getPopupContainer();
+        container.find('tr').last().after(function () {
+        return $(
+          '<tr>' +
+          '<td><input type="text" name="playlistURL" placeholder="url" value="" style="width:300px"></td>' +
+          '</tr>',
+        );
+        });
+      }
+
+      function addPlaylistPopup() {
+        var addLine = lastPopupId != 'addNewPlaylist';
+        displayCenterPopup('addNewPlaylist', function () {
+        if (addLine) {
+          addPlaylistLine();
+        }
+        ;
+        });
+        $('#centerPopupContent').find('#addPlaylistPopupForm').unbind('submit');
+        $('#centerPopupContent').find('#addPlaylistPopupForm').submit(function (event) {
+        event.preventDefault();
+        var formData = new FormData($(this)[0]);
+        $('#centerPopupInner').addClass('waitingMask');
+        $.ajax({
+          url: $(this).attr('action'),
+          type: 'POST',
+          data: formData,
+          processData: false,
+          contentType: false,
+          success: function (response) {
+          $('#centerPopupInner').removeClass('waitingMask');
+          $('#centerPopupOutter').hide();
+          reloadTable('#YTPlaylistTable');
+          if (response['status'] == 'ok') {
+            displayNewMessages(response['messages']);
+          } else if (response['status'] == 'exception') {
+            displayNewErrors(response['errors']);
+          }
+          ;
+          },
+        });
+        });
+      }
+      </script>
     </div>
-    <div class="section_content">
-      <table class="display" id="YTPlaylistTable" width="100%" drawn='False'>
-        <script class="tableVars">
-          var modelName = 'YTPlaylist';
-          var srcs = [
-            {
-              attr: 'ytPlaylistsToHarvest',
-            },
-          ];
-          var columns = [
-            {
-              'fields': ['title', 'pk'],
-              'colStr': 'Titre',
-              'render': function (data, type, row) {
-                if (row['title'] == null) {
-                  return undefinedTag();
-                }
-                ;
-                return tableToolLink('/youtube/playlist/' + row['pk'],
-                  truncate_text(row['title'], 50, true));
-              },
-            },
-            {
-              'searchable': false,
-              'fields': ['channel__title', 'channel__pk'],
-              'colStr': 'Chaîne',
-              'render': function (data, type, row) {
-                if (row['channel__pk'] == null) {
-                  return '';
-                }
-                ;
-                return tableToolLink('/youtube/channel/' + row['channel__pk'],
-                  truncate_text(row['channel__title'], 40, true));
-              },
-            },
-            {
-              'searchable': false,
-              'fields': ['description'],
-              'colStr': 'Description',
-              'render': function (data, type, row) {
-                if (row['description'] == null) {
-                  return '';
-                }
-                ;
-                return truncate_text(row['description'], 100, true);
-              },
-            },
-            {
-              'searchable': false,
-              'fields': ['video_count'],
-              'colStr': 'Nombre de vidéos',
-              'render': function (data, type, row) {
-                return centeredTag(row['video_count']);
-              },
-            },
-            /*{
-                "searchable": false,
-                "fields": ["pk"],
-                "colStr": "",
-                "render": function (data, type, row) {
-                    return tableToolLink("/youtube/playlist/"+ row["pk"], "Plus d'infos");
-                }
-            },*/
-          ];
-        </script>
-      </table>
+    <span>|</span>
+    <span class="section_menuItem"><a onclick="displayRemovePlaylistPopup()">Retirer</a></span>
+    <!-- REMOVE PLAYLIST POPUP-->
+    <div class="popup" id="removePlaylist">
+      <div id="title">Retirer</div>
+      <div id="help">
+      Retirera les listes de lectures sélectionnées de votre liste de collecte.
+      </div>
+      <div id="content">
+      <center>êtes vous sûr de vouloir retirer les <br> listes sélectionnées de votre liste de collecte?
+        <br><br>
+        <div id="selectedPlaylistsCount">0 lignes sélectionnées</div>
+        <br>
+        <input type="submit" value="Remove" onclick="submitRemovePlaylistsForm()" />
+      </center>
+      </div>
+      <script id="functions">
+      function displayRemovePlaylistPopup() {
+        lastPopupId = null;
+        var displayer = $('#removePlaylist').children('#content').children().children('#selectedPlaylistsCount');
+        var length = selectedCounts['#YTPlaylistTable'];
+        if (!length) {
+        alert('Vous devez dabord sélectionner une ligne dans le tableau.');
+        }
+        else {
+        displayer.html('' + length + ' row' + (length > 1 ? 's' : '') + ' selected');
+        displayCenterPopup('removePlaylist');
+        }
+
+      }
+
+      function submitRemovePlaylistsForm() {
+        url = '/removeSelectedItems?pageURL=' +
+        window.location.pathname + '&tableId=YTPlaylistTable' +
+        '&listToRemoveFrom=ytPlaylistsToHarvest';
+        executeAjaxAndDisplayMessages(url, '#YTPlaylistTable');
+      }
+      </script>
     </div>
+
+      {% include "tool/tables/tableMenuItems.html" with name="add_to_collection" model_name="YTPlaylist" table_id="YTPlaylistTable"%}
+
+
+    {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="YTPlaylist"  filename="Harvested_YTPlaylists" %}
+
+
+    {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+    </div>
+    {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+  </div>
+  <div class="section_content">
+    <table class="display" id="YTPlaylistTable" width="100%" drawn='False'>
+    <script class="tableVars">
+      var modelName = 'YTPlaylist';
+      var srcs = [
+      {
+        attr: 'ytPlaylistsToHarvest',
+      },
+      ];
+      var columns = [
+      {
+        'fields': ['title', 'pk'],
+        'colStr': 'Titre',
+        'render': function (data, type, row) {
+        if (row['title'] == null) {
+          return undefinedTag();
+        }
+        ;
+        return tableToolLink('/youtube/playlist/' + row['pk'],
+          truncate_text(row['title'], 50, true));
+        },
+      },
+      {
+        'searchable': false,
+        'fields': ['channel__title', 'channel__pk'],
+        'colStr': 'Chaîne',
+        'render': function (data, type, row) {
+        if (row['channel__pk'] == null) {
+          return '';
+        }
+        ;
+        return tableToolLink('/youtube/channel/' + row['channel__pk'],
+          truncate_text(row['channel__title'], 40, true));
+        },
+      },
+      {
+        'searchable': false,
+        'fields': ['description'],
+        'colStr': 'Description',
+        'render': function (data, type, row) {
+        if (row['description'] == null) {
+          return '';
+        }
+        ;
+        return truncate_text(row['description'], 100, true);
+        },
+      },
+      {
+        'searchable': false,
+        'fields': ['video_count'],
+        'colStr': 'Nombre de vidéos',
+        'render': function (data, type, row) {
+        return centeredTag(row['video_count']);
+        },
+      },
+      /*{
+        "searchable": false,
+        "fields": ["pk"],
+        "colStr": "",
+        "render": function (data, type, row) {
+          return tableToolLink("/youtube/playlist/"+ row["pk"], "Plus d'infos");
+        }
+      },*/
+      ];
+    </script>
+    </table>
+  </div>
   </div>
 
   {% elif source == "YoutubeChannel_playlists" %}
   <div class="">
-    <div class="section_menu">
-            <span class="section_title">
-                <b>Listes de lectures</b>
-            </span>
-      <div class="section_options">
-        {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="YTPlaylist" filename="YTChannel_"|join:channel|join:"_playlists" %}
-        {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
-      </div>
-      {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+  <div class="section_menu">
+      <span class="section_title">
+        <b>Listes de lectures</b>
+      </span>
+    <div class="section_options">
+    {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="YTPlaylist" filename="YTChannel_"|join:channel|join:"_playlists" %}
+    {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
     </div>
-    <div class="section_content">
-      <table class="display" id="YTChannelPlaylists" width="100%" drawn='False'>
-        <script class="tableVars">
-          var modelName = 'YTPlaylist';
-          var srcs = [
-            {
-              modelName: 'YTChannel',
-              attr: 'playlists',
-              id: '{{ channel.pk }}',
-            },
-          ];
-          var columns = [
-            {
-              'fields': ['title', 'pk'],
-              'colStr': 'Titre',
-              'render': function (data, type, row) {
-                if (row['title'] == null) {
-                  return undefinedTag();
-                }
-                ;
-                return tableToolLink('/youtube/playlist/' + row['pk'],
-                  truncate_text(row['title'], 50, true));
-              },
-            },
-            {
-              'searchable': false,
-              'fields': ['description'],
-              'colStr': 'Description',
-              'render': function (data, type, row) {
-                if (row['description'] == null) {
-                  return '';
-                }
-                ;
-                return truncate_text(row['description'], 100, true);
-              },
-            },
-            {
-              'searchable': false,
-              'fields': ['video_count'],
-              'colStr': 'Nombre de vidéos',
-              'render': function (data, type, row) {
-                return centeredTag(row['video_count']);
-              },
-            },
-            {
-              'searchable': false,
-              'fields': ['pk'],
-              'colStr': '',
-              'render': function (data, type, row) {
-                return tableToolLink('/youtube/playlist/' + row['pk'], 'Plus d\'infos');
-              },
-            },
-          ];
-        </script>
-      </table>
-    </div>
+    {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+  </div>
+  <div class="section_content">
+    <table class="display" id="YTChannelPlaylists" width="100%" drawn='False'>
+    <script class="tableVars">
+      var modelName = 'YTPlaylist';
+      var srcs = [
+      {
+        modelName: 'YTChannel',
+        attr: 'playlists',
+        id: '{{ channel.pk }}',
+      },
+      ];
+      var columns = [
+      {
+        'fields': ['title', 'pk'],
+        'colStr': 'Titre',
+        'render': function (data, type, row) {
+        if (row['title'] == null) {
+          return undefinedTag();
+        }
+        ;
+        return tableToolLink('/youtube/playlist/' + row['pk'],
+          truncate_text(row['title'], 50, true));
+        },
+      },
+      {
+        'searchable': false,
+        'fields': ['description'],
+        'colStr': 'Description',
+        'render': function (data, type, row) {
+        if (row['description'] == null) {
+          return '';
+        }
+        ;
+        return truncate_text(row['description'], 100, true);
+        },
+      },
+      {
+        'searchable': false,
+        'fields': ['video_count'],
+        'colStr': 'Nombre de vidéos',
+        'render': function (data, type, row) {
+        return centeredTag(row['video_count']);
+        },
+      },
+      {
+        'searchable': false,
+        'fields': ['pk'],
+        'colStr': '',
+        'render': function (data, type, row) {
+        return tableToolLink('/youtube/playlist/' + row['pk'], 'Plus d\'infos');
+        },
+      },
+      ];
+    </script>
+    </table>
+  </div>
   </div>
 
   {% elif source == "searchResult" %}
   <div class="">
-    <div class="section_menu">
-            <span class="section_title">
-                <b>Listes de lectures Youtube</b>
-            </span>
-      <div class="section_options">
-        {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="YTPlaylist"  filename="Youtube_Playlists_Search_Results_"|join:query %}
-        {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
-      </div>
-      {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+  <div class="section_menu">
+      <span class="section_title">
+        <b>Listes de lectures Youtube</b>
+      </span>
+    <div class="section_options">
+    {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="YTPlaylist"  filename="Youtube_Playlists_Search_Results_"|join:query %}
+    {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
     </div>
-    <div class="section_content">
-      <table class="display" id="YTPlaylists" width="100%" drawn='False'>
-        <script class="tableVars">
-          var modelName = 'YTPlaylist';
-          var srcs = [
-            {
-              query: '{% autoescape off %}{{ query }}{% endautoescape %}',
-            },
-          ];
-          var columns = [
-            {
-              'fields': ['title', 'pk'],
-              'colStr': 'Titre',
-              'render': function (data, type, row) {
-                if (row['title'] == null) {
-                  return undefinedTag();
-                }
-                ;
-                return tableToolLink('/youtube/playlist/' + row['pk'],
-                  truncate_text(row['title'], 50, true));
-              },
-            },
-            {
-              'searchable': false,
-              'fields': ['channel__title', 'channel__pk'],
-              'colStr': 'Chaîne',
-              'render': function (data, type, row) {
-                if (row['channel__pk'] == null) {
-                  return '';
-                }
-                ;
-                return tableToolLink('/youtube/channel/' + row['channel__pk'],
-                  truncate_text(row['channel__title'], 40, true));
-              },
-            },
-            {
-              'searchable': false,
-              'fields': ['description'],
-              'colStr': 'Description',
-              'render': function (data, type, row) {
-                if (row['description'] == null) {
-                  return '';
-                }
-                ;
-                return truncate_text(row['description'], 100, true);
-              },
-            },
-            {
-              'searchable': false,
-              'fields': ['video_count'],
-              'colStr': 'Nombre de vidéos',
-              'render': function (data, type, row) {
-                return centeredTag(row['video_count']);
-              },
-            },
-          ];
-        </script>
-      </table>
-    </div>
+    {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+  </div>
+  <div class="section_content">
+    <table class="display" id="YTPlaylists" width="100%" drawn='False'>
+    <script class="tableVars">
+      var modelName = 'YTPlaylist';
+      var srcs = [
+      {
+        query: '{% autoescape off %}{{ query }}{% endautoescape %}',
+      },
+      ];
+      var columns = [
+      {
+        'fields': ['title', 'pk'],
+        'colStr': 'Titre',
+        'render': function (data, type, row) {
+        if (row['title'] == null) {
+          return undefinedTag();
+        }
+        ;
+        return tableToolLink('/youtube/playlist/' + row['pk'],
+          truncate_text(row['title'], 50, true));
+        },
+      },
+      {
+        'searchable': false,
+        'fields': ['channel__title', 'channel__pk'],
+        'colStr': 'Chaîne',
+        'render': function (data, type, row) {
+        if (row['channel__pk'] == null) {
+          return '';
+        }
+        ;
+        return tableToolLink('/youtube/channel/' + row['channel__pk'],
+          truncate_text(row['channel__title'], 40, true));
+        },
+      },
+      {
+        'searchable': false,
+        'fields': ['description'],
+        'colStr': 'Description',
+        'render': function (data, type, row) {
+        if (row['description'] == null) {
+          return '';
+        }
+        ;
+        return truncate_text(row['description'], 100, true);
+        },
+      },
+      {
+        'searchable': false,
+        'fields': ['video_count'],
+        'colStr': 'Nombre de vidéos',
+        'render': function (data, type, row) {
+        return centeredTag(row['video_count']);
+        },
+      },
+      ];
+    </script>
+    </table>
+  </div>
   </div>
 
 

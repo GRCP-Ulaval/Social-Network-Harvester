@@ -5,13 +5,13 @@
 {% if name == "reloadTable" %}
 <span>|</span>
 <span class="section_menuItem" id="reloadTableLink" title="Recharger la table">
-    {% include "tool/icons.html" with x=0 y=5 className="tableOptionIcon" %}
+  {% include "tool/icons.html" with x=0 y=5 className="tableOptionIcon" %}
 </span>
 
 
 {% elif name == "openCloseIcon" %}
 <div class="tableOpenCloseIcon" type="plus" title="Ouvrir/fermer la section">
-    {% include "tool/icons.html" with x=3 y=3 className="openCloseIcon"%}
+  {% include "tool/icons.html" with x=3 y=3 className="openCloseIcon"%}
 </div>
 
 
@@ -19,14 +19,14 @@
 <span>|</span>
 <span class="section_menuItem tableDownloader" filename={{ filename }} title="Télécharger la sélection">
 
-    {% include "tool/icons.html" with x=5 y=4 className="tableOptionIcon" %}
+  {% include "tool/icons.html" with x=5 y=4 className="tableOptionIcon" %}
 
 {% elif name == "downloadFields" %}
 {% include "tool/tables/tableMenuItems.html" with name="downloadFilename" filename=filename %}
 <div class="downloadFields">
-    {% for key,val in className|getFields %}
-    <div field="{{key}}" helper="{{val.description}}">{{ val.name }}</div>
-    {% endfor %}
+  {% for key,val in className|getFields %}
+  <div field="{{key}}" helper="{{val.description}}">{{ val.name }}</div>
+  {% endfor %}
 </div>
 </span>
 
@@ -34,9 +34,60 @@
 {% elif name == "excludeRetweets" %}
 <span>|</span>
 <span><input type="checkbox" name="exclude_retweets" class="option_checkbox" title="Exclure les retweets">
-    <!--{% include "tool/icons.html" with x=1 y=5 className="tableOptionIcon" %}-->
-    Exclure les retweets
+  <!--{% include "tool/icons.html" with x=1 y=5 className="tableOptionIcon" %}-->
+  Exclure les retweets
 </span>
 
+{% elif name == "add_to_collection" %}
+<span>|</span>
+<span class="section_menuItem">
+    <a onclick="display_add_to_collection_popup('{{ table_id }}')">Ajouter à une collecte</a>
+</span>
+<div class="popup" id="add_to_collection_{{ table_id }}">
+  <div id="title">Ajouter à une collecte</div>
+  <div id="help">
+    Ajouter les items selectionnés à une collecte. Vous
+  </div>
+  <div id="content">
+    <center>
+      <span>Sélectionnez une collecte sous votre contrôle:</span>
+      <br/><br/>
+      <select id="selected_collection_{{ table_id }}">
+        {% for collection in user.curated_collections.all %}
+        <option value="{{ collection.pk }}">{{ collection.name }}</option>
+        {% endfor %}
+      </select>
+      <br/><br/>
 
+      <input
+          type="submit"
+          value="Ajouter"
+          onclick="submit_add_to_collection_form('{{ table_id }}', '{{ model_name }}')"
+      >
+      <br/><br/>
+      <span id="num_items_selected_{{ table_id }}"></span>
+    </center>
+  </div>
+  <script id="functions">
+    function display_add_to_collection_popup(table_id) {
+      lastPopupId = null;
+      var displayer = $('#num_items_selected_' + table_id);
+      var count = selectedCounts['#' + table_id];
+      if (!count) {
+        alert('Vous devez d\'abpord sélectioner une ligne du tableau.');
+      }
+      else {
+        displayer.html('' + count + ' ligne' + (count > 1 ? 's' : '') + ' selectionnée');
+        displayCenterPopup('add_to_collection_' + table_id);
+      }
+    }
+
+    function submit_add_to_collection_form(table_id, model_name) {
+      let collection_id = $('#centerPopupContent').find('#selected_collection_' + table_id).val()
+      let url = '/collection/ajax/addItems?pageURL=' + window.location.pathname + '&tableId=' +
+        table_id + '&collection_id=' + collection_id+'&modelName='+model_name;
+      executeAjaxAndDisplayMessages(url, '#'+table_id);
+    }
+  </script>
+</div>
 {% endif %}

@@ -24,6 +24,7 @@ def collection_detail(request, collection_id):
             ("Collectes", "/collection"),
             (collection, "/collection/%s" % collection.pk),
         ],
+        "collection": collection,
     }
     resetUserSelection(request)
     return render(request, "Collection/containers/Collection_Details.html", context)

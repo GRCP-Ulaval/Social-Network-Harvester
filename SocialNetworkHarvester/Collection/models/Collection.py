@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import models
 
+from SocialNetworkHarvester.loggers.viewsLogger import log
 from SocialNetworkHarvester.models import djangoNow
 
 
@@ -35,6 +36,9 @@ class Collection(models.Model):
         User,
         related_name='followed_collections'
     )
+
+    def items_twitter_users(self):
+        return self.collection_items.filter(twitter_user__isnull=False)
 
     def __str__(self):
         return 'Collecte "%s"' % (self.name)

@@ -3,422 +3,422 @@
 
 <section class="tableContainer">
 
-    {% if source == "YoutubeChannel_comments" %}
-    <div class="">
-        <div class="section_menu">
-            <span class="section_title">
-                <b>Commentaires reçus</b>
-            </span>
-            <div class="section_options">
-                {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="YTComment" filename="YTChannel_"|join:channel|join:"_comments" %}
-                {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
-            </div>
-            {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
-        </div>
-        <div class="section_content">
-            <table class="display" id="YTChannelComments" width="100%" drawn='False'>
-                <script class="tableVars">
-                    var modelName = "YTComment";
-                    var srcs = [
-                        {
-                            modelName: "YTChannel",
-                            attr: "comments",
-                            id: "{{ channel.pk }}",
-                        },
-                    ]
-                    var columns = [
-                        {
-                            "fields": ["author__title", "author__pk"],
-                            "colStr": "Auteur",
-                            "render": function (data, type, row) {
-                                if (row['author__title'] == null) {
-                                    return undefinedTag();
-                                }
-                                ;
-                                return tableToolLink("/youtube/channel/" + row["author__pk"],
-                                        truncate_text(row["author__title"], 50, true));
-                            }
-                        },
-                        {
-                            "searchable": true,
-                            "fields": ["video_target__title", "video_target__pk"],
-                            "colStr": "Vidéo ciblée",
-                            "render": function (data, type, row) {
-                                if (row['video_target__title'] == null) {
-                                    return undefinedTag();
-                                }
-                                ;
-                                return tableToolLink("/youtube/video/"+row['video_target__pk'],
-                                    truncate_text(row['video_target__title'], 50, true));
-                            }
-                        },
-                        {
-                            "fields": ["text"],
-                            "colStr": "Texte",
-                            "render": function (data, type, row) {
-                                return truncate_text(row['text'],100,true);
-                            }
-                        },
-                        {
-                            "fields": ["publishedAt"],
-                            "colStr": "Date de publication",
-                            "render": function (data, type, row) {
-                                return row['publishedAt'];
-                            }
-                        },
-                        {
-                            "fields": ["likeCount"],
-                            "colStr": "Likes",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['likeCount']);
-                            }
-                        },
-                        {
-                            "fields": ["numberOfReplies"],
-                            "colStr": "Réponses",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['numberOfReplies']);
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "fields": ["pk"],
-                            "colStr": "",
-                            "render": function (data, type, row) {
-                                return tableToolLink("/youtube/comment/" + row["pk"], "Plus d'infos");
-                            }
-                        },
-                    ]
-                </script>
-            </table>
-        </div>
+  {% if source == "YoutubeChannel_comments" %}
+  <div class="">
+    <div class="section_menu">
+      <span class="section_title">
+        <b>Commentaires reçus</b>
+      </span>
+      <div class="section_options">
+        {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="YTComment" filename="YTChannel_"|join:channel|join:"_comments" %}
+        {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+      </div>
+      {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
     </div>
-
-    {% elif source == "YoutubeChannel_postedComments" %}
-    <div class="">
-        <div class="section_menu">
-            <span class="section_title">
-                <b>Commentaires postés</b>
-            </span>
-            <div class="section_options">
-                {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="YTComment" filename="YTChannel_"|join:channel|join:"_posted_comments" %}
-                {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
-            </div>
-            {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
-        </div>
-        <div class="section_content">
-            <table class="display" id="YTChannelPostedComments" width="100%" drawn='False'>
-                <script class="tableVars">
-                    var modelName = "YTComment";
-                    var srcs = [
-                        {
-                            modelName: "YTChannel",
-                            attr: "posted_comments",
-                            id: "{{ channel.pk }}",
-                        },
-                    ]
-                    var columns = [
-                        {
-                            "searchable": true,
-                            "fields": ["video_target__title", "video_target__pk"],
-                            "colStr": "Vidéo ciblée",
-                            "render": function (data, type, row) {
-                                if (row['video_target__title'] == null) {
-                                    return undefinedTag();
-                                }
-                                ;
-                                return tableToolLink("/youtube/video/" + row['video_target__pk'],
-                                        truncate_text(row['video_target__title'], 50, true));
-                            }
-                        },
-                        {
-                            "fields": ["text"],
-                            "colStr": "Texte",
-                            "render": function (data, type, row) {
-                                return truncate_text(row['text'], 100, true);
-                            }
-                        },
-                        {
-                            "fields": ["publishedAt"],
-                            "colStr": "Date de publication",
-                            "render": function (data, type, row) {
-                                return row['publishedAt'];
-                            }
-                        },
-                        {
-                            "fields": ["likeCount"],
-                            "colStr": "Likes",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['likeCount']);
-                            }
-                        },
-                        {
-                            "fields": ["numberOfReplies"],
-                            "colStr": "Réponses",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['numberOfReplies']);
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "fields": ["pk"],
-                            "colStr": "",
-                            "render": function (data, type, row) {
-                                return tableToolLink("/youtube/comment/" + row["pk"], "Plus d'infos");
-                            }
-                        },
-                    ]
-                </script>
-            </table>
-        </div>
+    <div class="section_content">
+      <table class="display" id="YTChannelComments" width="100%" drawn='False'>
+        <script class="tableVars">
+          var modelName = "YTComment";
+          var srcs = [
+            {
+              modelName: "YTChannel",
+              attr: "comments",
+              id: "{{ channel.pk }}",
+            },
+          ]
+          var columns = [
+            {
+              "fields": ["author__title", "author__pk"],
+              "colStr": "Auteur",
+              "render": function (data, type, row) {
+                if (row['author__title'] == null) {
+                  return undefinedTag();
+                }
+                ;
+                return tableToolLink("/youtube/channel/" + row["author__pk"],
+                    truncate_text(row["author__title"], 50, true));
+              }
+            },
+            {
+              "searchable": true,
+              "fields": ["video_target__title", "video_target__pk"],
+              "colStr": "Vidéo ciblée",
+              "render": function (data, type, row) {
+                if (row['video_target__title'] == null) {
+                  return undefinedTag();
+                }
+                ;
+                return tableToolLink("/youtube/video/"+row['video_target__pk'],
+                  truncate_text(row['video_target__title'], 50, true));
+              }
+            },
+            {
+              "fields": ["text"],
+              "colStr": "Texte",
+              "render": function (data, type, row) {
+                return truncate_text(row['text'],100,true);
+              }
+            },
+            {
+              "fields": ["publishedAt"],
+              "colStr": "Date de publication",
+              "render": function (data, type, row) {
+                return row['publishedAt'];
+              }
+            },
+            {
+              "fields": ["likeCount"],
+              "colStr": "Likes",
+              "render": function (data, type, row) {
+                return centeredTag(row['likeCount']);
+              }
+            },
+            {
+              "fields": ["numberOfReplies"],
+              "colStr": "Réponses",
+              "render": function (data, type, row) {
+                return centeredTag(row['numberOfReplies']);
+              }
+            },
+            {
+              "searchable": false,
+              "fields": ["pk"],
+              "colStr": "",
+              "render": function (data, type, row) {
+                return tableToolLink("/youtube/comment/" + row["pk"], "Plus d'infos");
+              }
+            },
+          ]
+        </script>
+      </table>
     </div>
+  </div>
 
-    {% elif source == "YoutubeVideo_comments" %}
-    <div class="">
-        <div class="section_menu">
-            <span class="section_title">
-                <b>Commentaires</b>
-            </span>
-            <div class="section_options">
-                {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="YTComment" filename="YTVideo_"|join:video|join:"_comments" %}
-                {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
-            </div>
-            {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
-        </div>
-        <div class="section_content">
-            <table class="display" id="YTCommentsTable" width="100%" drawn='False'>
-                <script class="tableVars">
-                    var modelName = "YTComment";
-                    var srcs = [
-                        {
-                            modelName: "YTVideo",
-                            attr: "comments",
-                            id: "{{ video.pk }}",
-                        },
-                    ]
-                    var columns = [
-                        {
-                            "searchable": true,
-                            "fields": ["author__title", "author__pk"],
-                            "colStr": "Auteur",
-                            "render": function (data, type, row) {
-                                if (row['author__title'] == null) {
-                                    return undefinedTag();
-                                }
-                                ;
-                                return tableToolLink("/youtube/channel/" + row['author__pk'],
-                                        truncate_text(row['author__title'], 50, true));
-                            }
-                        },
-                        {
-                            "fields": ["text"],
-                            "colStr": "Texte",
-                            "render": function (data, type, row) {
-                                return truncate_text(row['text'], 100, true);
-                            }
-                        },
-                        {
-                            "fields": ["publishedAt"],
-                            "colStr": "Date de publication",
-                            "render": function (data, type, row) {
-                                return row['publishedAt'];
-                            }
-                        },
-                        {
-                            "fields": ["likeCount"],
-                            "colStr": "Likes",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['likeCount']);
-                            }
-                        },
-                        {
-                            "fields": ["numberOfReplies"],
-                            "colStr": "Réponses",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['numberOfReplies']);
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "fields": ["pk"],
-                            "colStr": "",
-                            "render": function (data, type, row) {
-                                return tableToolLink("/youtube/comment/" + row["pk"], "Plus d'infos");
-                            }
-                        },
-                    ]
-                </script>
-            </table>
-        </div>
+  {% elif source == "YoutubeChannel_postedComments" %}
+  <div class="">
+    <div class="section_menu">
+      <span class="section_title">
+        <b>Commentaires postés</b>
+      </span>
+      <div class="section_options">
+        {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="YTComment" filename="YTChannel_"|join:channel|join:"_posted_comments" %}
+        {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+      </div>
+      {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
     </div>
-
-    {% elif source == "YoutubeComment_replies" %}
-    <div class="">
-        <div class="section_menu">
-            <span class="section_title">
-                <b>Réponses</b>
-            </span>
-            <div class="section_options">
-                {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="YTComment" filename="YTComment_"|join:comment|join:"_replies" %}
-                {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
-            </div>
-            {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
-        </div>
-        <div class="section_content">
-            <table class="display" id="YTCommentReplies" width="100%" drawn='False'>
-                <script class="tableVars">
-                    var modelName = "YTComment";
-                    var srcs = [
-                        {
-                            modelName: "YTComment",
-                            attr: "replies",
-                            id: "{{ comment.pk }}",
-                        },
-                    ]
-                    var columns = [
-                        {
-                            "searchable": true,
-                            "fields": ["author__title", "author__pk"],
-                            "colStr": "Auteur",
-                            "render": function (data, type, row) {
-                                if (row['author__title'] == null) {
-                                    return undefinedTag();
-                                }
-                                ;
-                                return tableToolLink("/youtube/channel/" + row['author__pk'],
-                                        truncate_text(row['author__title'], 50, true));
-                            }
-                        },
-                        {
-                            "fields": ["publishedAt"],
-                            "colStr": "Date de publication",
-                            "render": function (data, type, row) {
-                                return row['publishedAt'];
-                            }
-                        },
-                        {
-                            "fields": ["text"],
-                            "colStr": "Texte",
-                            "render": function (data, type, row) {
-                                return truncate_text(row['text'], 100, true);
-                            }
-                        },
-                        {
-                            "fields": ["updatedAt"],
-                            "colStr": "Dernirère modification",
-                            "render": function (data, type, row) {
-                                return row['updatedAt'];
-                            }
-                        },
-                        {
-                            "fields": ["likeCount"],
-                            "colStr": "Likes",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['likeCount']);
-                            }
-                        },
-                        {
-                            "searchable":false,
-                            "orderable":false,
-                            "fields": ["getLink"],
-                            "render": function (data, type, row) {
-                                return tableToolLink(row['getLink'], "More infos");
-                            }
-                        },
-                    ]
-                </script>
-            </table>
-        </div>
+    <div class="section_content">
+      <table class="display" id="YTChannelPostedComments" width="100%" drawn='False'>
+        <script class="tableVars">
+          var modelName = "YTComment";
+          var srcs = [
+            {
+              modelName: "YTChannel",
+              attr: "posted_comments",
+              id: "{{ channel.pk }}",
+            },
+          ]
+          var columns = [
+            {
+              "searchable": true,
+              "fields": ["video_target__title", "video_target__pk"],
+              "colStr": "Vidéo ciblée",
+              "render": function (data, type, row) {
+                if (row['video_target__title'] == null) {
+                  return undefinedTag();
+                }
+                ;
+                return tableToolLink("/youtube/video/" + row['video_target__pk'],
+                    truncate_text(row['video_target__title'], 50, true));
+              }
+            },
+            {
+              "fields": ["text"],
+              "colStr": "Texte",
+              "render": function (data, type, row) {
+                return truncate_text(row['text'], 100, true);
+              }
+            },
+            {
+              "fields": ["publishedAt"],
+              "colStr": "Date de publication",
+              "render": function (data, type, row) {
+                return row['publishedAt'];
+              }
+            },
+            {
+              "fields": ["likeCount"],
+              "colStr": "Likes",
+              "render": function (data, type, row) {
+                return centeredTag(row['likeCount']);
+              }
+            },
+            {
+              "fields": ["numberOfReplies"],
+              "colStr": "Réponses",
+              "render": function (data, type, row) {
+                return centeredTag(row['numberOfReplies']);
+              }
+            },
+            {
+              "searchable": false,
+              "fields": ["pk"],
+              "colStr": "",
+              "render": function (data, type, row) {
+                return tableToolLink("/youtube/comment/" + row["pk"], "Plus d'infos");
+              }
+            },
+          ]
+        </script>
+      </table>
     </div>
+  </div>
 
-    {% elif source == "searchResult" %}
-    <div class="">
-        <div class="section_menu">
-            <span class="section_title">
-                <b>Commentaires Youtube</b>
-            </span>
-            <div class="section_options">
-                {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="YTComment" filename="Youtube_Comments_Search_Results_"|join:query %}
-                {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
-            </div>
-            {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
-        </div>
-        <div class="section_content">
-            <table class="display" id="YoutubeComments" width="100%" drawn='False'>
-                <script class="tableVars">
-                    var modelName = "YTComment";
-                    var srcs = [
-                        {
-                            query: '{% autoescape off %}{{ query }}{% endautoescape %}'
-                        },
-                    ]
-                    var columns = [
-                        {
-                            "fields": ["author__title", "author__pk"],
-                            "colStr": "Auteur",
-                            "render": function (data, type, row) {
-                                if (row['author__title'] == null) {
-                                    return undefinedTag();
-                                }
-                                ;
-                                return tableToolLink("/youtube/channel/" + row["author__pk"],
-                                        truncate_text(row["author__title"], 50, true));
-                            }
-                        },
-                        {
-                            "searchable": true,
-                            "fields": ["video_target__title", "video_target__pk"],
-                            "colStr": "Vidéo ciblée",
-                            "render": function (data, type, row) {
-                                if (row['video_target__title'] == null) {
-                                    return undefinedTag();
-                                }
-                                ;
-                                return tableToolLink("/youtube/video/" + row['video_target__pk'],
-                                        truncate_text(row['video_target__title'], 50, true));
-                            }
-                        },
-                        {
-                            "fields": ["text"],
-                            "colStr": "Texte",
-                            "render": function (data, type, row) {
-                                return truncate_text(row['text'], 100, true);
-                            }
-                        },
-                        {
-                            "fields": ["publishedAt"],
-                            "colStr": "Date de publication",
-                            "render": function (data, type, row) {
-                                return row['publishedAt'];
-                            }
-                        },
-                        {
-                            "fields": ["likeCount"],
-                            "colStr": "Likes",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['likeCount']);
-                            }
-                        },
-                        {
-                            "fields": ["numberOfReplies"],
-                            "colStr": "Réponses",
-                            "render": function (data, type, row) {
-                                return centeredTag(row['numberOfReplies']);
-                            }
-                        },
-                        {
-                            "searchable": false,
-                            "fields": ["pk"],
-                            "colStr": "",
-                            "render": function (data, type, row) {
-                                return tableToolLink("/youtube/comment/" + row["pk"], "Plus d'infos");
-                            }
-                        },
-                    ]
-                </script>
-            </table>
-        </div>
+  {% elif source == "YoutubeVideo_comments" %}
+  <div class="">
+    <div class="section_menu">
+      <span class="section_title">
+        <b>Commentaires</b>
+      </span>
+      <div class="section_options">
+        {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="YTComment" filename="YTVideo_"|join:video|join:"_comments" %}
+        {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+      </div>
+      {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
     </div>
+    <div class="section_content">
+      <table class="display" id="YTCommentsTable" width="100%" drawn='False'>
+        <script class="tableVars">
+          var modelName = "YTComment";
+          var srcs = [
+            {
+              modelName: "YTVideo",
+              attr: "comments",
+              id: "{{ video.pk }}",
+            },
+          ]
+          var columns = [
+            {
+              "searchable": true,
+              "fields": ["author__title", "author__pk"],
+              "colStr": "Auteur",
+              "render": function (data, type, row) {
+                if (row['author__title'] == null) {
+                  return undefinedTag();
+                }
+                ;
+                return tableToolLink("/youtube/channel/" + row['author__pk'],
+                    truncate_text(row['author__title'], 50, true));
+              }
+            },
+            {
+              "fields": ["text"],
+              "colStr": "Texte",
+              "render": function (data, type, row) {
+                return truncate_text(row['text'], 100, true);
+              }
+            },
+            {
+              "fields": ["publishedAt"],
+              "colStr": "Date de publication",
+              "render": function (data, type, row) {
+                return row['publishedAt'];
+              }
+            },
+            {
+              "fields": ["likeCount"],
+              "colStr": "Likes",
+              "render": function (data, type, row) {
+                return centeredTag(row['likeCount']);
+              }
+            },
+            {
+              "fields": ["numberOfReplies"],
+              "colStr": "Réponses",
+              "render": function (data, type, row) {
+                return centeredTag(row['numberOfReplies']);
+              }
+            },
+            {
+              "searchable": false,
+              "fields": ["pk"],
+              "colStr": "",
+              "render": function (data, type, row) {
+                return tableToolLink("/youtube/comment/" + row["pk"], "Plus d'infos");
+              }
+            },
+          ]
+        </script>
+      </table>
+    </div>
+  </div>
 
-    {% endif %}
+  {% elif source == "YoutubeComment_replies" %}
+  <div class="">
+    <div class="section_menu">
+      <span class="section_title">
+        <b>Réponses</b>
+      </span>
+      <div class="section_options">
+        {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="YTComment" filename="YTComment_"|join:comment|join:"_replies" %}
+        {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+      </div>
+      {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+    </div>
+    <div class="section_content">
+      <table class="display" id="YTCommentReplies" width="100%" drawn='False'>
+        <script class="tableVars">
+          var modelName = "YTComment";
+          var srcs = [
+            {
+              modelName: "YTComment",
+              attr: "replies",
+              id: "{{ comment.pk }}",
+            },
+          ]
+          var columns = [
+            {
+              "searchable": true,
+              "fields": ["author__title", "author__pk"],
+              "colStr": "Auteur",
+              "render": function (data, type, row) {
+                if (row['author__title'] == null) {
+                  return undefinedTag();
+                }
+                ;
+                return tableToolLink("/youtube/channel/" + row['author__pk'],
+                    truncate_text(row['author__title'], 50, true));
+              }
+            },
+            {
+              "fields": ["publishedAt"],
+              "colStr": "Date de publication",
+              "render": function (data, type, row) {
+                return row['publishedAt'];
+              }
+            },
+            {
+              "fields": ["text"],
+              "colStr": "Texte",
+              "render": function (data, type, row) {
+                return truncate_text(row['text'], 100, true);
+              }
+            },
+            {
+              "fields": ["updatedAt"],
+              "colStr": "Dernirère modification",
+              "render": function (data, type, row) {
+                return row['updatedAt'];
+              }
+            },
+            {
+              "fields": ["likeCount"],
+              "colStr": "Likes",
+              "render": function (data, type, row) {
+                return centeredTag(row['likeCount']);
+              }
+            },
+            {
+              "searchable":false,
+              "orderable":false,
+              "fields": ["getLink"],
+              "render": function (data, type, row) {
+                return tableToolLink(row['getLink'], "More infos");
+              }
+            },
+          ]
+        </script>
+      </table>
+    </div>
+  </div>
+
+  {% elif source == "searchResult" %}
+  <div class="">
+    <div class="section_menu">
+      <span class="section_title">
+        <b>Commentaires Youtube</b>
+      </span>
+      <div class="section_options">
+        {% include "tool/tables/tableMenuItems.html" with name="downloadFields" className="YTComment" filename="Youtube_Comments_Search_Results_"|join:query %}
+        {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+      </div>
+      {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
+    </div>
+    <div class="section_content">
+      <table class="display" id="YoutubeComments" width="100%" drawn='False'>
+        <script class="tableVars">
+          var modelName = "YTComment";
+          var srcs = [
+            {
+              query: '{% autoescape off %}{{ query }}{% endautoescape %}'
+            },
+          ]
+          var columns = [
+            {
+              "fields": ["author__title", "author__pk"],
+              "colStr": "Auteur",
+              "render": function (data, type, row) {
+                if (row['author__title'] == null) {
+                  return undefinedTag();
+                }
+                ;
+                return tableToolLink("/youtube/channel/" + row["author__pk"],
+                    truncate_text(row["author__title"], 50, true));
+              }
+            },
+            {
+              "searchable": true,
+              "fields": ["video_target__title", "video_target__pk"],
+              "colStr": "Vidéo ciblée",
+              "render": function (data, type, row) {
+                if (row['video_target__title'] == null) {
+                  return undefinedTag();
+                }
+                ;
+                return tableToolLink("/youtube/video/" + row['video_target__pk'],
+                    truncate_text(row['video_target__title'], 50, true));
+              }
+            },
+            {
+              "fields": ["text"],
+              "colStr": "Texte",
+              "render": function (data, type, row) {
+                return truncate_text(row['text'], 100, true);
+              }
+            },
+            {
+              "fields": ["publishedAt"],
+              "colStr": "Date de publication",
+              "render": function (data, type, row) {
+                return row['publishedAt'];
+              }
+            },
+            {
+              "fields": ["likeCount"],
+              "colStr": "Likes",
+              "render": function (data, type, row) {
+                return centeredTag(row['likeCount']);
+              }
+            },
+            {
+              "fields": ["numberOfReplies"],
+              "colStr": "Réponses",
+              "render": function (data, type, row) {
+                return centeredTag(row['numberOfReplies']);
+              }
+            },
+            {
+              "searchable": false,
+              "fields": ["pk"],
+              "colStr": "",
+              "render": function (data, type, row) {
+                return tableToolLink("/youtube/comment/" + row["pk"], "Plus d'infos");
+              }
+            },
+          ]
+        </script>
+      </table>
+    </div>
+  </div>
+
+  {% endif %}
 </section>

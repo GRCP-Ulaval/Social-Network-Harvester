@@ -1,14 +1,12 @@
-from django.db import models
-
-from SocialNetworkHarvester.models import Integer_time_label, Big_integer_time_label, Image_time_label, time_label
-
-from SocialNetworkHarvester.loggers.youtubeLogger import log
-from Youtube.management.commands.harvest.queues import *
 import re
-
 from datetime import datetime
+
+from django.db import models
 from django.utils.timezone import utc
 
+from SocialNetworkHarvester.loggers.youtubeLogger import log
+from SocialNetworkHarvester.models import Integer_time_label, Big_integer_time_label, Image_time_label, time_label
+from Youtube.management.commands.harvest.queues import *
 
 
 ####################### YTCHANNEL  #######################
@@ -781,7 +779,9 @@ class YTPlaylist(models.Model):
     def get_embedded(self):
         if not self.videos().first():
             return ""
-        return '<iframe width="100%" height="172px" src="https://www.youtube.com/embed/' + self.videos().first()._ident + \
+        return '<iframe width="100%" height="172px" src="https://www.youtube.com/embed/' + self.videos().first(
+
+        )._ident + \
                '?list=' + self._ident + ' "frameborder="0" allowFullScreen></iframe>'
 
     def get_fields_description(self):
@@ -888,6 +888,9 @@ class YTPlaylist(models.Model):
         if new:
             channelUpdateQueue.put(channel)
         self.channel = channel
+
+    def getLink(self):
+        return '/youtube/playlist/%s' % self.pk
 
 
 class YTPlaylistItem(models.Model):
