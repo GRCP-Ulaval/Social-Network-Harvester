@@ -116,6 +116,8 @@ class YTChannel(models.Model):
 
     class Meta:
         app_label = "Youtube"
+        verbose_name = 'Chaîne Youtube'
+        verbose_name_plural = 'Chaînes Youtube'
 
     def __str__(self):
         if self.title: return self.title
@@ -452,6 +454,8 @@ class YTVideo(models.Model):
 
     class Meta:
         app_label = "Youtube"
+        verbose_name = 'Video Youtube'
+        verbose_name_plural = 'Videos Youtube'
 
     def __str__(self):
         if self.channel:
@@ -760,6 +764,8 @@ class YTPlaylist(models.Model):
 
     class Meta:
         app_label = "Youtube"
+        verbose_name = 'Playlist Youtube'
+        verbose_name_plural = 'Playlists Youtube'
 
     def __str__(self):
         if self.title:
@@ -915,6 +921,8 @@ class YTPlaylistItem(models.Model):
 
     class Meta:
         app_label = "Youtube"
+        verbose_name = 'Élément de playlis Youtube'
+        verbose_name_plural = 'Éléments de playlist Youtube'
 
 
 #######################  YTCOMMENT  ######################
@@ -1056,6 +1064,8 @@ class YTComment(models.Model):
 
     class Meta:
         app_label = "Youtube"
+        verbose_name = 'Commentaire Youtube'
+        verbose_name_plural = 'Commentaires Youtube'
 
     def __str__(self):
         target = self.parent_comment or self.video_target or self.channel_target or "an unidentified target"

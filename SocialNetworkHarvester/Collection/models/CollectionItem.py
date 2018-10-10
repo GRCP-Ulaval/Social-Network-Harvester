@@ -65,19 +65,25 @@ class CollectionItem(models.Model):
                 return attr
 
     def __str__(self):
-        return str(self.get_item())
+        return "%s item: %s" % (self.collection, self.get_item())
 
     def str(self):
-        return str(self)
+        item = self.get_item()
+        if hasattr(item, 'str'):
+            return item.str()
+        return str(item)
 
     def object_class(self):
-        return self.get_item().__class__._meta.model.__name__
+        return self.get_item()._meta.verbose_name
 
     def getLink(self):
         return self.get_item().getLink()
 
     def get_obj_ident(self):
         return "CollectionItem__%s" % self.pk
+
+    def get_fields_description(self):
+        return self.get_item().get_fields_description()
 
     @staticmethod
     def create(collection, item):

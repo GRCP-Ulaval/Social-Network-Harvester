@@ -100,6 +100,10 @@ class FBPage(models.Model):
     error_on_harvest = models.BooleanField(default=False)
     last_feed_harvested = models.DateTimeField(null=True)
 
+    class Meta:
+        verbose_name = 'Page Facebook'
+        verbose_name_plural = 'Pages Facebook'
+
     def __str__(self):
         if self.name:
             return "Page Facebook de %s" % self.name

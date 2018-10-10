@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from AspiraUser.models import getUserSelection
 from Collection.models import Collection, CollectionItem
 from Collection.models.Collection import InvalidFieldException
-from SocialNetworkHarvester.jsonResponses import jsonUnknownError, jsonNotFound, jResponse, jsonBadRequest, \
+from SocialNetworkHarvester.jsonResponses import jsonNotFound, jResponse, jsonBadRequest, \
     missingParam, jsonForbiddenError
 from SocialNetworkHarvester.loggers.viewsLogger import logError
 
@@ -14,6 +14,7 @@ def ajax_base(request, endpoint_name):
         return {
             'search': search,
             'addItems': addItems,
+            'remove': removeItem,
         }[endpoint_name](request)
     except KeyError:
         logError("KeyError occured in collection ajax endpoint")
@@ -26,6 +27,7 @@ def ajax_base(request, endpoint_name):
             'status': 'error',
             'messages': ['Une erreur inconnue est survenue. Veuillez réessayer.']
         })
+
 
 def search(request):
     query = request.GET.get('query')
@@ -66,3 +68,7 @@ def addItems(request):
         'status': 'ok',
         'messages': ['Les éléments ont étés ajoutés à la collecte %s.' % collection.name]
     })
+
+
+def removeItem(request):
+    pass

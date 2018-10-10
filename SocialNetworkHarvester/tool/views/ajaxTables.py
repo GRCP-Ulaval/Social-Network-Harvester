@@ -83,7 +83,7 @@ def getQueryset(request):
     recordsTotal = queryset.count()
     if "exclude_retweets" in options.keys() and options['exclude_retweets']:
         queryset = queryset.filter(retweet_of__isnull=True)
-    if 'search_term' in options.keys() and options['search_term'] != "":
+    if 'search_term' in options.keys() and options['search_term'] != "" and 'search_fields' in options.keys():
         if re.match(emoji.get_emoji_regexp(), options['search_term']):
             raise EmojiiSearchException
         queryset = filterQuerySet(queryset, options['search_fields'].split(','), options['search_term'])
@@ -277,8 +277,10 @@ def generateCSVDownload(request, queryset, userSelection):
         csvfile.write('\uFEFF')
         csvwriter = csv.writer(csvfile)
         fields = request.GET['fields'].split(',')
-        model = queryset.model
-        temp = queryset.model.objects.all()[0]
+        temp = queryset.first()
+        if not temp:
+            csvfile.seek(0)
+            yield 'Aucune données selectionnées'
         csvwriter.writerow(getColumnsDescriptions(temp, fields, 'name'))
         csvwriter.writerow(getColumnsDescriptions(temp, fields, 'description'))
         if count <= 0:

@@ -88,6 +88,8 @@ class Hashtag(models.Model):
     # TODO: be able to order hashtags by hit_count in an SQL query
     class Meta:
         app_label = "Twitter"
+        verbose_name = 'Hashtag Twitter'
+        verbose_name_plural = 'Hashtags Twitter'
 
     term = models.CharField(max_length=128, null=True)
 
@@ -123,6 +125,8 @@ class Hashtag(models.Model):
 class HashtagHarvester(models.Model):
     class Meta:
         app_label = "Twitter"
+        verbose_name = 'Hashtag Twitter'
+        verbose_name_plural = 'Hashtags Twitter'
 
     hashtag = models.ForeignKey(Hashtag, related_name="harvesters", on_delete=models.CASCADE)
     _harvest_since = models.DateTimeField(null=True, blank=True)
@@ -510,6 +514,8 @@ class TWUser(models.Model):
 
     class Meta:
         app_label = "Twitter"
+        verbose_name = 'Utilisateur Twitter'
+        verbose_name_plural = 'Utilisateurs Twitter'
 
     def getLink(self):
         return "/twitter/user/%s" % self.pk
@@ -650,6 +656,8 @@ class follower(time_label):
 class Tweet(models.Model):
     class Meta:
         app_label = "Twitter"
+        verbose_name = 'Tweet'
+        verbose_name_plural = 'Tweets'
 
     def __str__(self):
         return "%s tweet #%s" % (("@%s" % self.user if self.user else 'unidentifed TWUser'), self._ident)

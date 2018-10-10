@@ -40,6 +40,20 @@ class Collection(models.Model):
     def items_twitter_users(self):
         return self.collection_items.filter(twitter_user__isnull=False)
 
+    def items_hashtag_harvesters(self):
+        items = self.collection_items.filter(twitter_hashtag__isnull=False)
+        return items
+        return self.collection_items.filter(twitter_hashtag__isnull=False)
+
+    def items_facebook_pages(self):
+        return self.collection_items.filter(facebook_page__isnull=False)
+
+    def items_youtube_channels(self):
+        return self.collection_items.filter(youtube_channel__isnull=False)
+
+    def items_youtube_playlists(self):
+        return self.collection_items.filter(youtube_playlist__isnull=False)
+
     def __str__(self):
         return 'Collecte "%s"' % (self.name)
 

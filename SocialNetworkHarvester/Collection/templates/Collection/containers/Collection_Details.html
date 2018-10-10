@@ -30,7 +30,16 @@
   </div>
 </section>
 
-{% include "tool/tables/twitterUserTable.html" with source="collection_details" collection=collection %}
+
+{% with source="collection_details" collection=collection %}
+
+{% include "tool/tables/twitterUserTable.html" %}
+{% include "tool/tables/twitterHashtagTable.html"  %}
+{% include "tool/tables/facebookPageTable.html"  %}
+{% include "tool/tables/youtubeChannelTable.html"  %}
+{% include "tool/tables/youtubePlaylistTable.html"  %}
+
+{% endwith %}
 
 {% endblock %}
 
