@@ -125,7 +125,7 @@ def userRegister(request):
             'org': data['org'],
             'webmasters': masterAddrs,
         })
-        send_mail('SNH - Account creation instructions', 'message',
+        send_mail('Aspira - Instructions de création de compte', 'message',
                   'doNotReplyMail', [data['email']], html_message=message)
 
     if not errors:

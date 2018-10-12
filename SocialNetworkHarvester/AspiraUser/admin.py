@@ -1,5 +1,7 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
+
 from AspiraUser.models import *
 
 admin.site.unregister(Group)
@@ -33,12 +35,12 @@ class UserProfileManager(admin.ModelAdmin):
         }),
         ('Twitter app', {
             'classes': ('collapse', 'closed'),
-            'fields' : (
-                ('twitterApp_consumerKey','twitterApp_consumer_secret'),
-                ('twitterApp_access_token_key','twitterApp_access_token_secret'),
+            'fields': (
+                ('twitterApp_consumerKey', 'twitterApp_consumer_secret'),
+                ('twitterApp_access_token_key', 'twitterApp_access_token_secret'),
                 'twitter_app_valid',
                 ('twitterUsersToHarvest', 'twitterUsersToHarvestLimit'),
-                ('twitterHashtagsToHarvest','twitterHashtagsToHarvestLimit'),
+                ('twitterHashtagsToHarvest', 'twitterHashtagsToHarvestLimit'),
             ),
         }),
         ('Facebook app', {
@@ -50,11 +52,27 @@ class UserProfileManager(admin.ModelAdmin):
         }),
         ('Youtube app', {
             'classes': ('collapse', 'closed'),
-            'fields' : (
+            'fields': (
                 'youtubeApp_dev_key',
                 'youtube_app_valid',
-                ('ytChannelsToHarvest','ytChannelsToHarvestLimit'),
+                ('ytChannelsToHarvest', 'ytChannelsToHarvestLimit'),
                 ('ytPlaylistsToHarvest', 'ytPlaylistsToHarvestLimit'),
             ),
         }),
+    )
+
+
+admin.site.unregister(User)
+
+
+@admin.register(User)
+class UserAdmin(UserAdmin):
+    list_display = (
+        'username',
+        'email',
+        'first_name',
+        'last_name',
+        'is_active',
+        'is_superuser',
+        'last_login'
     )
