@@ -9,200 +9,187 @@
 
 {% endblock %}
 {% block content %}
-    <div id="zone_title">
-        <div id="title_text">Tableau de bord</div>
-        <div id="editor">
-            <a style="cursor: pointer" onclick="displayCenterPopup('dashboardModifierPopup')">Modifier</a>
-            <!-- NOTIFICATION POPUP -->
-            <div class="popup" id="dashboardModifierPopup">
-                <div id="title">Modifier le tableau de bord</div>
-                <div id="help">
-                    Personalisation de votre tableau de bord
-                </div>
-                <div id="content">
-                    <div style="height:150px;width:150px">
-                        Cette fonctionnalité sera disponible prochainement.
-                    </div>
-                </div>
-            </div>
+<div id="zone_title">
+  <div id="title_text">Tableau de bord</div>
+  <div id="editor" class="yetToCome">
+    <a style="cursor: pointer" onclick="displayCenterPopup('dashboardModifierPopup')">Modifier</a>
+    <!-- NOTIFICATION POPUP -->
+    <div class="popup" id="dashboardModifierPopup">
+      <div id="title">Modifier le tableau de bord</div>
+      <div id="help">
+        Personalisation de votre tableau de bord
+      </div>
+      <div id="content">
+        <div style="text-align: center;padding:15px;">
+          Cette fonctionnalité sera <br/>disponible prochainement.
         </div>
+      </div>
     </div>
-    <div class="content">
-        <!-- TWITTER -->
-        <div class="section_box">
-            <a href="/twitter">
-                <div class="section_title">
-                    {% include "tool/icons.html" with x=0 y=0 className="section_title_icon" %}
-                    <center>Twitter</center>
-                </div>
-            </a>
-            <div class="">
-                <div class="section_box_info twitterUserLimitBar">Utilisateurs suivis:
-                    <span class="dataValue">{{ twStats.twitterUserUsage }}/{{ twStats.twitterUserLimit }}</span>
-                </div>
-                <div class="section_box_info twitterHashtagLimitBar">Hashtags:
-                    <span class="dataValue">{{ twStats.twitterHashtagUsage }}/{{ twStats.twitterHashtagLimit }}</span>
-                </div>
-                <div class="section_box_info">Tweets Collectés:
-                    <span class="dataValue">{{ twStats.collectedTweets }}</span>
-                </div>
-                <div class="section_box_info">Utilisateur le plus actif:
-                    <span class="dataValue"><a href="/twitter/user/{{ twStats.mostActiveTwitterUser.pk }}"
-                                               class="classic" title="{{ twStats.mostActiveTwitterUser }}">
-                        {{ twStats.mostActiveTwitterUser | truncatechars:15 }}
-                    </a></span>
-                </div>
-                <div class="section_box_info">Hashtag le plus actif:
-                    <span class="dataValue"><a href="/twitter/hashtag/{{ twStats.mostActiveHashtag.term }}" class="classic"
-                        title="{{ twStats.mostActiveHashtag }}">
-                        {{ twStats.mostActiveHashtag | truncatechars:15 }}
-                    </a></span>
-                </div>
-            </div>
+  </div>
+</div>
+<div class="content grid" style>
+  <div class="grid-sizer" style="width:1px;"></div>
+  <!-- TWITTER -->
+  <div class="grid-item section_box">
+    <a href="/twitter">
+      <div class="section_title">
+        {% include "tool/icons.html" with x=0 y=0 className="section_title_icon" %}
+        <center>Twitter</center>
+      </div>
+    </a>
+    <div class="">
+      <div class="section_box_info twitterUserLimitBar">Utilisateurs suivis:
+        <span class="dataValue">{{ twStats.twitterUserUsage }}/{{ twStats.twitterUserLimit }}</span>
+      </div>
+      <div class="section_box_info twitterHashtagLimitBar">Hashtags:
+        <span class="dataValue">{{ twStats.twitterHashtagUsage }}/{{ twStats.twitterHashtagLimit }}</span>
+      </div>
+      <div class="section_box_info">Tweets Collectés:
+        <span class="dataValue">{{ twStats.collectedTweets }}</span>
+      </div>
+      <div class="section_box_info">Utilisateur le plus actif:
+        <span class="dataValue">
+          <a
+              href="/twitter/user/{{ twStats.mostActiveTwitterUser.pk }}"
+              class="classic"
+              title="{{ twStats.mostActiveTwitterUser }}"
+          >
+            {{ twStats.mostActiveTwitterUser | truncatechars:15 }}
+          </a>
+        </span>
+      </div>
+      <div class="section_box_info">Hashtag le plus actif:
+        <span class="dataValue">
+          <a
+              href="/twitter/hashtag/{{ twStats.mostActiveHashtag.term }}"
+              class="classic"
+              title="{{ twStats.mostActiveHashtag }}"
+          >
+            {{ twStats.mostActiveHashtag | truncatechars:15 }}
+          </a>
+        </span>
+      </div>
+    </div>
+  </div>
 
-        </div>
-        <!-- YOUTUBE -->
-        <div class="section_box">
-            <a href="/youtube">
-                <div class="section_title">
-                    {% include "tool/icons.html" with x=2 y=0 className="section_title_icon" %}
-                    <center>Youtube</center>
-                </div>
-            </a>
-            <div class="">
-                <div class="section_box_info ytChannelsLimitBar">Chaînes suivies:
-                    <span class="dataValue">{{ ytStats.ytChannelUsage }}/{{ ytStats.ytChannelLimit }}</span>
-                </div>
-                <div class="section_box_info ytPlaylistLimitBar">Listes de lecture suivies:
-                    <span class="dataValue">{{ ytStats.ytPlaylistUsage }}/{{ ytStats.ytPlaylistLimit }}</span>
-                </div>
-                <div class="section_box_info">Videos collectées:
-                    <span class="dataValue">{{ ytStats.collectedYtVids }}</span>
-                </div>
-                <div class="section_box_info">Commentaires collectés:
-                    <span class="dataValue">{{ ytStats.collectedYtComments }}</span>
-                </div>
-                <div class="section_box_info">Chaîne la plus active:
-                    <span class="dataValue"><a href="/youtube/channel/{{ ytStats.mostActiveChannel.pk }}" class="classic"
-                                               title="{{ ytStats.mostActiveChannel }}">
+  <!-- YOUTUBE -->
+  <div class="grid-item section_box">
+    <a href="/youtube">
+      <div class="section_title">
+        {% include "tool/icons.html" with x=2 y=0 className="section_title_icon" %}
+        <center>Youtube</center>
+      </div>
+    </a>
+    <div class="">
+      <div class="section_box_info ytChannelsLimitBar">Chaînes suivies:
+        <span class="dataValue">{{ ytStats.ytChannelUsage }}/{{ ytStats.ytChannelLimit }}</span>
+      </div>
+      <div class="section_box_info ytPlaylistLimitBar">Listes de lecture suivies:
+        <span class="dataValue">{{ ytStats.ytPlaylistUsage }}/{{ ytStats.ytPlaylistLimit }}</span>
+      </div>
+      <div class="section_box_info">Videos collectées:
+        <span class="dataValue">{{ ytStats.collectedYtVids }}</span>
+      </div>
+      <div class="section_box_info">Commentaires collectés:
+        <span class="dataValue">{{ ytStats.collectedYtComments }}</span>
+      </div>
+      <div class="section_box_info">Chaîne la plus active:
+        <span class="dataValue"><a href="/youtube/channel/{{ ytStats.mostActiveChannel.pk }}" class="classic"
+                                   title="{{ ytStats.mostActiveChannel }}">
                         {{ ytStats.mostActiveChannel | truncatechars:15}}
                     </a></span>
-                </div>
-                <div class="section_box_info">Vidéo la plus commentée:
-                    <span class="dataValue"><a href="/youtube/video/{{ ytStats.mostActiveYtVid.pk }}"class="classic"
-                                               title="{{ ytStats.mostActiveYtVid.title }}">
+      </div>
+      <div class="section_box_info">Vidéo la plus commentée:
+        <span class="dataValue"><a href="/youtube/video/{{ ytStats.mostActiveYtVid.pk }}" class="classic"
+                                   title="{{ ytStats.mostActiveYtVid.title }}">
                         {{ ytStats.mostActiveYtVid | truncatechars:15 }}
                     </a></span>
-                </div>
-            </div>
-        </div>
-        <!-- FACEBOOK -->
-        <div class="section_box ">
-            <a href="/facebook">
-                <div class="section_title">
-                    {% include "tool/icons.html" with x=1 y=0 className="section_title_icon" %}
-                    <center>Facebook</center>
-                </div>
-            </a>
-            <div class="">
-                <div class="section_box_info fbPagesLimitBar">Pages suivies:
-                    <span class="dataValue">{{ fbStats.fbPageUsage }}/{{ fbStats.fbPageLimit }}</span>
-                </div>
-                <div class="section_box_info">Status collectées:
-                    <span class="dataValue">{{ fbStats.collectedFBStatuses }}</span>
-                </div>
-                <div class="section_box_info">Commentaires collectés:
-                    <span class="dataValue">{{ fbStats.collectedFBcomments }}</span>
-                </div>
-                <div class="section_box_info">Page la plus active:
-                    <span class="dataValue"><a href="/facebook/page/{{ fbStats.mostActivePage.pk }}" class="classic"
-                    title="{{ fbStats.mostActivePage }}">
+      </div>
+    </div>
+  </div>
+
+  <!-- FACEBOOK -->
+  <div class="grid-item section_box ">
+    <a href="/facebook">
+      <div class="section_title">
+        {% include "tool/icons.html" with x=1 y=0 className="section_title_icon" %}
+        <center>Facebook</center>
+      </div>
+    </a>
+    <div class="">
+      <div class="section_box_info fbPagesLimitBar">Pages suivies:
+        <span class="dataValue">{{ fbStats.fbPageUsage }}/{{ fbStats.fbPageLimit }}</span>
+      </div>
+      <div class="section_box_info">Status collectées:
+        <span class="dataValue">{{ fbStats.collectedFBStatuses }}</span>
+      </div>
+      <div class="section_box_info">Commentaires collectés:
+        <span class="dataValue">{{ fbStats.collectedFBcomments }}</span>
+      </div>
+      <div class="section_box_info">Page la plus active:
+        <span class="dataValue"><a href="/facebook/page/{{ fbStats.mostActivePage.pk }}" class="classic"
+                                   title="{{ fbStats.mostActivePage }}">
                         {{ fbStats.mostActivePage | truncatechars:15 }}
                     </a></span>
-                </div>
-                <div class="section_box_info">Status le plus commenté:
-                    <span class="dataValue"><a href="/facebook/post/{{ fbStats.mostActiveStatus.pk }}"class="classic"
-                    title="{{ fbStats.mostActiveStatus }}">
+      </div>
+      <div class="section_box_info">Status le plus commenté:
+        <span class="dataValue"><a href="/facebook/post/{{ fbStats.mostActiveStatus.pk }}" class="classic"
+                                   title="{{ fbStats.mostActiveStatus }}">
                         {{ fbStats.mostActiveStatus | truncatechars:15 }}
                     </a></span>
-                </div>
-            </div>
-        </div>
-        <!-- SETTINGS -->
-        <div class="section_box">
-            <a href="/user/settings">
-                <div class="section_title">
-                    {% include "tool/icons.html" with x=2 y=4 className="section_title_icon" %}
-                    <center>Paramètres</center>
-                </div>
-            </a>
-            <div class="section_box_info">
-                {% if user.userProfile.twitterApp_parameters_error %}
-                {% include 'tool/icons.html' with x=3 y=5 style="height:12px;width:12px;" %}
-                Application Twitter:
-                <span class="dataValue" style="color:red" title="Vos paramètres d'application Twitter ont rencontré un problème. Pour y remédier, veuillez consulter la section Twitter de votre page de paramètres.">
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="grid-item section_box">
+    <a href="/user/settings">
+      <div class="section_title">
+        {% include "tool/icons.html" with x=2 y=4 className="section_title_icon" %}
+        <center>Paramètres</center>
+      </div>
+    </a>
+    <div class="section_box_info">
+      {% if user.userProfile.twitterApp_parameters_error %}
+      {% include 'tool/icons.html' with x=3 y=5 style="height:12px;width:12px;" %}
+      Application Twitter:
+      <span class="dataValue" style="color:red" title="Vos paramètres d'application Twitter ont rencontré un problème. Pour y remédier, veuillez consulter la section Twitter de votre page de paramètres.">
                     Invalide
                 </span>
-                {% else %}
-                Application Twitter:
-                <span class="dataValue" style="color:green">Valide</span>
-                {% endif %}
-            </div>
-            <div class="section_box_info">
-                {% if user.userProfile.facebookApp_parameters_error %}
-                {% include 'tool/icons.html' with x=3 y=5 style="height:12px;width:12px;" %}
-                Connexion Facebook:
-                <span class="dataValue" style="color:red"
-                      title="Vous n'etes pas connecté à Facebook. Afin de collecter des données Facebook, vous devez connecter votre compte Facebook en visitant la page de paramètres.">
+      {% else %}
+      Application Twitter:
+      <span class="dataValue" style="color:green">Valide</span>
+      {% endif %}
+    </div>
+    <div class="section_box_info">
+      {% if user.userProfile.facebookApp_parameters_error %}
+      {% include 'tool/icons.html' with x=3 y=5 style="height:12px;width:12px;" %}
+      Connexion Facebook:
+      <span class="dataValue" style="color:red"
+            title="Vous n'etes pas connecté à Facebook. Afin de collecter des données Facebook, vous devez connecter votre compte Facebook en visitant la page de paramètres.">
                     Non-connecté
                 </span>
-                {% else %}
-                Connexion Facebook:
-                <span class="dataValue" style="color:green">Connecté</span>
-                {% endif %}
-            </div>
-            <div class="section_box_info">
-                {% if user.userProfile.youtubeApp_parameters_error %}
-                {% include 'tool/icons.html' with x=3 y=5 style="height:12px;width:12px;" %}
-                Application Youtube:
-                <span class="dataValue" style="color:red"
-                      title="Vos paramètres d'application Youtube ont rencontré un problème. Pour y remédier, veuillez consulter la section Youtube de votre page de paramètres.">
+      {% else %}
+      Connexion Facebook:
+      <span class="dataValue" style="color:green">Connecté</span>
+      {% endif %}
+    </div>
+    <div class="section_box_info">
+      {% if user.userProfile.youtubeApp_parameters_error %}
+      {% include 'tool/icons.html' with x=3 y=5 style="height:12px;width:12px;" %}
+      Application Youtube:
+      <span class="dataValue" style="color:red"
+            title="Vos paramètres d'application Youtube ont rencontré un problème. Pour y remédier, veuillez consulter la section Youtube de votre page de paramètres.">
                     Invalide
                 </span>
-                {% else %}
-                Application Youtube:
-                <span class="dataValue" style="color:green">Valide</span>
-                {% endif %}
-            </div>
-
-        </div>
-        <!-- DAILYMOTION -->
-        <div class="section_box yetToCome">
-            <a href="/dailymotion">
-                <div class="section_title">
-                    {% include "tool/icons.html" with x=4 y=0 className="section_title_icon" %}
-                        <span>DailyMotion</span>
-                </div>
-            </a>
-        </div>
-        <!-- INSTAGRAM -->
-        <div class="section_box yetToCome">
-            <a href="/instagram">
-                <div class="section_title">
-                    {% include "tool/icons.html" with x=5 y=0 className="section_title_icon" %}
-                    <span>Instagram</span>
-                </div>
-            </a>
-        </div>
-        <!-- REDDIT -->
-        <div class="section_box yetToCome">
-            <a href="/reddit">
-                <div class="section_title">
-                    {% include "tool/icons.html" with x=3 y=0 className="section_title_icon" %}
-                    <span>Reddit</span>
-                </div>
-            </a>
-        </div>
+      {% else %}
+      Application Youtube:
+      <span class="dataValue" style="color:green">Valide</span>
+      {% endif %}
     </div>
+
+  </div>
+
+</div>
 
 {% endblock %}

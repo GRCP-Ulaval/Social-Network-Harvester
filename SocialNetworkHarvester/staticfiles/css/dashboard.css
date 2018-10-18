@@ -1,67 +1,70 @@
 
 .content {
-    margin:2px;
-    text-align:center;
+    flex: 1;
+    margin: 2px;
+    align-content: center;
 }
 
 .section_box {
-    border:solid 1px #DDD;
-    background-color:#FFF;
-    height:300px;
-    display:inline-block;
-    margin-bottom:5px;
-    text-align:left;
-    padding:7px;
-    vertical-align: top;
+    border: solid 1px #DDD;
+    background-color: #FFF;
+    height: 300px;
+    margin-bottom: 3px;
+    text-align: left;
+    padding: 7px;
+    box-shadow: none;
 }
 
 .section_box:hover {
-    box-shadow: 0px 0px 5px 5px #DDD;
+    box-shadow: 2px 2px 4px 6px #DDD;
+    background-color: #FFF;
 }
 
-.section_title{
+.section_title {
     font-size: 14px;
     border-bottom: solid 1px #DDD;
     padding-bottom: 3px;
 }
+
 .section_title center {
-    height:30px;
-    padding-top:8px;
-    font-weight:bold;
+    height: 30px;
+    padding-top: 8px;
+    font-weight: bold;
 }
 
-.section_title_icon{
-    width:35px;
-    height:35px;
+.section_title_icon {
+    width: 35px;
+    height: 35px;
     vertical-align: middle;
-    position:absolute
+    position: absolute
 }
 
 #editor {
-    margin-top:35px;
-    float:right;
-    margin-right:5px;
+    margin-top: 35px;
+    float: right;
+    margin-right: 5px;
 }
 
 #zone_title {
-    height:60px;
+    height: 60px;
 }
 
-#title_text{
-    float:left;
-    margin-top:20px;
-    margin-left:5px;
+#title_text {
+    float: left;
+    margin-top: 20px;
+    margin-left: 5px;
     font-size: 16px;
+    font-weight: bold;
 }
 
-.section_box_info{
+.section_box_info {
     font-size: 12px;
     border-bottom: solid 1px #DDD;
-    padding:5px;
+    padding: 5px;
 }
 
 .dataValue {
-    float:right;
+    float: right;
 }
 
 

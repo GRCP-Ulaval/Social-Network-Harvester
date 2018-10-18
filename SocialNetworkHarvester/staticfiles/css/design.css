@@ -378,7 +378,7 @@ a.classic {
     -moz-border-radius: 3pc;
     border-radius: 3px;
     background-color: #FFF;
-    box-shadow: 0px 2px 2px 2px #555;
+    box-shadow: 5px 5px 20px 4px #222;
 }
 
 #centerPopupCloser {
