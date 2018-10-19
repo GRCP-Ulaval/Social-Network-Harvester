@@ -1,8 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 
-from AspiraUser.models import *
+from AspiraUser.models import UserProfile
 
 admin.site.unregister(Group)
 

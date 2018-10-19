@@ -1,7 +1,8 @@
 from django.db import models
 
 from SocialNetworkHarvester.loggers.viewsLogger import log
-from SocialNetworkHarvester.models import replaceEmojisFromFields, today
+from SocialNetworkHarvester.models import replaceEmojisFromFields
+from SocialNetworkHarvester.utils import today
 from .FBProfile import FBProfile
 
 

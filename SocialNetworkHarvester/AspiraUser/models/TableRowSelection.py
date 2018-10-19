@@ -1,122 +1,13 @@
 import pickle
-import random
 import re
 
-import facebook
 from django.contrib.auth.models import User
+from django.db import models
 
 from Collection.models import Collection, CollectionItem
-from Facebook.models import FBPage, FBPost, FBComment, FBReaction, FBUser
-from SocialNetworkHarvester.loggers.viewsLogger import logError
-from SocialNetworkHarvester.settings import FACEBOOK_APP_PARAMS
-from Twitter.models import *
-from Youtube.models import YTChannel, YTPlaylist, Subscription, YTVideo, YTComment, YTPlaylistItem
-
-
-class UserProfile(models.Model):
-    class Meta:
-        app_label = "AspiraUser"
-
-    def __str__(self):
-        return "%s's user profile" % self.user
-
-    user = models.OneToOneField(User, related_name="userProfile", null=False, on_delete=models.CASCADE)
-
-    twitterApp_consumerKey = models.CharField(max_length=255, null=True, blank=True)
-    twitterApp_consumer_secret = models.CharField(max_length=255, null=True, blank=True)
-    twitterApp_access_token_key = models.CharField(max_length=255, null=True, blank=True)
-    twitterApp_access_token_secret = models.CharField(max_length=255, null=True, blank=True)
-    twitterApp_parameters_error = models.BooleanField(default=False)
-    twitterUsersToHarvest = models.ManyToManyField(TWUser, related_name="harvested_by", blank=True)
-    twitterUsersToHarvestLimit = models.IntegerField(default=30, blank=True)
-    twitterHashtagsToHarvest = models.ManyToManyField(HashtagHarvester, related_name="harvested_by", blank=True)
-    twitterHashtagsToHarvestLimit = models.IntegerField(default=5, blank=True)
-
-    facebookApp_parameters_error = models.BooleanField(default=False)
-    facebookPagesToHarvest = models.ManyToManyField(FBPage, related_name="harvested_by", blank=True)
-    facebookPagesToHarvestLimit = models.IntegerField(default=20, blank=True)
-
-    youtubeApp_dev_key = models.CharField(max_length=255, null=True, blank=True)
-    youtubeApp_parameters_error = models.BooleanField(default=False)
-    ytChannelsToHarvest = models.ManyToManyField(YTChannel, related_name="harvested_by", blank=True)
-    ytChannelsToHarvestLimit = models.IntegerField(default=100, blank=True)
-    ytPlaylistsToHarvest = models.ManyToManyField(YTPlaylist, related_name="harvested_by", blank=True)
-    ytPlaylistsToHarvestLimit = models.IntegerField(default=5, blank=True)
-
-    passwordResetToken = models.CharField(max_length=255, null=True, blank=True, unique=True)
-    passwordResetDateLimit = models.DateTimeField(null=True)
-
-    def twitter_app_valid(self):
-        return not self.twitterApp_parameters_error
-
-    def facebook_app_valid(self):
-        return not self.facebookApp_parameters_error
-
-    def youtube_app_valid(self):
-        return not self.youtubeApp_parameters_error
-
-    @staticmethod
-    def getUniquePasswordResetToken():
-        token = getRandomString(length=254)
-        while UserProfile.objects.filter(passwordResetToken=token).exists():
-            token = getRandomString()
-        return token
-
-    @staticmethod
-    def getHarvestables():
-        return {
-            'TWUser': 'twitterUsersToHarvest',
-            'HashtagHarvester': 'twitterHashtagsToHarvest',
-            'FBPage': 'facebookPagesToHarvest',
-            'YTChannel': 'ytChannelsToHarvest',
-            'YTPlaylist': 'ytPlaylistsToHarvest',
-        }
-
-    def getHarvested(self, modelName, kwargs={}):
-        if modelName not in self.harvestableModels(): raise Exception("Wrong model name specified")
-        if kwargs:
-            return getattr(self, self.harvestableModels()[modelName]).filter(**kwargs)
-        return getattr(self, self.harvestableModels()[modelName]).all()
-
-
-class FBAccessToken(models.Model):
-    class Meta:
-        app_label = "Facebook"
-
-    _token = models.CharField(max_length=255)
-    expires = models.IntegerField(blank=True, null=True)
-    # expires gives the "epoch date" of expiration of the token. Compare to time.time() to know if still valid.
-    userProfile = models.OneToOneField(UserProfile, related_name="fbAccessToken", null=True, on_delete=models.CASCADE)
-
-    def is_expired(self):
-        if not self.expires: return True
-        return time.time() >= self.expires
-
-    def is_extended(self):
-        return self.expires != None
-
-    def __str__(self):
-        return "%s's facebook access token" % self.userProfile.user
-
-    def extend(self):
-        try:
-            graph = facebook.GraphAPI(self._token)
-            response = graph.extend_access_token(FACEBOOK_APP_PARAMS['app_id'], FACEBOOK_APP_PARAMS['app_secret'])
-            pretty(response)
-            if not 'access_token' in response:
-                raise Exception("failed to extend access token: %s" % self)
-            self._token = response['access_token']
-            if 'expires_in' in response:
-                self.expires = time.time() + int(response['expires_in'])
-            else:
-                self.expires = time.time() + 60 * 5
-            self.save()
-            log("%s expires in %s seconds" % (self, self.expires - time.time()))
-        except Exception as e:
-            logError("An error occured while extending the token!")
-            self.userProfile.facebookApp_parameters_error = True
-            self.userProfile.save()
-            raise
+from Facebook.models import FBUser, FBReaction, FBComment, FBPost, FBPage
+from Twitter.models import TWUser, Tweet, HashtagHarvester, follower, favorite_tweet, Hashtag
+from Youtube.models import YTChannel, YTVideo, YTPlaylist, Subscription, YTComment, YTPlaylistItem
 
 
 class TableRowsSelection(models.Model):
@@ -269,15 +160,6 @@ def resetUserSelection(request):
     if selection.exists():
         selection[0].delete()
         TableRowsSelection.objects.create(user=user, pageUrl=pageURL)
-
-
-def getRandomString(length=255):
-    if length < 0: length = 255
-    s = '%s%s%s' % (random.randint(0, 99999),
-                    ''.join(random.choice(
-                        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for i in
-                            range(length)), int(time.time()))
-    return "".join(random.sample(s, length))
 
 
 MODEL_WHITELIST = ['FBPage', 'FBPost', 'FBComment', 'FBReaction', 'FBUser',

@@ -3,8 +3,8 @@ import os
 from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
 
-from SocialNetworkHarvester.models import djangoNow
 from SocialNetworkHarvester.settings import LOG_DIRECTORY, DEBUG
+from SocialNetworkHarvester.utils import djangoNow
 from .base_logger import Logger
 
 jobsLogger = Logger(

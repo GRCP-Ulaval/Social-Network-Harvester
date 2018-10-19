@@ -1,17 +1,6 @@
 import time
-from datetime import timedelta, datetime
-
-from django.utils.timezone import utc
 
 from SocialNetworkHarvester.harvest.globals import start_time, global_thread_stop_flag
-
-
-def today():
-    return datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=utc)
-
-
-def x_days_ago(x=0):
-    return today() - timedelta(days=x)
 
 
 def order_queryset(queryset, field_name, delay=1):

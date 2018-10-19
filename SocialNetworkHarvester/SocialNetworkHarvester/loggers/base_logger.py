@@ -1,12 +1,10 @@
-import datetime
+from datetime import datetime
 import logging
 import pprint
 import re
 import threading
 
-
-def dtNow():
-    return datetime.datetime.now()
+from SocialNetworkHarvester.utils import djangoNow
 
 
 class Logger():
@@ -51,8 +49,8 @@ class Logger():
     def log(self, message, showTime=True, showDate=True):
         try:
             self.logger.info('%s%s%s%s%s' % (
-                showDate * dtNow().strftime('%Y/%m/%d '),
-                showTime * dtNow().strftime('%H:%M | '),
+                showDate * datetime.utcnow().strftime('%Y/%m/%d '),
+                showTime * datetime.utcnow().strftime('%H:%M | '),
                 self.showThread * '{:^30} | '.format(threading.current_thread().name),
                 ' ' * (self.indent_level),
                 message
@@ -77,8 +75,8 @@ class Logger():
 
     def exception(self, message='EXCEPTION', showTime=True, showDate=True):
         self.logger.exception("%s%s%s%s" % (
-            showDate * dtNow().strftime('%Y/%m/%d '),
-            showTime * dtNow().strftime('%H:%M | '),
+            showDate * datetime.utcnow().strftime('%Y/%m/%d '),
+            showTime * datetime.utcnow().strftime('%H:%M | '),
             self.showThread * '{:^30} | '.format(threading.current_thread().name),
             message))
 

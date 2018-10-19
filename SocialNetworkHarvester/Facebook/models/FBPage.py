@@ -3,10 +3,11 @@ from datetime import datetime
 from django.db import models
 from django.utils.timezone import utc
 
+from SocialNetworkHarvester.utils import today
 from .FBLocation import FBLocation
 from .FBVideo import FBVideo
 from SocialNetworkHarvester.loggers.viewsLogger import log
-from SocialNetworkHarvester.models import replaceEmojisFromFields, today
+from SocialNetworkHarvester.models import replaceEmojisFromFields
 
 
 class FBPage(models.Model):

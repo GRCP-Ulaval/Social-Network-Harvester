@@ -1,8 +1,10 @@
 import re
+from datetime import datetime
 
 from django.db import models
 
-from SocialNetworkHarvester.models import today
+from SocialNetworkHarvester.models import Text_time_label
+from SocialNetworkHarvester.utils import today
 
 
 class TWUser(models.Model):
@@ -100,7 +102,8 @@ class TWUser(models.Model):
     def has_reached_begining(self):
         return self._has_reached_begining
 
-    def get_fields_description(self):
+    @staticmethod
+    def get_fields_description():
         return {
             "screen_name": {
                 "description": "Nom d'utilisateur, identifiant le compte.",
@@ -347,7 +350,7 @@ class TWUser(models.Model):
         return re.sub("_normal.", "_bigger.", self.profile_image_url)
 
     def UpdateFromResponse(self, response):
-        #log('%s: %s' % (self, response))
+        # log('%s: %s' % (self, response))
         if not isinstance(response, dict):
             raise Exception('A DICT or JSON object from Twitter must be passed as argument.')
         # log('len(location): %s'%len(jObject['location']))
@@ -388,11 +391,11 @@ class TWUser(models.Model):
                     else:
                         className = globals()[atr]
                     newItem = className(twuser=self, value=jObject[atr])
-                    try:
-                        newItem.save()
-                    except:
-                        log('className: %s' % atr)
-                        raise
+                    newItem.save()
                 elif lastItem.value != jObject[atr]:
                     lastItem.value = jObject[atr]
                     lastItem.save()
+
+
+class TWUrl(Text_time_label):
+    twuser = models.ForeignKey(TWUser, related_name="urls", on_delete=models.CASCADE)

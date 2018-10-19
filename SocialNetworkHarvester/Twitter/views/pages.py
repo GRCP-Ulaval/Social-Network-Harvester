@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, Http404, render_to_response
 
 from AspiraUser.models import *
+from SocialNetworkHarvester.loggers.viewsLogger import log
 
 
 @login_required()

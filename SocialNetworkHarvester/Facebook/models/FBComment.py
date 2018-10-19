@@ -1,6 +1,7 @@
 from django.db import models
 
-from SocialNetworkHarvester.models import GenericModel, replaceEmojisFromFields, today
+from SocialNetworkHarvester.models import GenericModel, replaceEmojisFromFields
+from SocialNetworkHarvester.utils import today
 from .FBAttachment import FBAttachment
 from .FBProfile import FBProfile
 from .FBPost import FBPost
