@@ -5,7 +5,6 @@ class YTCommentHarvester(CommonThread):
     batchSize = 1
     workQueueName = 'channelsToCommentHarvestQueue'
 
-    #@youtubeLogger.debug(showArgs=True)
     def method(self, channelList):
         channel = channelList[0]
         log('Will harvest %s\'s channel and video comments'%channel)

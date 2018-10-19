@@ -2,7 +2,7 @@ import re
 
 import tweepy
 
-from SocialNetworkHarvester.loggers.twitterLogger import pretty
+from SocialNetworkHarvester.loggers.jobsLogger import pretty
 from .globals import *
 
 
@@ -24,7 +24,6 @@ class Client:
     def __str__(self):
         return self.name
 
-    # @twitterLogger.debug()
     def __init__(self, **kwargs):
         ck = kwargs['ck']
         cs = kwargs['cs']
@@ -37,7 +36,6 @@ class Client:
         self.api = tweepy.API(auth)
         self.refreshLimits()
 
-    # @twitterLogger.debug()
     def call(self, callName, *args, **kwargs):
         if time.time() >= self.getResetTime(callName) + 1:
             self.refreshLimits()
@@ -48,25 +46,21 @@ class Client:
         else:
             raise Exception('No more calls of type "%s"' % self.callsMap[callName])
 
-    # @twitterLogger.debug()
     def refreshLimits(self):
         response = self.api.rate_limit_status()
         self.limits = response['resources']
         # self.prettyLimitStatus()
 
-    # @twitterLogger.debug()
     def getRemainingCalls(self, callName):
         if time.time() >= self.getResetTime(callName) + 1:
             self.refreshLimits()
         callIdentifier = self.callsMap[callName]
         return self.limits[re.search(r'(?<=/)\w+(?=/)', callIdentifier).group(0)][callIdentifier]['remaining']
 
-    # @twitterLogger.debug()
     def setRemainingCalls(self, callName, value):
         callIdentifier = self.callsMap[callName]
         self.limits[re.search(r'(?<=/)\w+(?=/)', callIdentifier).group(0)][callIdentifier]['remaining'] = value
 
-    # @twitterLogger.debug()
     def getResetTime(self, callName):
         callIdentifier = self.callsMap[callName]
         # log('item found: %s'%re.search(r'(?<=/)\w+(?=/)', callIdentifier))
@@ -84,7 +78,6 @@ class Client:
         pretty(d)
 
 
-# @twitterLogger.debug()
 def getClient(callName):
     client = None
     # log("%i clients available"%clientQueue.qsize())
@@ -101,7 +94,6 @@ def getClient(callName):
     return client
 
 
-# @twitterLogger.debug(showArgs=True)
 def returnClient(client):
     if clientQueue.full():
         # log("clients: %s"%[client for client in iter(clientQueue.get, None)])
@@ -125,7 +117,6 @@ class CustomCursor:
         self.kwargs = kwargs
         self.initPagination()
 
-    # @twitterLogger.debug()
     def initPagination(self):
         client = getClient(self.callName)
         method = getattr(client.api, self.callName)
@@ -145,7 +136,6 @@ class CustomCursor:
             self.pagination_item = None
         returnClient(client)
 
-    # @twitterLogger.debug()
     def next(self):
         if self.index == -1: return None
         if self.index < self.nbItems:
@@ -156,7 +146,6 @@ class CustomCursor:
             self._getNextSet()
             return self.next()
 
-    # @twitterLogger.debug()
     def _getNextSet(self):
         self.results = []
 

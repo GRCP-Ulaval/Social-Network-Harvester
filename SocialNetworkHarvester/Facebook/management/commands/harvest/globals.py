@@ -32,17 +32,3 @@ exceptionQueue = queue.Queue()  # stores exceptions
 allQueues = [pageUpdateQueue, pageFeedHarvestQueue, statusUpdateQueue, reactionHarvestQueue, commentHarvestQueue,
              commentUpdateQueue, profileUpdateQueue]
 
-
-def today():
-    return datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=utc)
-
-
-def xDaysAgo(x=0):
-    return today() - timedelta(days=x)
-
-
-startTime = time.time()
-
-
-def elapsedSeconds():
-    return int(time.time() - startTime)

@@ -604,7 +604,6 @@ class FBPage(models.Model):
                         val = "DATA TOO LONG. CONTENT SKIPPED"
                     setattr(self, attr, val)
 
-    # @youtubeLogger.debug()
     def updateStatistics(self, jObject):
         for attrName in self.statistics:
             countObjs = getattr(self, attrName).order_by('-recorded_time')

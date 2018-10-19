@@ -49,7 +49,13 @@ INSTALLED_APPS = [
     'Twitter',
     'Youtube',
     'Collection'
+]
 
+# Applications in which there is an 'harvest' module
+HARVEST_APPS = [
+    'Facebook',
+    'Twitter',
+    'Youtube',
 ]
 
 MIDDLEWARE = [

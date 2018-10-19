@@ -1,14 +1,13 @@
 from .commonThread import *
 
-class YTSubscriptionHarvester(CommonThread):
 
+class YTSubscriptionHarvester(CommonThread):
     batchSize = 1
     workQueueName = 'channelToSubsHarvestQueue'
 
-    #@youtubeLogger.debug(showArgs=True)
     def method(self, channelList):
         channel = channelList[0]
-        log('Will harvest %s\'s subscriptions'%channel)
+        log('Will harvest %s\'s subscriptions' % channel)
         pageToken = None
         response = self.call(channel)
         actualSubs = []
@@ -32,7 +31,7 @@ class YTSubscriptionHarvester(CommonThread):
         self.filterOldSubs(channel, actualSubs)
         channel._last_subs_harvested = today()
         log('Finished %s\'s subs-harvest (%s comment%s added)' % (channel,
-                                newCommentsNumber,plurial(newCommentsNumber)))
+                                                                  newCommentsNumber, plurial(newCommentsNumber)))
         channel.save()
 
     def call(self, channel, pageToken=None):
@@ -56,14 +55,14 @@ class YTSubscriptionHarvester(CommonThread):
         returnClient(client)
         return response
 
-    def createNewSubs(self,channel,actualSubs):
+    def createNewSubs(self, channel, actualSubs):
         currentSubs = list(channel.Subscription.filter(ended__isnull=True).values('value'))
-        for newSubChannel in list(set(actualSubs)-set(currentSubs)):
-            newSub = Subscription.objects.create(channel=channel,value=newSubChannel)
+        for newSubChannel in list(set(actualSubs) - set(currentSubs)):
+            newSub = Subscription.objects.create(channel=channel, value=newSubChannel)
 
     def filterOldSubs(self, channel, actualSubs):
         currentSubs = list(channel.Subscription.filter(ended__isnull=True).values('value'))
         for oldSubChannel in list(set(currentSubs) - set(actualSubs)):
-            sub = Subscription.objects.get(channel=channel,value=oldSubChannel)
+            sub = Subscription.objects.get(channel=channel, value=oldSubChannel)
             sub.ended = today()
             sub.save()

@@ -5,7 +5,6 @@ class YTVideoUpdater(CommonThread):
     batchSize = 50
     workQueueName = 'videoToUpdateQueue'
 
-    #@youtubeLogger.debug(showArgs=True)
     def method(self, videoList):
         response = self.call(videoList)
         for item in response['items']:
@@ -22,7 +21,6 @@ class YTVideoUpdater(CommonThread):
             video._error_on_update = True
             video.save()
 
-    #@youtubeLogger.debug()
     def call(self, videoList):
         client = getClient()
         try:

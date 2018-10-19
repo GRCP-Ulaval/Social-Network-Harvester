@@ -5,7 +5,6 @@ class YTPlaylistItemHarvester(CommonThread):
     batchSize = 1
     workQueueName = 'playlistsToVideoHarvest'
 
-    #@youtubeLogger.debug(showArgs=True)
     def method(self, playlists):
         playlist = playlists[0]
         log('Will harvest %s\'s videos'%playlist)

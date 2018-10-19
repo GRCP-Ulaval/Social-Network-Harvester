@@ -5,7 +5,6 @@ class YTChannelUpdater(CommonThread):
     batchSize = 50
     workQueueName = 'channelUpdateQueue'
 
-    #@youtubeLogger.debug(showArgs=True)
     def method(self, channelList):
         client = getClient()
         response = client.list('channels', id=",".join([channel._ident for channel in channelList]),

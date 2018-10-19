@@ -24,7 +24,6 @@ RAMUSAGELIMIT = 600000000  # in bytes
 GRAPHRAMUSAGE = False
 
 
-@twitterLogger.debug()
 def harvestTwitter():
     # resetErrorsTwUser("_error_on_network_harvest")
     # resetErrorsTwUser("_error_on_update")
@@ -103,7 +102,6 @@ def send_routine_email(title, message):
 
 
 # @profile
-# @twitterLogger.debug(showArgs=True)
 def updateNewUsers():
     allNewUsers = list(TWUser.objects.filter(_ident__isnull=True, _error_on_update=False))
     userlists = [allNewUsers[i:i + 100] for i in range(0, len(allNewUsers), 100)]
@@ -131,7 +129,6 @@ def updateNewUsers():
 
 
 # @profile
-# @twitterLogger.debug()
 def launchHashagHarvestThreads(*args, **kwargs):
     profiles = kwargs['profiles']
     hashtags = profiles[0].twitterHashtagsToHarvest.all()
@@ -151,7 +148,6 @@ def launchHashagHarvestThreads(*args, **kwargs):
 
 
 # @profile
-# @twitterLogger.debug()
 def launchUpdaterTread(*args, **kwargs):
     priority_updates = orderQueryset(TWUser.objects.filter(harvested_by__isnull=False, _error_on_update=False),
                                      '_last_updated', delay=0.5)
@@ -197,14 +193,13 @@ def launchUpdaterTread(*args, **kwargs):
 
 
 # @profile
-# @twitterLogger.debug()
 def launchTweetHarvestThreads(*args, **kwargs):
     profiles = kwargs['profiles']
     twUsers = profiles[0].twitterUsersToHarvest.filter(_error_on_harvest=False, protected=False)
     for profile in profiles[1:]:
         twUsers = twUsers | profile.twitterUsersToHarvest.filter(_error_on_harvest=False, protected=False)
 
-    # twUsers = orderQueryset(twUsers, '_last_tweet_harvested', delay=1)
+    twUsers = orderQueryset(twUsers, '_last_tweet_harvested', delay=1)
     priorities = [(twUser, twUser.statuses_count - twUser.tweets.count()) for twUser in twUsers]
     priorities.sort(key=lambda x: x[1], reverse=True)
     twUsers = [prioritie[0] for prioritie in priorities]
@@ -227,7 +222,6 @@ def launchTweetHarvestThreads(*args, **kwargs):
 
 
 # @profile
-# @twitterLogger.debug()
 def launchNetworkHarvestThreads(*args, **kwargs):
     profiles = kwargs['profiles']
     twUsers = profiles[0].twitterUsersToHarvest.filter(_error_on_network_harvest=False, protected=False)
@@ -250,7 +244,6 @@ def launchNetworkHarvestThreads(*args, **kwargs):
 
 
 # @profile
-# @twitterLogger.debug()
 def launchRetweeterHarvestThreads(*args, **kwargs):
     profiles = kwargs['profiles']
     twUsers = TWUser.objects.none()
@@ -275,7 +268,6 @@ def launchRetweeterHarvestThreads(*args, **kwargs):
 
 
 # @profile
-# @twitterLogger.debug()
 def launchTweetUpdateThread(*args, **kwargs):
     profiles = kwargs['profiles']
     twUsers = TWUser.objects.none()
@@ -299,7 +291,6 @@ def launchTweetUpdateThread(*args, **kwargs):
     put_batch_in_queue(tweetUpdateQueue, tweets)
 
 
-# @twitterLogger.debug()
 def getClientList(profiles):
     clientList = []
     for profile in profiles:
@@ -309,7 +300,6 @@ def getClientList(profiles):
     return clientList
 
 
-# @twitterLogger.debug()
 # @profile()
 def orderQueryset(queryset, dateTimeFieldName, delay=1):
     isNull = dateTimeFieldName + "__isnull"
@@ -319,7 +309,6 @@ def orderQueryset(queryset, dateTimeFieldName, delay=1):
     return ordered_elements
 
 
-# @twitterLogger.debug()
 def createTwClient(profile):
     try:
         client = Client(
@@ -348,14 +337,12 @@ def put_batch_in_queue(queue, queryset):
     log('Finished adding %s items in %s' % (queryset.count(), queue._name), showTime=True)
 
 
-# @twitterLogger.debug()
 def clearUpdatedTime():
     for twUser in TWUser.objects.filter(_last_updated__isnull=False):
         twUser._last_updated = None
         twUser.save()
 
 
-# @twitterLogger.debug()
 def clearNetworkHarvestTime():
     for twUser in TWUser.objects.filter(_last_friends_harvested__isnull=False):
         twUser._last_friends_harvested = None
@@ -368,14 +355,12 @@ def clearNetworkHarvestTime():
         twUser.save()
 
 
-@twitterLogger.debug(showArgs=True)
 def resetErrorsTwUser(errorMarker):
     for twuser in TWUser.objects.filter(**{errorMarker: True}):
         setattr(twuser, errorMarker, False)
         twuser.save()
 
 
-@twitterLogger.debug()
 def waitForThreadsToEnd():
     notEmptyQueuesNum = -1
     while notEmptyQueuesNum != 0 and exceptionQueue.empty():
@@ -394,7 +379,6 @@ def waitForThreadsToEnd():
     return stopAllThreads()
 
 
-@twitterLogger.debug()
 def stopAllThreads():
     time.sleep(3)
     threadsExitFlag[0] = True

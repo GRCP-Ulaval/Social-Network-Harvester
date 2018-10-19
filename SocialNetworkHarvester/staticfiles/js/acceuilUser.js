@@ -5,7 +5,7 @@ $(document).ready(function(){
 function resizeBoxes(old_width){
     var container_width = $('#inner_container').width();
     if(old_width != container_width){
-        if(1500 < container_width) {
+        if(1600 < container_width) {
             var boxWidth = container_width / 5;
         }else if(1200 < container_width){
             var boxWidth = container_width/4;

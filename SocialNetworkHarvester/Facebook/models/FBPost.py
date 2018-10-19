@@ -280,7 +280,6 @@ class FBPost(models.Model):
         self.last_updated = today()
         self.save()
 
-    # @youtubeLogger.debug(showArgs=True)
     def copyBasicFields(self, jObject):
         for attr in self.basicFields:
             if self.basicFields[attr][0] in jObject:
@@ -297,7 +296,6 @@ class FBPost(models.Model):
                         val = "DATA TOO LONG. CONTENT SKIPPED"
                     setattr(self, attr, val)
 
-    # @youtubeLogger.debug()
     def updateStatistics(self, jObject):
         for attrName in self.statistics:
             countObjs = getattr(self, attrName).order_by('-recorded_time')

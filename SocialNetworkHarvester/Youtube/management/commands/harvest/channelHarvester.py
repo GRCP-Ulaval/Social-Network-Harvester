@@ -5,7 +5,6 @@ class YTChannelHarvester(CommonThread):
     batchSize = 1
     workQueueName = 'channelHarvestQueue'
 
-    #@youtubeLogger.debug(showArgs=True)
     def method(self, channelList):
         channel = channelList[0]
         log('Will harvest %s\'s videos'%channel)

@@ -23,7 +23,6 @@ threadList = [[]]
 RAMUSAGELIMIT = 600000000 # in bytes
 GRAPHRAMUSAGE = False
 
-@youtubeLogger.debug()
 def harvestYoutube():
     #resetLastUpdated()
     #resetLastHarvested()
@@ -61,7 +60,6 @@ def harvestYoutube():
     time.sleep(10)
     waitForThreadsToEnd()
 
-@youtubeLogger.debug()
 def resetLastUpdated():
     for channel in YTChannel.objects.filter(_last_updated__isnull=False).iterator():
         channel._last_updated = None
@@ -73,7 +71,6 @@ def resetLastUpdated():
         comm._last_updated = None
         comm.save()
 
-@youtubeLogger.debug()
 def resetLastHarvested():
     for channel in YTChannel.objects.filter(_last_video_harvested__isnull=False).iterator():
         channel._last_video_harvested = None
@@ -85,26 +82,12 @@ def resetLastHarvested():
         channel._last_subs_harvested = None
         channel.save()
 
-@youtubeLogger.debug()
+
 def resetAllErrors():
     pass
 
 
-def send_routine_email(title, message):
-    logfilepath = os.path.join(LOG_DIRECTORY, 'youtube.log')
-    logfile = open(logfilepath, 'r')
-    adresses = [user.email for user in User.objects.filter(is_superuser=True)]
-    try:
-        email = EmailMessage(title, message)
-        email.attachments = [('youtubeLogger.log', logfile.read(), 'text/plain')]
-        email.to = adresses
-        email.from_email = 'Aspira'
-        email.send()
-        print('%s - Routine email sent to %s' % (datetime.now().strftime('%y-%m-%d_%H:%M'), adresses))
-    except Exception as e:
-        print('Routine email failed to send')
-        print(e)
-        youtubeLogger.exception('An error occured while sending an email to admin')
+
 
 def getClientList(profiles):
     clientList = []
@@ -362,7 +345,7 @@ def updateNewChannels(): #only channels that dont have a channelId but have a us
         else:
             channel.update(data)
 
-@youtubeLogger.debug()
+
 def waitForThreadsToEnd():
     notEmptyQueuesNum = -1
     while notEmptyQueuesNum != 0 and not exceptionQueue.qsize():
@@ -381,7 +364,7 @@ def waitForThreadsToEnd():
     return stopAllThreads()
 
 
-@youtubeLogger.debug()
+
 def stopAllThreads():
     time.sleep(3)
     threadsExitFlag[0] = True

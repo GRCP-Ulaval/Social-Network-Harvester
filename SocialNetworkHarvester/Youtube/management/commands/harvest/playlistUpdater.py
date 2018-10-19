@@ -5,7 +5,6 @@ class YTPlaylistUpdater(CommonThread):
     batchSize = 50
     workQueueName = 'playlistsToUpdate'
 
-    #@youtubeLogger.debug(showArgs=True)
     def method(self, playlists):
         log('Will update %s playlists'% len(playlists))
         response = self.call(playlists)

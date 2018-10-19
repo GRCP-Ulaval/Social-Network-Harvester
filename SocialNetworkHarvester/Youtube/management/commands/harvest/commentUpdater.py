@@ -5,7 +5,6 @@ class YTCommentUpdater(CommonThread):
     batchSize = 50
     workQueueName = 'commentToUpdateQueue'
 
-    #@youtubeLogger.debug()
     def execute(self):
         topCommentList = []
         repliesList = []
@@ -41,7 +40,6 @@ class YTCommentUpdater(CommonThread):
     def method(self):
         raise Exception('This thread is special! "self.method" should not be called!')
 
-    #@youtubeLogger.debug(showArgs=True)
     def updateRepliesList(self, commentList):
         idList = ",".join([comment._ident for comment in commentList])
         client = getClient()
@@ -66,7 +64,6 @@ class YTCommentUpdater(CommonThread):
             comment._deleted_at = today()
             comment.save()
 
-    #@youtubeLogger.debug(showArgs=True)
     def updateTopCommentList(self,commentList):
         client = getClient()
         try:

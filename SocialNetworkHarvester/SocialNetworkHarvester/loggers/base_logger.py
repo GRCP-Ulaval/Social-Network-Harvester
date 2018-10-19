@@ -48,21 +48,13 @@ class Logger():
     def unindent(self):
         self.indent_level -= self.indentation
 
-    def log(self, *args, **kwargs):
-        message = ''
-        if len(args) > 0:
-            message = args[0]
-        indent = True
-        if 'indent' in kwargs:
-            indent = kwargs['indent']
-        showTime = False
-        if 'showTime' in kwargs:
-            showTime = kwargs['showTime']
+    def log(self, message, showTime=True, showDate=True):
         try:
-            self.logger.info('%s%s%s%s' % (
-                self.showThread * '{:<30}'.format(threading.current_thread().name),
+            self.logger.info('%s%s%s%s%s' % (
+                showDate * dtNow().strftime('%Y/%m/%d '),
+                showTime * dtNow().strftime('%H:%M | '),
+                self.showThread * '{:^30} | '.format(threading.current_thread().name),
                 ' ' * (self.indent_level),
-                showTime * dtNow().strftime('%H:%M: '),
                 message
             )
                              )
@@ -83,10 +75,11 @@ class Logger():
         except:
             self.logger.info(self.pformat(message.encode('unicode-escape')))
 
-    def exception(self, message='EXCEPTION', showTime=True):
-        self.logger.exception("%s%s%s" % (
-            self.showThread * '{:<30}'.format(threading.current_thread().name),
-            showTime * dtNow().strftime('%H:%M '),
+    def exception(self, message='EXCEPTION', showTime=True, showDate=True):
+        self.logger.exception("%s%s%s%s" % (
+            showDate * dtNow().strftime('%Y/%m/%d '),
+            showTime * dtNow().strftime('%H:%M | '),
+            self.showThread * '{:^30} | '.format(threading.current_thread().name),
             message))
 
     def debug(self, showArgs=False, showFile=False, showClass=True):

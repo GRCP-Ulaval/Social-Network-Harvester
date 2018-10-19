@@ -4,7 +4,6 @@ from datetime import datetime
 from django.db import models
 from django.utils.timezone import utc
 
-from SocialNetworkHarvester.loggers.youtubeLogger import log
 from SocialNetworkHarvester.models import Integer_time_label, Big_integer_time_label, Image_time_label, time_label
 from Youtube.management.commands.harvest.queues import *
 
@@ -328,7 +327,6 @@ class YTChannel(models.Model):
     def getLink(self):
         return "/youtube/channel/%s" % self.pk
 
-    # @youtubeLogger.debug(showArgs=False)
     def update(self, jObject):
         if not isinstance(jObject, dict):
             raise Exception('A DICT or JSON object from Youtube must be passed as argument.')
@@ -340,7 +338,6 @@ class YTChannel(models.Model):
         self._last_updated = today()
         self.save()
 
-    # @youtubeLogger.debug(showArgs=True)
     def copyBasicFields(self, jObject):
         for attr in self.basicFields:
             if self.basicFields[attr][0] in jObject:
@@ -353,7 +350,7 @@ class YTChannel(models.Model):
                 if val:
                     setattr(self, attr, val)
 
-    # @youtubeLogger.debug()
+
     def copyDateTimeFields(self, jObject):
         for attr in self.dateTimeFields:
             if self.dateTimeFields[attr][0] in jObject:
@@ -368,7 +365,7 @@ class YTChannel(models.Model):
                     val = val.replace(tzinfo=utc)
                     setattr(self, attr, val)
 
-    # @youtubeLogger.debug()
+
     def updateStatistics(self, jObject):
         for attrName in self.statistics:
             countObjs = getattr(self, attrName).order_by('-recorded_time')
@@ -386,7 +383,7 @@ class YTChannel(models.Model):
                 if countObjs[0].value != int(val) and countObjs[0].recorded_time != today():
                     objType.objects.create(channel=self, value=val)
 
-    # @youtubeLogger.debug()
+
     def updateImages(self, jObject):
         # TODO: Save a copy of the images on disk
         pass
@@ -658,7 +655,7 @@ class YTVideo(models.Model):
         self._last_updated = today()
         self.save()
 
-    # @youtubeLogger.debug()
+
     def copyBasicFields(self, jObject):
         for attr in self.basicFields:
             if self.basicFields[attr][0] in jObject:
@@ -671,7 +668,7 @@ class YTVideo(models.Model):
                 if val:
                     setattr(self, attr, val)
 
-    # @youtubeLogger.debug()
+
     def copyDateTimeFields(self, jObject):
         for attr in self.dateTimeFields:
             if self.dateTimeFields[attr][0] in jObject:
@@ -686,7 +683,7 @@ class YTVideo(models.Model):
                     val = val.replace(tzinfo=utc)
                     setattr(self, attr, val)
 
-    # @youtubeLogger.debug()
+
     def updateStatistics(self, jObject):
         for attrName in self.statistics:
             countObjs = getattr(self, attrName).order_by('-recorded_time')
@@ -1120,7 +1117,7 @@ class YTComment(models.Model):
             self.text = self.text[0: self._text_max_length - 3] + '...'
             log('%s\'s text has been truncated!' % self)
 
-    # @youtubeLogger.debug()
+
     def copyBasicFields(self, jObject):
         for attr in self.basicFields:
             if self.basicFields[attr][0] in jObject:
@@ -1133,7 +1130,7 @@ class YTComment(models.Model):
                 if val:
                     setattr(self, attr, val)
 
-    # @youtubeLogger.debug()
+
     def copyDateTimeFields(self, jObject):
         for attr in self.dateTimeFields:
             if self.dateTimeFields[attr][0] in jObject:
@@ -1148,7 +1145,7 @@ class YTComment(models.Model):
                     val = val.replace(tzinfo=utc)
                     setattr(self, attr, val)
 
-    # @youtubeLogger.debug()
+
     def updateStatistics(self, jObject):
         for attrName in self.statistics:
             countObjs = getattr(self, attrName).order_by('-recorded_time')
