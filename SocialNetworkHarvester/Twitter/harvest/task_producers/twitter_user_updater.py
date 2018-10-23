@@ -28,7 +28,9 @@ class TwitterUserUpdater(BaseTaskProducer):
         ))
 
         for index in range(0, priority_updates.count() - 1, self.batch_size):
-            yield (update_twitter_users, [priority_updates[index: index + self.batch_size]], {})
+            if priority_updates[index: index + self.batch_size]:
+                yield update_twitter_users, [priority_updates[index: index + self.batch_size]]
 
         for index in range(0, all_users_to_update.count() - 1, self.batch_size):
-            yield (update_twitter_users, [all_users_to_update[index: index + self.batch_size]], {})
+            if all_users_to_update[index: index + self.batch_size]:
+                yield update_twitter_users, [all_users_to_update[index: index + self.batch_size]]

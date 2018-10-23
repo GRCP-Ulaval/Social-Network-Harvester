@@ -7,11 +7,20 @@ from django_extensions.management.jobs import BaseJob
 from SocialNetworkHarvester.harvest import BaseTaskProducer
 from SocialNetworkHarvester.harvest.globals import global_errors, global_thread_stop_flag
 from SocialNetworkHarvester.harvest.taskConsumer import TaskConsumer
-from SocialNetworkHarvester.harvest.utils import MailReportableException
+from SocialNetworkHarvester.harvest.utils import (
+    MailReportableException,
+    get_running_time_in_minutes,
+    get_running_time_in_seconds,
+    get_formated_job_counts)
 from SocialNetworkHarvester.loggers.jobsLogger import log, logError, mail_log
 from SocialNetworkHarvester.settings import HARVEST_APPS, DEBUG
 
 TASK_CONSUMERS_COUNT = 10
+
+DISPLAY_JOBS_STATUS_DELAY_IN_MINUTES = 0.1
+
+MONITORING_DELAY_IN_SECONDS = 3
+
 
 threads_list = [[]]
 
@@ -42,14 +51,29 @@ def generate_producers():
         threads_list[0].append(t)
         t.start()
 
+def monitoring_delay_passed():
+    return get_running_time_in_seconds() % (DISPLAY_JOBS_STATUS_DELAY_IN_MINUTES * 60) < MONITORING_DELAY_IN_SECONDS
+
 
 def monitor_progress():
+    time.sleep(MONITORING_DELAY_IN_SECONDS)
     while True:
         if not global_errors.empty():
             thread, error = global_errors.get()
-            log('Error occured in thread: %s' % thread.name)
+            log(f'ERROR OCCURED IN THREAD: {thread}')
             manage_exception(error)
-        time.sleep(3)
+        elif monitoring_delay_passed():
+            display_jobs_statuses()
+        time.sleep(MONITORING_DELAY_IN_SECONDS)
+
+
+def display_jobs_statuses():
+    simple_log_kwargs = {'showDate': False, 'showTime': False, 'showThread': False}
+    log(f'Current running time: {int(get_running_time_in_minutes())} minutes '
+        f'{int(get_running_time_in_seconds() % 60)} seconds', **simple_log_kwargs)
+    formated = get_formated_job_counts()
+    if formated:
+        log(formated, **simple_log_kwargs)
 
 
 def manage_exception(error):
@@ -67,7 +91,9 @@ def end_threads():
     global_thread_stop_flag[0] = True
     for thread in threads_list[0]:
         if thread.is_alive():
+            log('Joining thread %s' % thread.name)
             thread.join()
+    log('Successfully joined all threads')
 
 
 class Job(BaseJob):
@@ -91,6 +117,8 @@ class Job(BaseJob):
             end_threads()
             msg = "An unknown exception occured while harvesting data."
             logError(msg)
-            if not DEBUG:
+            if DEBUG:
+                raise
+            else:
                 mail_log('Aspira - Harvest Unknown Error', msg)
         log('harvest ended')

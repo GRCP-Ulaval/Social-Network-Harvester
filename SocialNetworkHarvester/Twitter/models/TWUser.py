@@ -3,6 +3,7 @@ from datetime import datetime
 
 from django.db import models
 
+from Twitter import models as this_module
 from SocialNetworkHarvester.models import Text_time_label
 from SocialNetworkHarvester.utils import today
 
@@ -385,12 +386,8 @@ class TWUser(models.Model):
                 related_name = atr + 's'
                 lastItem = self.getLast(related_name)
                 if not lastItem or lastItem.recorded_time != today():
-                    if atr == 'url':
-                        # having a class named "url" breaks the Django import system.
-                        className = TWUrl
-                    else:
-                        className = globals()[atr]
-                    newItem = className(twuser=self, value=jObject[atr])
+                    time_label_class = this_module.get_twitter_model_by_name(atr)
+                    newItem = time_label_class(twuser=self, value=jObject[atr])
                     newItem.save()
                 elif lastItem.value != jObject[atr]:
                     lastItem.value = jObject[atr]

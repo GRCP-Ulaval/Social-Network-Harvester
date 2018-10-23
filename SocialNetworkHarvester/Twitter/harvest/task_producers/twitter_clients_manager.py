@@ -35,12 +35,14 @@ def create_twitter_client(profile):
 
 
 def clear_twitter_client_queue():
+    log('Clearing Twitter Clients queue')
     while not clients_queue.empty():
         clients_queue.get()
 
 
 class TwitterClientsGenerator(BaseTaskProducer):
     name = 'TwitterClientsUpdater'
+    in_between_routines_delay_in_seconds = 1800  # 30 minutes
 
     def generate_tasks(self):
         """
@@ -62,6 +64,7 @@ class TwitterClientsGenerator(BaseTaskProducer):
                 'No valid Twitter client exists! (reseting them all)'
             )
         clients_queue.maxsize = len(clients_list)
+        clear_twitter_client_queue()
         log('Valid Twitter clients: %s' % [str(client) for client in clients_list])
         for client in clients_list:
             clients_queue.put(client)

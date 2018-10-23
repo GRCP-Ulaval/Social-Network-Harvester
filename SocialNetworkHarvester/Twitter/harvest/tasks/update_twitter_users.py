@@ -1,8 +1,8 @@
 import tweepy
 
-from SocialNetworkHarvester.harvest.globals import tasks_queue
-from SocialNetworkHarvester.harvest.utils import today, check_stop_flag_raised
+from SocialNetworkHarvester.harvest.utils import check_stop_flag_raised, add_task
 from SocialNetworkHarvester.loggers.jobsLogger import log
+from SocialNetworkHarvester.utils import today
 from Twitter.harvest.client import get_client, return_client
 
 
@@ -22,11 +22,7 @@ def update_twitter_users(twitter_user_batch):
         check_stop_flag_raised()
         tw_user = next((user for user in twitter_user_batch if user._ident == response._json['id']), None)
         if tw_user:
-            tasks_queue.put((
-                update_twitter_user_from_response,
-                [tw_user, response._json],
-                {}
-            ))
+            add_task(update_twitter_user_from_response, args=[tw_user, response._json])
             twitter_user_batch.remove(tw_user)
     for tw_user in twitter_user_batch:
         log('Twitter user (%s) has returned no result.' % tw_user)
@@ -38,7 +34,7 @@ def update_twitter_users(twitter_user_batch):
 
 def update_twitter_user_from_response(twitter_user, response):
     twitter_user.UpdateFromResponse(response)
-    #log('updated %s' % twitter_user)
+    # log('updated %s' % twitter_user)
     if twitter_user.harvested_by.count():
         twitter_user._update_frequency = 1
     else:

@@ -19,7 +19,9 @@ class BaseThread(Thread):
         requireds = ['name']
         if not all([getattr(self, required) for required in requireds]):
             raise Exception(
-                "The following attributes or methods must exist in %s: %s" % (self.__class__.__name__, requireds))
+                f"The following attributes or methods must "
+                f"exist in {self.__class__.__name__}: {requireds}"
+            )
 
     def run(self):
         log('%s has started' % self.name)
@@ -28,9 +30,10 @@ class BaseThread(Thread):
                 check_stop_flag_raised()
                 self.execute()
         except NonFatalExeption:
-            logError("(%s) has encountered a non-fatal error. Relaunching in %s seconds" % (
-                self.name, self.relaunch_delay_in_seconds
-            ))
+            logError(
+                f"({self.name}) has encountered a non-fatal error. Relaunching "
+                f"in {self.relaunch_delay_in_seconds} seconds"
+            )
             safe_sleep(self.relaunch_delay_in_seconds)
             return self.run()
         except GlobalStopFlagRaised:
@@ -42,3 +45,6 @@ class BaseThread(Thread):
 
     def execute(self):
         raise NotImplementedError('BaseThread children must implement the execute() method.')
+
+    def __str__(self):
+        return self.name

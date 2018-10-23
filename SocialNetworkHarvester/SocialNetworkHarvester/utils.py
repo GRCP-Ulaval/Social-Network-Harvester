@@ -15,7 +15,7 @@ def today():
     return datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=utc)
 
 
-def xDaysAgo(n=0):
+def x_days_ago(n=0):
     return today() - timedelta(days=n)
 
 

@@ -98,7 +98,7 @@ class ItemHarvester(models.Model):
         current_items = collection.collection_items.filter(**{'%s__isnull' % foreign_key: False})
 
         if not current_items.filter(**{foreign_key: item}).exists():
-            CollectionItem.objects.create(
+            ItemHarvester.objects.create(
                 collection=collection,
                 **{foreign_key: item}
             )

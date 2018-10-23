@@ -1,10 +1,8 @@
-from datetime import datetime
 import logging
 import pprint
 import re
 import threading
-
-from SocialNetworkHarvester.utils import djangoNow
+from datetime import datetime
 
 
 class Logger():
@@ -46,12 +44,14 @@ class Logger():
     def unindent(self):
         self.indent_level -= self.indentation
 
-    def log(self, message, showTime=True, showDate=True):
+    def log(self, message, showTime=True, showDate=True, showThread=None):
+        if showThread is None:
+            showThread = self.showThread
         try:
             self.logger.info('%s%s%s%s%s' % (
                 showDate * datetime.utcnow().strftime('%Y/%m/%d '),
                 showTime * datetime.utcnow().strftime('%H:%M | '),
-                self.showThread * '{:^30} | '.format(threading.current_thread().name),
+                showThread * '{:^30} | '.format(threading.current_thread().name),
                 ' ' * (self.indent_level),
                 message
             )
