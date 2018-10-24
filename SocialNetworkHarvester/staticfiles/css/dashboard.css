@@ -13,11 +13,13 @@
     text-align: left;
     padding: 7px;
     box-shadow: none;
+    z-index: 1;
 }
 
 .section_box:hover {
     box-shadow: 2px 2px 4px 6px #DDD;
     background-color: #FFF;
+    z-index: 2;
 }
 
 .section_title {

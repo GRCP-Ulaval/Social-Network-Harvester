@@ -109,7 +109,7 @@
         </div>
         <script id="functions">
           function displayRemoveChannelPopup() {
-            lastPopupId = null;
+            clear_last_popup_content();
             var displayer = $('#removeChannels').children('#content').children().children('#selectedChannelsNumber');
             var length = selectedCounts['#YTChannelTable'];
             if (!length) {

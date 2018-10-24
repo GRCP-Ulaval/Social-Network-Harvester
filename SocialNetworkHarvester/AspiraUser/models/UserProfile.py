@@ -111,3 +111,6 @@ class UserProfile(models.Model):
             return self.user.harvested_items.get(youtube_playlist=item)
         else:
             raise Exception(f'Invalid item instance: "{item.__class__}"')
+
+    def remove_item_from_harvest_list(self, item):
+        self.get_item_harvester(item).delete()

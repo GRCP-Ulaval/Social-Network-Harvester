@@ -132,7 +132,7 @@
         </div>
         <script id="functions">
           function displayRemoveHashtagsPopup() {
-            lastPopupId = null;
+            clear_last_popup_content();
             var displayer = $('#removeHashtags').children('#content').children().children('#selectedHashtagsNumber');
             var length = selectedCounts['#TWHashtagTable'];
             if (!length) {
@@ -179,7 +179,7 @@
   <div class="section_content">
     <table class="display" id="TWHashtagTable" width="100%" drawn='False'>
       <script class="tableVars">
-        var modelName = 'HashtagHarvester';
+        var modelName = 'ItemHarvester';
         var srcs = [
           {
             attr: 'twitterHashtagsToHarvest',
@@ -188,13 +188,13 @@
         var columns = [
           {
             'colStr': 'Terme',
-            'fields': ['hashtag__term', 'hashtag__pk'],
+            'fields': ['twitter_hashtag__term', 'twitter_hashtag__getLink'],
             'render': function (data, type, row) {
-              if (row['hashtag__term'] == null) {
+              if (row['twitter_hashtag__term'] == null) {
                 return undefinedTag();
               } else {
-                return tableToolLink('/twitter/hashtag/' + row['hashtag__pk'],
-                  truncate_text(row['hashtag__term'], 30, true));
+                return tableToolLink(row['twitter_hashtag__getLink'],
+                  truncate_text(row['twitter_hashtag__term'], 30, true));
               }
             },
           },
@@ -202,35 +202,35 @@
             'orderable': false,
             'searchable': false,
             'colStr': 'Nombre de tweets',
-            'fields': ['harvest_count'],
+            'fields': ['twitter_hashtag__tweets__count'],
             'render': function (data, type, row) {
-              if (row['harvest_count'] == null) {
+              if (row['twitter_hashtag__tweets__count'] == null) {
                 return '';
               }
               ;
-              return row['harvest_count'];
+              return centeredTag(row['twitter_hashtag__tweets__count']);
             },
           },
           {
-            'colStr': 'Collecté depuis',
-            'fields': ['_harvest_since'],
+            'colStr': 'Collecté à partir du',
+            'fields': ['harvest_since'],
             'render': function (data, type, row) {
-              if (row['_harvest_since'] == null) {
+              if (row['harvest_since'] == null) {
                 return '';
               }
               ;
-              return row['_harvest_since'];
+              return row['harvest_since'];
             },
           },
           {
-            'colStr': 'Collecté jusqu\'à',
-            'fields': ['_harvest_until'],
+            'colStr': 'Collecté jusqu\'au',
+            'fields': ['harvest_until'],
             'render': function (data, type, row) {
-              if (row['_harvest_until'] == null) {
+              if (row['harvest_until'] == null) {
                 return '';
               }
               ;
-              return row['_harvest_until'];
+              return row['harvest_until'];
             },
           },
         ];

@@ -119,7 +119,7 @@
         </div>
         <script id="functions">
           function removeSelectedUsers() {
-            lastPopupId = null;
+            clear_last_popup_content();
             var displayer = $('#removeTwitterUser').children('#content').children().children('#selectedTWUsers');
             var length = selectedCounts['#TWUserTable'];
             if (!length) {
@@ -133,8 +133,7 @@
 
           function submitForm() {
             url = '/removeSelectedItems?pageURL=' +
-              window.location.pathname + '&tableId=TWUserTable' +
-              '&listToRemoveFrom=twitterUsersToHarvest';
+              window.location.pathname + '&tableId=TWUserTable';
             executeAjaxAndDisplayMessages(url, '#TWUserTable');
           }
         </script>
@@ -158,7 +157,7 @@
   <div class="section_content">
     <table class="display" id="TWUserTable" width="100%" drawn='False'>
       <script class="tableVars">
-        var modelName = 'TWUser';
+        var modelName = 'ItemHarvester';
         var srcs = [
           {
             attr: 'twitterUsersToHarvest',
@@ -167,24 +166,28 @@
         var columns = [
           {
             'colStr': 'Nom',
-            'fields': ['name', 'pk'],
+            'fields': ['twitter_user__name', 'twitter_user__getLink'],
             'render': function (data, type, row) {
-              if (row['name'] == null) {
+              if (row['twitter_user__name'] == null) {
                 return undefinedTag();
               } else {
-                return tableToolLink('/twitter/user/' + row['pk'],
-                  truncate_text(row['name'], 30, true));
+                return tableToolLink(row['twitter_user__getLink'],
+                  truncate_text(row['twitter_user__name'], 30, true)
+                );
               }
             },
           },
           {
             'colStr': 'Nom d\'utilisateur',
-            'fields': ['screen_name', '_error_on_update'],
+            'fields': ['twitter_user__screen_name', 'twitter_user__error_on_update'],
             'render': function (data, type, row) {
-              var str = '<span>' + row['screen_name'] + '</span>';
-              if (row['_error_on_update']) {
-                str = `<span style="cursor:pointer;" title="Cet utilisateur n'existe pas ou ses informations sont privées.">
-                  {% include 'tool/icons.html' with x=3 y=5 style="height:12px;width:12px;"%}
+              var str = '<span>' + row['twitter_user__screen_name'] + '</span>';
+              if (row['twitter_user__error_on_update']) {
+                str = `<span
+                        style="cursor:pointer;"
+                        title="Cet utilisateur n'existe pas ou ses informations sont privées."
+                       >
+                        {% include 'tool/icons.html' with x=3 y=5 style="height:12px;width:12px;" %}
                     </span>` + str;
               }
               return str;
@@ -192,46 +195,46 @@
           },
           {
             'colStr': 'Nombre d\'abonnés',
-            'fields': ['followers_count'],
+            'fields': ['twitter_user__followers_count'],
             'render': function (data, type, row) {
-              if (row['followers_count'] == null) {
+              if (row['twitter_user__followers_count'] == null) {
                 return '';
               }
               ;
-              return '<center>' + row['followers_count'] + '</center>';
+              return centeredTag(row['twitter_user__followers_count']);
             },
           },
           {
             'colStr': 'Nombre d\'abonnements',
-            'fields': ['friends_count'],
+            'fields': ['twitter_user__friends_count'],
             'render': function (data, type, row) {
-              if (row['friends_count'] == null) {
+              if (row['twitter_user__friends_count'] == null) {
                 return '';
               }
               ;
-              return '<center>' + row['friends_count'] + '</center>';
+              return centeredTag(row['twitter_user__friends_count']);
             },
           },
           {
             'colStr': 'Nombre de status',
-            'fields': ['statuses_count'],
+            'fields': ['twitter_user__statuses_count'],
             'render': function (data, type, row) {
-              if (row['statuses_count'] == null) {
+              if (row['twitter_user__statuses_count'] == null) {
                 return '';
               }
               ;
-              return '<center>' + row['statuses_count'] + '</center>';
+              return centeredTag(row['twitter_user__statuses_count']);
             },
           },
           {
             'colStr': 'Location',
-            'fields': ['location'],
+            'fields': ['twitter_user__location'],
             'render': function (data, type, row) {
-              if (row['location'] == null) {
+              if (row['twitter_user__location'] == null) {
                 return '';
               }
               ;
-              return truncate_text(row['location'], 50, true);
+              return truncate_text(row['twitter_user__location'], 50, true);
             },
           },
         ];
@@ -1048,9 +1051,9 @@
                 return tableToolLink('/twitter/user/' + row['twitter_user__pk'],
                   truncate_text(row['twitter_user__name'], 30, true));
               }
-            }
+            },
           },
-        ]
+        ];
       </script>
     </table>
   </div>

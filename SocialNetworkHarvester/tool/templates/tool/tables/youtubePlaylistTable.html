@@ -108,7 +108,7 @@
         </div>
         <script id="functions">
           function displayRemovePlaylistPopup() {
-            lastPopupId = null;
+            clear_last_popup_content();
             var displayer = $('#removePlaylist').children('#content').children().children('#selectedPlaylistsCount');
             var length = selectedCounts['#YTPlaylistTable'];
             if (!length) {

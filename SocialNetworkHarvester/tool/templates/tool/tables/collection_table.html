@@ -10,67 +10,6 @@
         </span>
       <div class="section_options">
 
-        <!-- REMOVE SELECTION --
-                <span>|</span>
-        <span class="section_menuItem">
-          <a
-              onclick="collection_remove_selected('{{ collection.pk }}')"
-              title="Retirer la sélection de cette collecte."
-          >
-            Retirer
-          </a>
-        </span>
-        <div class="popup" id="remove_collection_item_popup_{{ collection.pk }}">
-          <div id="title">Retirer</div>
-          <div id="help">
-            Retire les éléments présentement sélectionnés de cette collecte.
-          </div>
-          <div id="content">
-            <center>
-              Êtes-vous sûr de vouloir retirer les <br>
-              éléments sélectionnés de la collecte: <br>
-              <b>{{ collection.name }}</b>
-              <br><br>
-              <div id="selected_collection_elements"></div>
-              <br>
-              <input
-                  type="submit"
-                  value="Remove"
-                  onclick="submit_remove_collection_items('{{ collection.pk }}')"
-              >
-            </center>
-          </div>
-          <script id="functions">
-            function collection_remove_selected(collection_id) {
-              lastPopupId = null;
-
-              var length = selectedCounts['#collection_table_' + collection_id];
-              if (!length) {
-                alert('Vous devez d\'abpord sélectioner une ligne du tableau.');
-              }
-
-              else {
-                var displayer = $('#remove_collection_item_popup_'+collection_id)
-                  .find('#selected_collection_elements');
-
-                let plural = length > 1 ? 's' : '';
-                displayer.html('' + length + ' ligne' + plural + ' sélectionnée' + plural);
-                displayCenterPopup('remove_collection_item_popup_' + collection_id);
-              }
-            }
-
-            function submit_remove_collection_items(collection_id) {
-              let url = makeUrl('/collection/ajax/remove', {
-                pageURL: window.location.pathname,
-                tableId: 'collection_table_' + collection_id,
-                collectionId: collection_id,
-              });
-              executeAjaxAndDisplayMessages(url, '#collection_table_' + collection_id);
-            }
-          </script>
-        </div>
-        -->
-
         {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
 
         <span> | </span>

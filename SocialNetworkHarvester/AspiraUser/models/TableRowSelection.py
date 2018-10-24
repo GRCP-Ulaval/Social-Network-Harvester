@@ -4,6 +4,7 @@ import re
 from django.contrib.auth.models import User
 from django.db import models
 
+from AspiraUser.models import ItemHarvester
 from Collection.models import Collection, CollectionItem
 from Facebook.models import FBUser, FBReaction, FBComment, FBPost, FBPage
 from Twitter.models import TWUser, Tweet, follower, favorite_tweet, Hashtag
@@ -165,7 +166,7 @@ def resetUserSelection(request):
 MODEL_WHITELIST = ['FBPage', 'FBPost', 'FBComment', 'FBReaction', 'FBUser',
                    'Tweet', 'TWUser', "HashtagHarvester", "Hashtag", "favorite_tweet", "follower",
                    'YTChannel', 'YTVideo', 'YTPlaylist', 'Subscription', 'YTComment', 'YTPlaylistItem',
-                   'Collection', 'CollectionItem'
+                   'Collection', 'CollectionItem', 'ItemHarvester'
                    ]
 
 
@@ -176,5 +177,6 @@ def getModel(modelName):
         TWUser, Tweet, follower, favorite_tweet, Hashtag,
         FBPage, FBPost, FBComment, FBReaction, FBUser,
         YTChannel, YTVideo, YTPlaylist, Subscription, YTComment, YTPlaylistItem,
-        Collection, CollectionItem
+        Collection, CollectionItem,
+        ItemHarvester
     ]}[modelName]

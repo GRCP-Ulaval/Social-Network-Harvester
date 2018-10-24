@@ -41,12 +41,12 @@
 {% elif name == "add_to_collection" %}
 <span>|</span>
 <span class="section_menuItem">
-    <a onclick="display_add_to_collection_popup('{{ table_id }}')">Ajouter à une collecte</a>
+    <a onclick="display_add_to_collection_popup('{{ table_id }}')">Assigner à une collecte</a>
 </span>
 <div class="popup" id="add_to_collection_{{ table_id }}">
-  <div id="title">Ajouter à une collecte</div>
+  <div id="title">Assigner à une collecte</div>
   <div id="help">
-    Ajouter les items selectionnés à une collecte. Vous
+    Ajouter les items selectionnés à une collecte thématique. Celle-ci sera accessible par les autres utilisateurs d'Aspira, mais ne pourra être modifié que par vous.
   </div>
   <div id="content">
     <center>
@@ -70,7 +70,7 @@
   </div>
   <script id="functions">
     function display_add_to_collection_popup(table_id) {
-      lastPopupId = null;
+      clear_last_popup_content();
       var displayer = $('#num_items_selected_' + table_id);
       var count = selectedCounts['#' + table_id];
       if (!count) {

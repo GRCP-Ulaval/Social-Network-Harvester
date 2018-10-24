@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from django.utils.timezone import utc
 
 from AspiraUser.models import getUserSelection, getModel, ItemHarvester
-from SocialNetworkHarvester.jsonResponses import jsonBadRequest, missingParam, jResponse
+from SocialNetworkHarvester.jsonResponses import jsonBadRequest, missingParam, jResponse, jsonMessage
 from SocialNetworkHarvester.loggers.viewsLogger import logError
 from SocialNetworkHarvester.settings import HARVEST_MAX_PERIOD, HARVEST_SINCE_OLDEST_DATE
 from SocialNetworkHarvester.utils import today
@@ -14,26 +14,15 @@ from SocialNetworkHarvester.utils import today
 
 @login_required()
 def removeSelectedItems(request):
+    """ Removes the selecteds ItemHarvesters from the user's harvesting list
+    """
     errors = []
-    userProfile = request.user.userProfile
+    user = request.user
     selection = getUserSelection(request)
     queryset = selection.getSavedQueryset(None, request.GET['tableId'])
-    successNum = 0
-    listToRemovefrom = getattr(userProfile, request.GET['listToRemoveFrom'])
     for item in queryset:
-        try:
-            listToRemovefrom.remove(item)
-            successNum += 1
-        except:
-            logError('Une erreur est survenue lors du retrait de %s' % item)
-            errors.append('Une erreur est survenue lors du retrait de %s' % item)
-    if errors == []:
-        response = {'status': 'ok', 'messages': [
-            'Retiré %i élément%s de votre liste de collecte' % (successNum, 's' if successNum > 1 else '')]}
-    else:
-        response = {'status': 'exception', 'errors': errors}
-    selection.delete()
-    return HttpResponse(json.dumps(response), content_type='application/json')
+        pass
+    return jsonMessage('La selection a été retirée de votre lsite de collecte')
 
 
 @login_required()

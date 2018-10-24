@@ -1,7 +1,7 @@
 $(document).ready(function () {
   $('#centerPopupCloser').click(function () {
     closeCenterPopup();
-    lastPopupId = null;
+    clear_last_popup_content()
   });
   $('body').on('mouseover', '#centerPopupHelper', function (event) {
     $('#centerPopupHelpText').position({
@@ -92,4 +92,8 @@ function displayCenterPopup(containerId, afterFunction) {
 
 function select_popup_content(selector) {
   return $('#centerPopupContent').find(selector);
+}
+
+function clear_last_popup_content() {
+  lastPopupId = null;
 }

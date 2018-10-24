@@ -552,7 +552,7 @@ function setDownloadableRows(link){
         dynamic: dynamic,
         srcs: JSON.stringify(srcs),
     });
-    lastPopupId = null;
+    clear_last_popup_content();
     $('#downloadSelection').find('#sourceURL').attr('value', url);
     var displayer = $('#downloadSelection').children('#content').find('#selectedRowsCount');
     var tableIdContainer = displayer.parent().find('#selectedTableId');

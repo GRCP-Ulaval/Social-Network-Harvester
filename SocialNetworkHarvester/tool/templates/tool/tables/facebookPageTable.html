@@ -127,7 +127,7 @@
           </div>
           <script id="functions">
             function removeSelectedPages() {
-              lastPopupId = null;
+              clear_last_popup_content();
               var displayer = $('#removeFbPage').children('#content').children().children('#selectedFbPages');
               var length = selectedCounts['#FbPagesTable'];
               if (!length) {
