@@ -1,8 +1,9 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, Http404, render_to_response
+from django.shortcuts import render, Http404, render_to_response, get_object_or_404
 
-from AspiraUser.models import *
+from AspiraUser.models import resetUserSelection
 from SocialNetworkHarvester.loggers.viewsLogger import log
+from Twitter.models import TWUser, Hashtag, Tweet
 
 
 @login_required()
@@ -20,30 +21,13 @@ def twitterBaseView(request):
 
 @login_required()
 def twUserView(request, TWUser_value):
-    queryset = TWUser.objects.none();
-    try:
-        queryset = TWUser.objects.filter(pk=TWUser_value)
-    except:
-        pass
-    if not queryset:
-        try:
-            queryset = TWUser.objects.filter(screen_name=TWUser_value)
-        except:
-            pass
-    if not queryset:
-        try:
-            queryset = TWUser.objects.filter(_ident=TWUser_value)
-        except:
-            pass
-    if not queryset:
-        raise Http404('No TWUser matches that value')
-    twUser = queryset[0]
+    twUser = get_object_or_404(TWUser, pk=TWUser_value)
     context = {
         'user': request.user,
         'twUser': twUser,
         'navigator': [
             ("Twitter", "/twitter"),
-            (str(twUser), "/twitter/user/" + TWUser_value),
+            (str(twUser), f"/twitter/user/{twUser.pk}"),
         ],
     }
     if 'snippet' in request.GET and request.GET['snippet'] == 'true':
@@ -53,7 +37,6 @@ def twUserView(request, TWUser_value):
             pass
     else:
         resetUserSelection(request)
-
         return render(request, 'Twitter/TwitterUser.html', context)
 
 

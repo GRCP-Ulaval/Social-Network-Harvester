@@ -66,7 +66,7 @@ def getFieldsValuesAsTiles(instance, user):
         def parseOptions(self):
             if "options" in self.fieldVal:
                 self.options = self.fieldVal['options']
-                log(self.options)
+                #og(self.options)
                 if "description" not in self.fieldVal and any([
                     ("admin_only" not in self.options)
                 ]):

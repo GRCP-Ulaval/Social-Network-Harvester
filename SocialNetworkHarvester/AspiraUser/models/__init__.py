@@ -1,4 +1,5 @@
 from .FBAccessToken import FBAccessToken
+from .ItemHarvester import ItemHarvester
 from .TableRowSelection import (
     TableRowsSelection,
     getUserSelection,

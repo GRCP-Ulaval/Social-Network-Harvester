@@ -18,7 +18,9 @@
                 @{{ twUser.screen_name }}
             </a></b>
         </span>
-        {% include "tool/misc.html" with tool="addRemoveFromList" listName="twitterUsersToHarvest" list=user.userProfile.twitterUsersToHarvest.all item=twUser %}
+        {% with tool="addRemoveFromList" item=twUser %}
+        {% include "tool/misc.html" %}
+        {% endwith %}
     </div>
     <div class="section_overview_content">
         <!--div class="labelsContainer">

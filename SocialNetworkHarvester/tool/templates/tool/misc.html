@@ -3,90 +3,102 @@
 
 {% if tool == "gridDisplay" %}
 <div class="grid">
-    {% autoescape off %}
-        {{ item|getFieldsValuesAsTiles:currentUser }}
-    {% endautoescape %}
+  {% autoescape off %}
+  {{ item|getFieldsValuesAsTiles:currentUser }}
+  {% endautoescape %}
 </div>
 
 {% elif tool == "addRemoveFromList" %}
-{% if item in list %}
+{% if item|in_harvest_list:user.userProfile %}
 <span class="document_title document_menu" title="Retirer de ma liste de collecte"
-    style="background-color : rgba(0, 222, 0, 0.85);">
-    <a onclick=displayCenterPopup("removeFromList") >
+      style="background-color : rgba(0, 222, 0, 0.85);">
+    <a onclick=displayCenterPopup("removeFromList")>
         {% include "tool/icons.html" with x=5 y=5 style='height:15px;width:15px;vertical-align:middle'%}
         Ajouté à ma liste
     </a>
 </span>
 <div class="popup" id="removeFromList">
-    <div id="title">Retirer de la liste</div>
-    <div id="help">
-        Retrait de <b>{{ item }}</b>
+  <div id="title">Retirer de la liste</div>
+  <div id="help">
+    Retrait de <b>{{ item }}</b>
+  </div>
+  <div id="content">
+    <center>
+      Voulez-vous retirer <br><br>
+      <b>{{ item }}</b><br><br>
+      de votre liste de collecte Aspira?<br><br>
+    </center>
+    <div style="width:300px; height:30px;">
+      <input type="button" class="cancelButton" value="Annuler" onclick="cancelOperation()">
+      <input type="button" class="submitButton" value="Retirer" onclick="submitOperation(false)">
     </div>
-    <div id="content">
-        <center>
-            Voulez-vous retirer <br><br>
-            <b>{{ item }}</b><br><br>
-            de votre liste de collecte Aspira?<br><br>
-        </center>
-        <div style="width:300px; height:30px;">
-            <input type="button" class="cancelButton" value="Annuler" onclick="cancelOperation()">
-            <input type="button" class="submitButton" value="Retirer" onclick="submitOperation(false)">
-        </div>
-    </div>
-{% else %}
+  </div>
+  {% else %}
 
-<span class="document_title document_menu" title="Ajouter à ma liste de collecte">
-    <a onclick=displayCenterPopup("addToList") >
+  <span class="document_title document_menu" title="Ajouter à ma liste de collecte">
+    <a onclick=displayCenterPopup("addToList")>
         {% include "tool/icons.html" with x=4 y=5 style='height:15px;width:15px;vertical-align:middle'%}
         Ajouter à ma liste
     </a>
-</span>
-<div class="popup" id="addToList">
+  </span>
+  <div class="popup" id="addToList">
     <div id="title">Ajouter à ma liste</div>
     <div id="help">
-        Ajout de <b>{{ item }}</b>
+      Ajout de <b>{{ item }}</b>
     </div>
     <div id="content">
-        <center>
-            Voulez-vous ajouter <br><br>
-            <b>{{ item }}</b><br><br>
-            à votre liste de collecte Aspira?<br><br>
-        </center>
-        <div style="width:300px; height:30px;">
-            <input type="button" class="cancelButton" value="Annuler" onclick="cancelOperation()">
-            <input type="button" class="submitButton" value="Ajouter" onclick="submitOperation(true)">
-        </div>
+      <center>
+        Voulez-vous ajouter <br><br>
+        <b>{{ item }}</b><br><br>
+        à votre liste de collecte Aspira?<br><br>
+        Date de debut :
+        <input id="{{item.get_obj_ident}}_harvest_since" type="date">
+        <br>
+        Date de fin :
+        <input id="{{item.get_obj_ident}}_harvest_until" type="date">
+        <br><br>
+      </center>
+      <div style="width:300px; height:30px;">
+        <input type="button" class="cancelButton" value="Annuler" onclick="cancelOperation()">
+        <input type="button" class="submitButton" value="Ajouter" onclick="submitOperation(true)">
+      </div>
     </div>
-{% endif %}
+    {% endif %}
 
     <script id="functions">
-        function cancelOperation(){
-            closeCenterPopup();
+      function cancelOperation() {
+        closeCenterPopup();
+      }
+
+      function submitOperation(addItem) {
+        var url = '/user/forms/manageHarvestList/';
+        if (addItem) {
+          url += 'add';
+        } else {
+          url += 'remove';
         }
-        function submitOperation(addItem){
-            var url = "/user/forms/manageHarvestList/";
-            if (addItem){
-                url += "add";
-            }else{
-                url += "remove";
-            }
-            $.post(url,{
-                "id":"{{ item.pk }}",
-                "list":"{{ listName }}",
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
-            }, function(response){
-                closeCenterPopup();
-                if (response['message'] != null){
-                    displayNewMessages(response['message']['message'])
-                } else if (response['error'] != null){
-                    displayNewErrors(response['error']['reason'])
-                }
-                setTimeout(function(){location.reload()}, 1500);
-            });
-        }
+        let harvest_since = select_popup_content('input#{{item.get_obj_ident}}_harvest_since').val();
+        let harvest_until = select_popup_content('input#{{item.get_obj_ident}}_harvest_until').val();
+        log(harvest_until);
+        $.post(url, {
+          'id': '{{ item.pk }}',
+          'model': '{{ item|get_type_str }}',
+          'harvest_since': harvest_since || '',
+          'harvest_until': harvest_until || '',
+          'csrfmiddlewaretoken': '{{ csrf_token }}',
+        }, function (response) {
+          closeCenterPopup();
+          if (response['message'] != null) {
+            displayNewMessages(response['message']['message']);
+          } else if (response['error'] != null) {
+            displayNewErrors(response['error']['reason']);
+            return;
+          }
+          setTimeout(function () {
+            location.reload();
+          }, 1500);
+        });
+      }
     </script>
-</div>
-{% endif %}
-
-
-
+  </div>
+  {% endif %}

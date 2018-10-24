@@ -1,6 +1,4 @@
-import time
 from datetime import datetime, timedelta
-from random import random
 
 from django.core.exceptions import MultipleObjectsReturned
 from django.db import models, IntegrityError

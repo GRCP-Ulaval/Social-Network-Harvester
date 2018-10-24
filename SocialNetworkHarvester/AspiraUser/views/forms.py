@@ -1,4 +1,5 @@
-from datetime import timedelta
+import re
+from datetime import timedelta, datetime
 
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -8,14 +9,14 @@ from django.core.mail import send_mail
 from django.core.validators import validate_email
 from django.shortcuts import render, redirect
 from django.template.loader import render_to_string
+from django.utils.timezone import utc
 
 from AspiraUser.models import UserProfile
-from SocialNetworkHarvester.jsonResponses import *
+from SocialNetworkHarvester.jsonResponses import jResponse, jsonErrors, missingParam
 from SocialNetworkHarvester.loggers.viewsLogger import logError
 from SocialNetworkHarvester.settings import DEBUG
 from SocialNetworkHarvester.views.messages import add_info_message, add_error_message, add_error_messages
-from Youtube.models import *
-from .pages import userSettings, lastUrlOrHome
+from .pages import lastUrlOrHome
 
 
 def userLogin(request):
@@ -115,7 +116,7 @@ def userRegister(request):
             validate_email(data['email'])
         except ValidationError:
             errors.append('L\'adresse email fournie ne semble pas valide. Veuillez vérifier qu\'il '
-                                'ne s\'agit pas d\'une erreur.')
+                          'ne s\'agit pas d\'une erreur.')
 
     if not errors:
         message = render_to_string('AspiraUser/emails/newAccountInstructions.html', {
@@ -226,9 +227,8 @@ def requestResetPW(request):
         return jsonErrors("L'adresse email '%s' n'existe pas." % request.POST['email'])
 
     aspiraUser.userProfile.passwordResetToken = UserProfile.getUniquePasswordResetToken()
-    aspiraUser.userProfile.passwordResetDateLimit = datetime.utcnow() \
-                                                        .replace(second=0, microsecond=0, tzinfo=utc) + timedelta(
-        days=1)
+    aspiraUser.userProfile.passwordResetDateLimit = datetime.utcnow().replace(
+        second=0, microsecond=0, tzinfo=utc) + timedelta(days=1)
     aspiraUser.userProfile.save()
 
     if DEBUG:

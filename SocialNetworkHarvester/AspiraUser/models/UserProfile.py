@@ -3,7 +3,7 @@ from django.db import models
 from django.utils.crypto import get_random_string
 
 from Facebook.models import FBPage
-from Twitter.models import TWUser, HashtagHarvester
+from Twitter.models import Hashtag, TWUser
 from Youtube.models import YTChannel, YTPlaylist
 
 
@@ -21,20 +21,15 @@ class UserProfile(models.Model):
     twitterApp_access_token_key = models.CharField(max_length=255, null=True, blank=True)
     twitterApp_access_token_secret = models.CharField(max_length=255, null=True, blank=True)
     twitterApp_parameters_error = models.BooleanField(default=False)
-    twitterUsersToHarvest = models.ManyToManyField(TWUser, related_name="harvested_by", blank=True)
     twitterUsersToHarvestLimit = models.IntegerField(default=30, blank=True)
-    twitterHashtagsToHarvest = models.ManyToManyField(HashtagHarvester, related_name="harvested_by", blank=True)
     twitterHashtagsToHarvestLimit = models.IntegerField(default=5, blank=True)
 
     facebookApp_parameters_error = models.BooleanField(default=False)
-    facebookPagesToHarvest = models.ManyToManyField(FBPage, related_name="harvested_by", blank=True)
     facebookPagesToHarvestLimit = models.IntegerField(default=20, blank=True)
 
     youtubeApp_dev_key = models.CharField(max_length=255, null=True, blank=True)
     youtubeApp_parameters_error = models.BooleanField(default=False)
-    ytChannelsToHarvest = models.ManyToManyField(YTChannel, related_name="harvested_by", blank=True)
     ytChannelsToHarvestLimit = models.IntegerField(default=100, blank=True)
-    ytPlaylistsToHarvest = models.ManyToManyField(YTPlaylist, related_name="harvested_by", blank=True)
     ytPlaylistsToHarvestLimit = models.IntegerField(default=5, blank=True)
 
     passwordResetToken = models.CharField(max_length=255, null=True, blank=True, unique=True)
@@ -49,6 +44,30 @@ class UserProfile(models.Model):
     def youtube_app_valid(self):
         return not self.youtubeApp_parameters_error
 
+    def twitterUsersToHarvest(self):
+        return self.user.harvested_items.filter(twitter_user__isnull=False)
+
+    def twitterHashtagsToHarvest(self):
+        return self.user.harvested_items.filter(twitter_hashtag__isnull=False)
+
+    def facebookPagesToHarvest(self):
+        return self.user.harvested_items.filter(facebook_page__isnull=False)
+
+    def ytChannelsToHarvest(self):
+        return self.user.harvested_items.filter(youtube_channel__isnull=False)
+
+    def ytPlaylistsToHarvest(self):
+        return self.user.harvested_items.filter(youtube_playlist__isnull=False)
+
+    def get_harvest_limit(self, model):
+        return {
+            TWUser: self.twitterUsersToHarvestLimit,
+            Hashtag: self.twitterHashtagsToHarvestLimit,
+            FBPage: self.facebookPagesToHarvestLimit,
+            YTChannel: self.ytChannelsToHarvestLimit,
+            YTPlaylist: self.ytPlaylistsToHarvestLimit
+        }[model]
+
     @staticmethod
     def getUniquePasswordResetToken():
         token = get_random_string(length=254)
@@ -56,12 +75,39 @@ class UserProfile(models.Model):
             token = get_random_string(length=254)
         return token
 
-    @staticmethod
-    def getHarvestables():
+    def get_harvest_queryset(self, model):
         return {
-            'TWUser': 'twitterUsersToHarvest',
-            'HashtagHarvester': 'twitterHashtagsToHarvest',
-            'FBPage': 'facebookPagesToHarvest',
-            'YTChannel': 'ytChannelsToHarvest',
-            'YTPlaylist': 'ytPlaylistsToHarvest',
-        }
+            TWUser: self.twitterUsersToHarvest(),
+            Hashtag: self.twitterHashtagsToHarvest(),
+            FBPage: self.facebookPagesToHarvest(),
+            YTChannel: self.ytChannelsToHarvest(),
+            YTPlaylist: self.ytPlaylistsToHarvest(),
+        }[model]
+
+    def item_is_in_list(self, item):
+        if isinstance(item, TWUser):
+            return self.user.harvested_items.filter(twitter_user=item).exists()
+        elif isinstance(item, Hashtag):
+            return self.user.harvested_items.filter(twitter_hashtag=item).exists()
+        elif isinstance(item, FBPage):
+            return self.user.harvested_items.filter(facebook_page=item).exists()
+        elif isinstance(item, YTChannel):
+            return self.user.harvested_items.filter(youtube_channel=item).exists()
+        elif isinstance(item, YTPlaylist):
+            return self.user.harvested_items.filter(youtube_playlist=item).exists()
+        else:
+            raise Exception(f'Invalid item instance: "{item.__class__}"')
+
+    def get_item_harvester(self, item):
+        if isinstance(item, TWUser):
+            return self.user.harvested_items.get(twitter_user=item)
+        elif isinstance(item, Hashtag):
+            return self.user.harvested_items.get(twitter_hashtag=item)
+        elif isinstance(item, FBPage):
+            return self.user.harvested_items.get(facebook_page=item)
+        elif isinstance(item, YTChannel):
+            return self.user.harvested_items.get(youtube_channel=item)
+        elif isinstance(item, YTPlaylist):
+            return self.user.harvested_items.get(youtube_playlist=item)
+        else:
+            raise Exception(f'Invalid item instance: "{item.__class__}"')

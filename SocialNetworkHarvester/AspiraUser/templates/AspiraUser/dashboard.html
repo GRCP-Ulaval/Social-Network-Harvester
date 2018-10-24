@@ -48,10 +48,11 @@
       <div class="section_box_info">Tweets Collectés:
         <span class="dataValue">{{ twStats.collectedTweets }}</span>
       </div>
+      {% if twStats.mostActiveTwitterUser %}
       <div class="section_box_info">Utilisateur le plus actif:
         <span class="dataValue">
           <a
-              href="/twitter/user/{{ twStats.mostActiveTwitterUser.pk }}"
+              href="{{ twStats.mostActiveTwitterUser.getLink }}"
               class="classic"
               title="{{ twStats.mostActiveTwitterUser }}"
           >
@@ -59,10 +60,12 @@
           </a>
         </span>
       </div>
+      {% endif %}
+      {% if twStats.mostActiveHashtag %}
       <div class="section_box_info">Hashtag le plus actif:
         <span class="dataValue">
           <a
-              href="/twitter/hashtag/{{ twStats.mostActiveHashtag.term }}"
+              href="{{ twStats.mostActiveHashtag.getLink }}"
               class="classic"
               title="{{ twStats.mostActiveHashtag }}"
           >
@@ -70,6 +73,7 @@
           </a>
         </span>
       </div>
+      {% endif %}
     </div>
   </div>
 
@@ -94,18 +98,32 @@
       <div class="section_box_info">Commentaires collectés:
         <span class="dataValue">{{ ytStats.collectedYtComments }}</span>
       </div>
+      {% if ytStats.mostActiveChannel %}
       <div class="section_box_info">Chaîne la plus active:
-        <span class="dataValue"><a href="/youtube/channel/{{ ytStats.mostActiveChannel.pk }}" class="classic"
-                                   title="{{ ytStats.mostActiveChannel }}">
-                        {{ ytStats.mostActiveChannel | truncatechars:15}}
-                    </a></span>
+        <span class="dataValue">
+          <a
+              href="{{ ytStats.mostActiveChannel.getLink }}"
+              class="classic"
+              title="{{ ytStats.mostActiveChannel }}"
+          >
+            {{ ytStats.mostActiveChannel | truncatechars:15}}
+          </a>
+        </span>
       </div>
+      {% endif %}
+      {% if ytStats.mostActiveYtVid %}
       <div class="section_box_info">Vidéo la plus commentée:
-        <span class="dataValue"><a href="/youtube/video/{{ ytStats.mostActiveYtVid.pk }}" class="classic"
-                                   title="{{ ytStats.mostActiveYtVid.title }}">
-                        {{ ytStats.mostActiveYtVid | truncatechars:15 }}
-                    </a></span>
+        <span class="dataValue">
+          <a
+              href="{{ ytStats.mostActiveYtVid.getLink }}"
+              class="classic"
+              title="{{ ytStats.mostActiveYtVid.title }}"
+          >
+            {{ ytStats.mostActiveYtVid | truncatechars:15 }}
+          </a>
+        </span>
       </div>
+      {% endif %}
     </div>
   </div>
 
@@ -127,18 +145,31 @@
       <div class="section_box_info">Commentaires collectés:
         <span class="dataValue">{{ fbStats.collectedFBcomments }}</span>
       </div>
+      {% if fbStats.mostActivePage %}
       <div class="section_box_info">Page la plus active:
-        <span class="dataValue"><a href="/facebook/page/{{ fbStats.mostActivePage.pk }}" class="classic"
-                                   title="{{ fbStats.mostActivePage }}">
-                        {{ fbStats.mostActivePage | truncatechars:15 }}
-                    </a></span>
+        <span class="dataValue">
+          <a href="{{ fbStats.mostActivePage.getLink }}"
+             class="classic"
+             title="{{ fbStats.mostActivePage }}"
+          >
+            {{ fbStats.mostActivePage | truncatechars:15 }}
+          </a>
+        </span>
       </div>
+      {% endif %}
+      {% if fbStats.mostActiveStatus %}
       <div class="section_box_info">Status le plus commenté:
-        <span class="dataValue"><a href="/facebook/post/{{ fbStats.mostActiveStatus.pk }}" class="classic"
-                                   title="{{ fbStats.mostActiveStatus }}">
-                        {{ fbStats.mostActiveStatus | truncatechars:15 }}
-                    </a></span>
+        <span class="dataValue">
+          <a
+              href="{{ fbStats.mostActiveStatus.getLink }}"
+              class="classic"
+              title="{{ fbStats.mostActiveStatus }}"
+          >
+            {{ fbStats.mostActiveStatus | truncatechars:15 }}
+          </a>
+        </span>
       </div>
+      {% endif %}
     </div>
   </div>
 

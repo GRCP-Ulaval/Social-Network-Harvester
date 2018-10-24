@@ -1,3 +1,4 @@
+"""
 from django.db import models
 
 from .Hashtag import Hashtag
@@ -72,3 +73,5 @@ class HashtagHarvester(models.Model):
 
     def getLink(self):
         return self.hashtag.getLink()
+
+"""

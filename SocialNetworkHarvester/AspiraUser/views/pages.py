@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
 from django.shortcuts import render, HttpResponseRedirect, Http404
@@ -32,125 +34,139 @@ def userDashboard(request):
     return render(request, 'AspiraUser/dashboard.html', context)
 
 
-def getTwitterStats(aspiraUser):
-    twitterUserLimit = aspiraUser.twitterUsersToHarvestLimit
-    twitterHashtagLimit = aspiraUser.twitterHashtagsToHarvestLimit
-    collectedTweets = Tweet.objects.filter(user__harvested_by=aspiraUser).count() + \
-                      Tweet.objects.filter(harvested_by__harvested_by=aspiraUser).count()
-    mostActiveTwitterUser = "None"
-    twitterUserUsage = aspiraUser.twitterUsersToHarvest.count()
-    if twitterUserUsage > 0:
-        mostActiveTwitterUser = \
-            aspiraUser.twitterUsersToHarvest.annotate(harvested_count=Count('tweets')).order_by("-harvested_count")[0]
-    twitterUserPercent = 0
-    if twitterUserLimit > 0:
-        twitterUserPercent = twitterUserUsage * 100 / twitterUserLimit
+def getTwitterStats(user_profile):
+    twuser_limit = user_profile.twitterUsersToHarvestLimit
+    hashtag_limit = user_profile.twitterHashtagsToHarvestLimit
+    collected_tweets = (Tweet.objects.filter(user__harvested_by__user__userProfile=user_profile) |
+                        Tweet.objects.filter(hashtags__harvested_by__user__userProfile=user_profile)).count()
+
+    twitter_user_usage = user_profile.twitterUsersToHarvest().count()
+    most_active_twitter_user = user_profile.twitterUsersToHarvest() \
+        .annotate(harvested_count=Count('twitter_user__tweets')) \
+        .order_by("-harvested_count") \
+        .first()
+    if most_active_twitter_user:
+        most_active_twitter_user = most_active_twitter_user.twitter_user
+
+    twitter_user_percent = 0
+    if twuser_limit > 0:
+        twitter_user_percent = twitter_user_usage * 100 / twuser_limit
     else:
-        twitterUserLimit = 'inf'
-    twitterHashtagPercent = 0
-    twitterHashtagUsage = aspiraUser.twitterHashtagsToHarvest.count()
-    if twitterHashtagLimit > 0:
-        twitterHashtagPercent = twitterHashtagUsage * 100 / twitterHashtagLimit
+        twuser_limit = 'inf'
+
+    twitter_hashtag_percent = 0
+    twitter_hashtag_usage = user_profile.twitterHashtagsToHarvest().count()
+    if hashtag_limit > 0:
+        twitter_hashtag_percent = twitter_hashtag_usage * 100 / hashtag_limit
     else:
-        twitterHashtagLimit = 'inf'
-    mostActiveHashtag = "None"
-    if twitterHashtagUsage > 0:
-        mostActiveHashtag = \
-            aspiraUser.twitterHashtagsToHarvest.annotate(harvested_count=Count('harvested_tweets')).order_by(
-                "-harvested_count")[0].hashtag
+        hashtag_limit = 'inf'
+
+    most_active_hashtag = user_profile.twitterHashtagsToHarvest() \
+        .annotate(harvested_count=Count('twitter_hashtag__harvested_tweets')) \
+        .order_by("-harvested_count").first()
+    if most_active_hashtag:
+        most_active_hashtag = most_active_hashtag.twitter_hashtag
+
     return {
-        'twitterUserUsage': twitterUserUsage,
-        'twitterUserLimit': twitterUserLimit,
-        'twitterUserPercent': twitterUserPercent,
-        'twitterHashtagUsage': twitterHashtagUsage,
-        'twitterHashtagLimit': twitterHashtagLimit,
-        'twitterHashtagPercent': twitterHashtagPercent,
-        'collectedTweets': collectedTweets,
-        'mostActiveTwitterUser': mostActiveTwitterUser,
-        'mostActiveHashtag': mostActiveHashtag,
+        'twitterUserUsage': twitter_user_usage,
+        'twitterUserLimit': twuser_limit,
+        'twitterUserPercent': twitter_user_percent,
+        'twitterHashtagUsage': twitter_hashtag_usage,
+        'twitterHashtagLimit': hashtag_limit,
+        'twitterHashtagPercent': twitter_hashtag_percent,
+        'collectedTweets': collected_tweets,
+        'mostActiveTwitterUser': most_active_twitter_user,
+        'mostActiveHashtag': most_active_hashtag,
     }
 
 
-def getYoutubeStats(aspiraUser):
-    ytChannelUsage = aspiraUser.ytChannelsToHarvest.count()
-    ytChannelLimit = aspiraUser.ytChannelsToHarvestLimit
-    ytChannelPercent = 0
-    if ytChannelLimit:
-        ytChannelPercent = ytChannelUsage * 100 / ytChannelLimit
+def getYoutubeStats(user_profile):
+    yt_channel_usage = user_profile.ytChannelsToHarvest().count()
+    yt_channel_limit = user_profile.ytChannelsToHarvestLimit
+    yt_channel_percent = 0
+    if yt_channel_limit:
+        yt_channel_percent = yt_channel_usage * 100 / yt_channel_limit
     else:
-        ytChannelLimit = 'inf'
+        yt_channel_limit = 'inf'
 
-    ytPlaylistUsage = aspiraUser.ytPlaylistsToHarvest.count()
-    ytPlaylistLimit = aspiraUser.ytPlaylistsToHarvestLimit
-    ytPlaylistPercent = 0
-    if ytPlaylistLimit:
-        ytPlaylistPercent = ytPlaylistUsage * 100 / ytPlaylistLimit
+    yt_playlist_usage = user_profile.ytPlaylistsToHarvest().count()
+    yt_playlist_limit = user_profile.ytPlaylistsToHarvestLimit
+    yt_playlist_percent = 0
+    if yt_playlist_limit:
+        yt_playlist_percent = yt_playlist_usage * 100 / yt_playlist_limit
     else:
-        ytPlaylistLimit = 'inf'
+        yt_playlist_limit = 'inf'
 
-    collectedYtVids = YTVideo.objects.filter(channel__harvested_by=aspiraUser).count()
-    collectedYtComments = YTChannel.objects.filter(harvested_by=aspiraUser).aggregate(count=Count('comments'))['count']
+    collected_yt_vids = YTVideo.objects.filter(channel__harvested_by__user=user_profile.user).count()
+    collected_yt_comments = YTChannel.objects \
+        .filter(harvested_by__user=user_profile.user) \
+        .aggregate(count=Count('comments'))['count']
 
-    mostActiveChannel = aspiraUser.ytChannelsToHarvest.annotate(vidCount=Count('videos')).order_by('vidCount')
-    if mostActiveChannel.count():
-        mostActiveChannel = mostActiveChannel[0]
-    else:
-        mostActiveChannel = "None"
-    mostActiveYtVid = YTVideo.objects.filter(channel__harvested_by=aspiraUser).order_by('-comment_count')
-    if mostActiveYtVid.count():
-        mostActiveYtVid = mostActiveYtVid[0]
-    else:
-        mostActiveYtVid = "None"
+    most_active_channel = user_profile.ytChannelsToHarvest() \
+        .annotate(vidCount=Count('youtube_channel__videos')) \
+        .order_by('vidCount') \
+        .first()
+    if most_active_channel:
+        most_active_channel = most_active_channel.youtube_channel
+
+    most_active_yt_vid = YTVideo.objects \
+        .filter(channel__harvested_by__user=user_profile.user) \
+        .order_by('-comment_count') \
+        .first()
 
     return {
-        'ytChannelUsage': ytChannelUsage,
-        'ytChannelLimit': ytChannelLimit,
-        'ytChannelPercent': ytChannelPercent,
-        'ytPlaylistUsage': ytPlaylistUsage,
-        'ytPlaylistLimit': ytPlaylistLimit,
-        'ytPlaylistPercent': ytPlaylistPercent,
-        'collectedYtVids': collectedYtVids,
-        'collectedYtComments': collectedYtComments,
-        'mostActiveChannel': mostActiveChannel,
-        'mostActiveYtVid': mostActiveYtVid,
+        'ytChannelUsage': yt_channel_usage,
+        'ytChannelLimit': yt_channel_limit,
+        'ytChannelPercent': yt_channel_percent,
+        'ytPlaylistUsage': yt_playlist_usage,
+        'ytPlaylistLimit': yt_playlist_limit,
+        'ytPlaylistPercent': yt_playlist_percent,
+        'collectedYtVids': collected_yt_vids,
+        'collectedYtComments': collected_yt_comments,
+        'mostActiveChannel': most_active_channel,
+        'mostActiveYtVid': most_active_yt_vid,
     }
 
 
-def getFacebookStats(aspiraUser):
-    fbPageUsage = aspiraUser.facebookPagesToHarvest.count()
-    fbPageLimit = aspiraUser.facebookPagesToHarvestLimit
-    fbPageUsagePercent = 0
-    if fbPageLimit:
-        fbPageUsagePercent = fbPageUsage * 100 / fbPageLimit
+def getFacebookStats(user_profile):
+    fb_page_usage = user_profile.facebookPagesToHarvest().count()
+    fb_page_limit = user_profile.facebookPagesToHarvestLimit
+    fb_page_usage_percent = 0
+    if fb_page_limit:
+        fb_page_usage_percent = fb_page_usage * 100 / fb_page_limit
     else:
-        fbPageLimit = 'inf'
+        fb_page_limit = 'inf'
 
-    collectedFBStatuses = FBPost.objects.filter(from_profile__fbPage__isnull=False) \
-        .filter(from_profile__fbPage__harvested_by=aspiraUser).count()
-    collectedFBcomments = FBPage.objects.filter(harvested_by=aspiraUser) \
+    collected_f_b_statuses = FBPost.objects \
+        .filter(from_profile__fbPage__isnull=False) \
+        .filter(from_profile__fbPage__harvested_by__user=user_profile.user).count()
+
+    collected_f_bcomments = FBPage.objects \
+        .filter(harvested_by__user=user_profile.user) \
         .aggregate(count=Count('fbProfile__posted_comments'))['count']
-    mostActivePage = aspiraUser.facebookPagesToHarvest \
-        .annotate(statusCount=Count('fbProfile__postedStatuses')) \
-        .order_by('statusCount')
-    if mostActivePage.count():
-        mostActivePage = mostActivePage[0]
-    else:
-        mostActivePage = "None"
-    mostActiveStatus = FBPost.objects.filter(from_profile__fbPage__isnull=False) \
-        .filter(from_profile__fbPage__harvested_by=aspiraUser).order_by('-comment_count')
-    if mostActiveStatus.count():
-        mostActiveStatus = mostActiveStatus[0]
-    else:
-        mostActiveStatus = "None"
+
+    most_active_page = user_profile.facebookPagesToHarvest() \
+        .annotate(statusCount=Count('facebook_page__fbProfile__postedStatuses')) \
+        .order_by('statusCount') \
+        .first()
+
+    if most_active_page:
+        most_active_page = most_active_page.facebook_page
+
+    most_active_status = FBPost.objects \
+        .filter(from_profile__fbPage__isnull=False) \
+        .filter(from_profile__fbPage__harvested_by__user=user_profile.user) \
+        .order_by('-comment_count') \
+        .first()
 
     return {
-        'fbPageUsage': fbPageUsage,
-        'fbPageLimit': fbPageLimit,
-        'fbPageUsagePercent': fbPageUsagePercent,
-        'collectedFBStatuses': collectedFBStatuses,
-        'collectedFBcomments': collectedFBcomments,
-        'mostActivePage': mostActivePage,
-        'mostActiveStatus': mostActiveStatus,
+        'fbPageUsage': fb_page_usage,
+        'fbPageLimit': fb_page_limit,
+        'fbPageUsagePercent': fb_page_usage_percent,
+        'collectedFBStatuses': collected_f_b_statuses,
+        'collectedFBcomments': collected_f_bcomments,
+        'mostActivePage': most_active_page,
+        'mostActiveStatus': most_active_status,
     }
 
 

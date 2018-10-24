@@ -89,6 +89,7 @@ function displayCenterPopup(containerId, afterFunction) {
   });
 }
 
-function getPopupContainer() {
-  return $('#centerPopupOutter table tr td #centerPopupInner #centerPopupContent');
+
+function select_popup_content(selector) {
+  return $('#centerPopupContent').find(selector);
 }

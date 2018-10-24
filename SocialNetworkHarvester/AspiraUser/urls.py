@@ -14,7 +14,24 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
 from django.conf.urls import url
-from .views import *
+
+from AspiraUser.views import (
+    addRemoveItemById,
+    removeSelectedItems,
+    userLogin,
+    userRegister,
+    userLogout,
+    editUserSettings,
+    confAgreement,
+    browserList,
+    updatePW,
+    requestResetPW,
+    userDashboard,
+    userLoginPage,
+    userSettings,
+    resetPWPage,
+    search
+)
 
 urlpatterns = [
     url(r'^$', userDashboard),

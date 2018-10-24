@@ -6,7 +6,7 @@ from django.db import models
 
 from Collection.models import Collection, CollectionItem
 from Facebook.models import FBUser, FBReaction, FBComment, FBPost, FBPage
-from Twitter.models import TWUser, Tweet, HashtagHarvester, follower, favorite_tweet, Hashtag
+from Twitter.models import TWUser, Tweet, follower, favorite_tweet, Hashtag
 from Youtube.models import YTChannel, YTVideo, YTPlaylist, Subscription, YTComment, YTPlaylistItem
 
 
@@ -173,7 +173,7 @@ def getModel(modelName):
     if modelName not in MODEL_WHITELIST:
         raise Exception('Invalid or forbidden model name: %s' % modelName)
     return {model.__name__: model for model in [
-        TWUser, Tweet, HashtagHarvester, follower, favorite_tweet, Hashtag,
+        TWUser, Tweet, follower, favorite_tweet, Hashtag,
         FBPage, FBPost, FBComment, FBReaction, FBUser,
         YTChannel, YTVideo, YTPlaylist, Subscription, YTComment, YTPlaylistItem,
         Collection, CollectionItem

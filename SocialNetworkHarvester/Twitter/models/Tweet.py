@@ -7,7 +7,6 @@ from django.db import models
 from SocialNetworkHarvester.loggers.jobsLogger import log
 from SocialNetworkHarvester.utils import get_from_any_or_create, today
 from .Hashtag import Hashtag
-from .HashtagHarvester import HashtagHarvester
 from .TWPlace import TWPlace
 from .TWUser import TWUser
 
@@ -49,7 +48,6 @@ class Tweet(models.Model):
     user_mentions = models.ManyToManyField(TWUser, related_name="mentions")
 
     hashtags = models.ManyToManyField(Hashtag, related_name='tweets')
-    harvested_by = models.ManyToManyField(HashtagHarvester, related_name='harvested_tweets')
 
     _last_updated = models.DateTimeField(null=True)
 

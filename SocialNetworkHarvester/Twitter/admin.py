@@ -78,29 +78,6 @@ class HashtagManager(admin.ModelAdmin):
         }),
     )
 
-@admin.register(HashtagHarvester)
-class HashtagManager(admin.ModelAdmin):
-    fieldsets = (
-        ('', {
-            'fields': (
-                'hashtag',
-            ),
-        }),
-        ('Harvest settings', {
-            'classes': ('collapse', 'closed'),
-            'fields': (
-                '_harvest_since',
-                '_harvest_until',
-                '_last_harvested',
-                '_has_reached_begining'
-            ),
-        }),
-    )
-    readonly_fields = [
-        '_last_harvested',
-        '_has_reached_begining'
-    ]
-
 
 
 

@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
 import os
+from datetime import timedelta
 
 try:
     if 'prod_DB' in os.environ and os.environ['prod_DB'] in ['true', 'True']:
@@ -57,6 +58,12 @@ HARVEST_APPS = [
     'Twitter',
     'Youtube',
 ]
+
+# Longuest period an HarvestItem is allowed to harvest for
+HARVEST_MAX_PERIOD = timedelta(days=30)
+
+# Oldest date from today on which an HarvestItem can begin an harvest.
+HARVEST_SINCE_OLDEST_DATE = timedelta(days=183)  # half a year
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

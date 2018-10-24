@@ -2,7 +2,7 @@ from django.db import models
 
 from Facebook.models import FBPage
 from SocialNetworkHarvester.models import nullable
-from Twitter.models import TWUser, HashtagHarvester
+from Twitter.models import TWUser, Hashtag
 from Youtube.models import YTChannel, YTPlaylist
 from .Collection import Collection
 
@@ -20,7 +20,7 @@ class CollectionItem(models.Model):
         on_delete=models.PROTECT
     )
     twitter_hashtag = models.ForeignKey(
-        HashtagHarvester,
+        Hashtag,
         related_name='collections_included_in',
         **nullable,
         on_delete=models.PROTECT
@@ -89,7 +89,7 @@ class CollectionItem(models.Model):
     def create(collection, item):
         foreign_key = {
             TWUser: 'twitter_user',
-            HashtagHarvester: 'twitter_hashtag',
+            Hashtag: 'twitter_hashtag',
             FBPage: 'facebook_page',
             YTChannel: 'youtube_channel',
             YTPlaylist: 'youtube_playlist'

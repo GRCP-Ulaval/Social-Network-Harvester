@@ -3,7 +3,8 @@ from django.db import models
 
 from Facebook.models import FBPage
 from SocialNetworkHarvester.models import nullable
-from Twitter.models import TWUser, HashtagHarvester
+from SocialNetworkHarvester.utils import x_days_ago, today
+from Twitter.models import TWUser, Hashtag
 from Youtube.models import YTChannel, YTPlaylist
 
 
@@ -15,33 +16,39 @@ class ItemHarvester(models.Model):
     )
     twitter_user = models.ForeignKey(
         TWUser,
-        related_name='collections_included_in',
+        related_name='harvested_by',
         **nullable,
         on_delete=models.PROTECT
     )
     twitter_hashtag = models.ForeignKey(
-        HashtagHarvester,
-        related_name='collections_included_in',
+        Hashtag,
+        related_name='harvested_by',
         **nullable,
         on_delete=models.PROTECT
     )
     facebook_page = models.ForeignKey(
         FBPage,
-        related_name='collections_included_in',
+        related_name='harvested_by',
         **nullable,
         on_delete=models.PROTECT
     )
     youtube_channel = models.ForeignKey(
         YTChannel,
-        related_name='collections_included_in',
+        related_name='harvested_by',
         **nullable,
         on_delete=models.PROTECT
     )
     youtube_playlist = models.ForeignKey(
         YTPlaylist,
-        related_name='collections_included_in',
+        related_name='harvested_by',
         **nullable,
         on_delete=models.PROTECT
+    )
+    harvest_since = models.DateTimeField(
+        default=x_days_ago(30)
+    )
+    harvest_until = models.DateTimeField(
+        default=today()
     )
 
     def foreign_keys(self):
@@ -55,7 +62,7 @@ class ItemHarvester(models.Model):
 
     def clean(self):
         if sum(self.foreign_keys()) != 1:
-            raise Exception('A CollectionItem must have exactly one attribute set in ['
+            raise Exception('An ItemHarvester must have exactly one attribute set in ['
                             'twitter_hashtag, twitter_user, facebook_page, '
                             'youtube_channel, youtube_playlist]')
 
@@ -65,7 +72,7 @@ class ItemHarvester(models.Model):
                 return attr
 
     def __str__(self):
-        return "%s item: %s" % (self.collection, self.get_item())
+        return "%s harvested item: %s" % (self.user, self.get_item())
 
     def str(self):
         item = self.get_item()
@@ -86,19 +93,21 @@ class ItemHarvester(models.Model):
         return self.get_item().get_fields_description()
 
     @staticmethod
-    def create(collection, item):
+    def create(user, item, harvest_since, harvest_until):
         foreign_key = {
             TWUser: 'twitter_user',
-            HashtagHarvester: 'twitter_hashtag',
+            Hashtag: 'twitter_hashtag',
             FBPage: 'facebook_page',
             YTChannel: 'youtube_channel',
             YTPlaylist: 'youtube_playlist'
         }[item.__class__._meta.model]
 
-        current_items = collection.collection_items.filter(**{'%s__isnull' % foreign_key: False})
+        current_items = user.harvested_items.filter(**{'%s__isnull' % foreign_key: False})
 
         if not current_items.filter(**{foreign_key: item}).exists():
             ItemHarvester.objects.create(
-                collection=collection,
-                **{foreign_key: item}
+                user=user,
+                **{foreign_key: item},
+                harvest_since=harvest_since,
+                harvest_until=harvest_until
             )

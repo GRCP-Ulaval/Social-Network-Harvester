@@ -12,10 +12,17 @@
 <section class="overviewContainer">
     <div class="section_menu">
         <span class="section_title document_title">
-            <a class="dark_blue_link" href="https://twitter.com/hashtag/{{ hashtag.term }}" target="_blank">
+            <a
+                class="dark_blue_link"
+                href="https://twitter.com/hashtag/{{ hashtag.term }}"
+                target="_blank"
+            >
                 <b>{{ hashtag }}</b>
             </a>
         </span>
+        {% with tool="addRemoveFromList" item=hashtag %}
+        {% include "tool/misc.html" %}
+        {% endwith %}
     </div>
     <div class="section_overview_content">
         {% include "tool/misc.html" with tool="gridDisplay" item=hashtag currentUser=user %}

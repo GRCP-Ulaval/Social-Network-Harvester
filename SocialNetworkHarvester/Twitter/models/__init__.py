@@ -1,5 +1,5 @@
 from .Hashtag import Hashtag
-from .HashtagHarvester import HashtagHarvester
+#from .HashtagHarvester import HashtagHarvester
 from .TWPlace import TWPlace
 from .TWUser import TWUser, TWUrl
 from .Tweet import Tweet
@@ -35,7 +35,6 @@ def get_twitter_model_by_name(model_name):
         'favorite_tweet': favorite_tweet,
         'url': TWUrl,
         'Hashtag': Hashtag,
-        'HashtagHarvester': HashtagHarvester,
         'TWPlace': TWPlace,
         'TWUser': TWUser,
         'Tweet': Tweet,

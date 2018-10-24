@@ -44,8 +44,7 @@
         </div>
         <script id="functions">
           function addChannelLine() {
-            var container = getPopupContainer();
-            container.find('tr').last().after(function () {
+            select_popup_content('tr').last().after(function () {
               return $(
                 '<tr>' +
                 '<td><input type="text" name="channelURL" placeholder="url" value="" style="width:300px"></td>' +

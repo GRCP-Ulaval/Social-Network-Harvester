@@ -49,8 +49,7 @@
           </div>
           <script id="functions">
             function addPageLine() {
-              var container = getPopupContainer();
-              container.find('tr').last().after(function () {
+              select_popup_content('tr').last().after(function () {
                 return $(
                   '<tr>' +
                   '<td><input type="text" name="pageUrl" placeholder="https://www.facebook.com/..." ' +

@@ -1,6 +1,5 @@
 import re
 from datetime import datetime
-from functools import reduce
 
 import emoji
 from django.contrib.auth.decorators import login_required
@@ -48,6 +47,15 @@ def ajaxBase(request):
         return jsonBadRequest("Bad arguments")
 
 
+def reduce_methods(base, attrs):
+    subattr = base
+    for attr in attrs:
+        subattr = getattr(subattr, attr)
+        if callable(subattr) and hasattr(subattr, '__self__'):
+            subattr = subattr()
+    return subattr
+
+
 def getQueryset(request):
     updateQueryOptions(request)
     modelName = request.GET['modelName']
@@ -65,20 +73,13 @@ def getQueryset(request):
                 if "tableId" in src:
                     selectedSrcs = userSelection.getSavedQueryset(srcModelName, src["tableId"])
                     for selected in selectedSrcs:
-                        subqueryset = reduce(getattr, attrs, selected)
-                        # test if subqueryset is a bound method or not:
-                        if callable(subqueryset) and hasattr(subqueryset, '__self__'):
-                            subqueryset = subqueryset()
+                        subqueryset = reduce_methods(selected, attrs)
                         queryset = queryset | subqueryset.all()
                 else:
                     subqueryset = get_object_or_404(getModel(srcModelName), pk=src['id'])
-                    for attr in attrs:
-                        subqueryset = getattr(subqueryset, attr)
-                        if callable(subqueryset) and hasattr(subqueryset, '__self__'):
-                            subqueryset = subqueryset()
-                    queryset = queryset | subqueryset.all()
+                    queryset = queryset | reduce_methods(subqueryset, attrs).all()
             else:
-                queryset = queryset | reduce(getattr, attrs, srcModel)
+                queryset = queryset | reduce_methods(srcModel, attrs)
     options = userSelection.getQueryOptions(request.GET['tableId'])
     recordsTotal = queryset.count()
     if "exclude_retweets" in options.keys() and options['exclude_retweets']:
