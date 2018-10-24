@@ -92,13 +92,13 @@
               </div>
               <script id="functions">
                 function checkPass() {
-                  var pass0 = $('#centerPopupContent').find('#pass0');
-                  var pass1 = $('#centerPopupContent').find('#pass1');
-                  var pass2 = $('#centerPopupContent').find('#pass2');
-                  var pass0_status = $('#centerPopupContent').find('#pass0_status');
-                  var pass1_status = $('#centerPopupContent').find('#pass1_status');
-                  var pass2_status = $('#centerPopupContent').find('#pass2_status');
-                  var submitButton = $('#centerPopupContent').find('#submitFormButton');
+                  var pass0 = select_popup_content('#pass0');
+                  var pass1 = select_popup_content('#pass1');
+                  var pass2 = select_popup_content('#pass2');
+                  var pass0_status = select_popup_content('#pass0_status');
+                  var pass1_status = select_popup_content('#pass1_status');
+                  var pass2_status = select_popup_content('#pass2_status');
+                  var submitButton = select_popup_content('#submitFormButton');
                   if (pass1.prop('value').length < 6) {
                     pass1_status.html('<span style="color:#ff6666" ' +
                       'title="Minimum de 6 caractères">&#10007</span>');
@@ -128,9 +128,9 @@
                 };
 
                 function submitForm() {
-                  var pass0 = $('#centerPopupContent').find('#pass0');
-                  var pass1 = $('#centerPopupContent').find('#pass1');
-                  var pass2 = $('#centerPopupContent').find('#pass2');
+                  var pass0 = select_popup_content('#pass0');
+                  var pass1 = select_popup_content('#pass1');
+                  var pass2 = select_popup_content('#pass2');
                   $.post('/user/forms/updatePW', {
                       'pass0': pass0.prop('value'),
                       'pass1': pass1.prop('value'),

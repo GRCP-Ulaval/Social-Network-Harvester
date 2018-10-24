@@ -669,7 +669,7 @@ function executeAjaxAndDisplayMessages(url, tableId){
             reloadTable(tableId)
             if (response['status'] == 'ok') {
                 displayNewMessages(response['messages'])
-            } else if (response['status'] == 'exception') {
+            } else if (response['status'] == 'errors') {
                 displayNewErrors(response['errors'])
             };
         }

@@ -164,7 +164,7 @@ def resetUserSelection(request):
 
 
 MODEL_WHITELIST = ['FBPage', 'FBPost', 'FBComment', 'FBReaction', 'FBUser',
-                   'Tweet', 'TWUser', "HashtagHarvester", "Hashtag", "favorite_tweet", "follower",
+                   'Tweet', 'TWUser', "Hashtag", "favorite_tweet", "follower",
                    'YTChannel', 'YTVideo', 'YTPlaylist', 'Subscription', 'YTComment', 'YTPlaylistItem',
                    'Collection', 'CollectionItem', 'ItemHarvester'
                    ]

@@ -21,8 +21,11 @@
           <div id="help">
             Ajoutez une nouvelle page Facebook à votre liste en collant l'url de la page ci-dessous.
           </div>
-          <div id="content">
-            <form style="max-width:450px;" method="post" action="/facebook/forms/FBAddPage"
+          <div id="content" style="text-align: center">
+            <br>
+            <span>Cette fonctionnalité est désactivée pour l'instant.</span>
+            <br><br>
+            <!--form style="max-width:450px;" method="post" action="/facebook/forms/FBAddPage"
                   enctype="multipart/form-data" id="newPageForm">
               {% csrf_token %}
               <p>Ajoutez toutes les urls:</p>
@@ -45,7 +48,7 @@
                 <br><br>
               </div>
               <center><input type="submit" value="Soumetre" style="right:0px;"></input></center>
-            </form>
+            </form -->
           </div>
           <script id="functions">
             function addPageLine() {
@@ -75,8 +78,8 @@
                 }
                 ;
               });
-              $('#centerPopupContent').find('#newPageForm').unbind('submit');
-              $('#centerPopupContent').find('#newPageForm').submit(function (event) {
+              select_popup_content('#newPageForm').unbind('submit');
+              select_popup_content('#newPageForm').submit(function (event) {
                 event.preventDefault();
                 var formData = new FormData($(this)[0]);
                 $('#centerPopupInner').addClass('waitingMask');

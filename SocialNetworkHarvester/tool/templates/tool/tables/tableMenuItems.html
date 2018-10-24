@@ -46,7 +46,8 @@
 <div class="popup" id="add_to_collection_{{ table_id }}">
   <div id="title">Assigner à une collecte</div>
   <div id="help">
-    Ajouter les items selectionnés à une collecte thématique. Celle-ci sera accessible par les autres utilisateurs d'Aspira, mais ne pourra être modifié que par vous.
+    Ajouter les items selectionnés à une collecte thématique. Celle-ci sera accessible par les autres utilisateurs
+    d'Aspira, mais ne pourra être modifié que par vous.
   </div>
   <div id="content">
     <center>
@@ -83,10 +84,10 @@
     }
 
     function submit_add_to_collection_form(table_id, model_name) {
-      let collection_id = $('#centerPopupContent').find('#selected_collection_' + table_id).val()
+      let collection_id = select_popup_content('#selected_collection_' + table_id).val();
       let url = '/collection/ajax/addItems?pageURL=' + window.location.pathname + '&tableId=' +
-        table_id + '&collection_id=' + collection_id+'&modelName='+model_name;
-      executeAjaxAndDisplayMessages(url, '#'+table_id);
+        table_id + '&collection_id=' + collection_id + '&modelName=' + model_name;
+      executeAjaxAndDisplayMessages(url, '#' + table_id);
     }
   </script>
 </div>

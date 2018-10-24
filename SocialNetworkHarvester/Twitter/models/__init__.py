@@ -1,5 +1,4 @@
 from .Hashtag import Hashtag
-#from .HashtagHarvester import HashtagHarvester
 from .TWPlace import TWPlace
 from .TWUser import TWUser, TWUrl
 from .Tweet import Tweet

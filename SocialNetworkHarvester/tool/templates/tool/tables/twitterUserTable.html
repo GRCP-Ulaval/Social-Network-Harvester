@@ -24,52 +24,47 @@
           à un nom d'utilisateur distinct et valide.
         </div>
         <div id="content">
-          <form style="max-width:450px;" method="post" action="/twitter/addUser"
+          <form style="max-width:450px; text-align: center" method="post" action="/twitter/addUser"
                 enctype="multipart/form-data" id="newUserForm">
             {% csrf_token %}
             <p>Écrivez tous les noms d'utilisateurs (les "screen_name") ainsi que les
               dates voulus:</p>
-            <center>
-              <input id='slot_1' type="text" name="screen_name" placeholder="Nom d'utilisateur" value="">
-              <br>
-              Date de debut :<input type="date">
-              <br>
-              Date de fin : <input type="date">
-              <p></p>
-              <br>
-              <br>
-              <div class="plusIconInput" onclick="addUserLine(this)">
-                {% include "tool/icons.html" with x=3 y=3 %}
-              </div>
-            </center>
-            <hr>
-            <p>Alternativement, sélectionnez un fichier .csv:</p>
-            <input type="file" name="Browse" size="chars">
+            <table>
+              <tr>
+                <th>Nom d'utilisateur</th>
+                <th>Date de début de collecte</th>
+                <th>Date de fin de collecte</th>
+              </tr>
+              <tr>
+                <td><input type="text" name="screen_name_0" placeholder="Nom d'utilisateur" value=""></td>
+                <td><input type="date" name="since_0"></td>
+                <td><input type="date" name="until_0"></td>
+              </tr>
+              <tr>
+                <td><input type="text" name="screen_name_1" placeholder="Nom d'utilisateur" value=""></td>
+                <td><input type="date" name="since_1"></td>
+                <td><input type="date" name="until_1"></td>
+              </tr>
+              <tr>
+                <td><input type="text" name="screen_name_2" placeholder="Nom d'utilisateur" value=""></td>
+                <td><input type="date" name="since_2"></td>
+                <td><input type="date" name="until_2"></td>
+              </tr>
+            </table>
             <br><br>
-            <center><input type="submit" value="Soumettre" style="right:0px;"></center>
+            <input type="submit" value="Soumettre" style="right:0px;">
+            <br><br>
           </form>
         </div>
         <script id="functions">
-          function addUserLine(elem) {
-            $(elem).parent().children('p').last().after(function () {
-              return $(
-                '<input type=\'text\' name=\'screen_name\' placeholder="Nom d\'utilisateur">'
-                + '<br>'
-                + 'Date de debut :<input type="date">'
-                + '<br>'
-                + 'Date de fin : <input type="date">'
-                + '<p></p>');
-            });
-          }
-
           function addTWUserFormPopup() {
             displayCenterPopup('addNewTwitterUser');
-            $('#centerPopupContent').find('#newUserForm').unbind('submit');
-            $('#centerPopupContent').find('#newUserForm').submit(function (event) {
+            select_popup_content('#newUserForm').unbind('submit');
+            select_popup_content('#newUserForm').submit(function (event) {
               event.preventDefault();
               var formData = new FormData($(this)[0]);
-              $('#centerPopupInner').addClass('waitingMask');
-              $('#centerPopupContent').addClass('unselectable');
+              set_popup_waiting(true);
+              set_popup_selectable(false);
               $.ajax({
                 url: $(this).attr('action'),
                 type: 'POST',
@@ -77,17 +72,14 @@
                 processData: false,
                 contentType: false,
                 success: function (response) {
-                  $('#centerPopupInner').removeClass('waitingMask');
-                  $('#centerPopupContent').removeClass('unselectable');
-                  $('#centerPopupOutter').hide();
+                  closeCenterPopup();
+                  if(response['status'] === 'success'){
+                    clear_last_popup_content()
+                  }
+                  set_popup_waiting(false);
+                  set_popup_selectable(true);
                   reloadTable('#TWUserTable');
-                  if (typeof response['messages'] != 'undefined') {
-                    displayNewMessages(response['messages']);
-                  }
-                  if (typeof response['errors'] != 'undefined') {
-                    displayNewErrors(response['errors']);
-                  }
-                  ;
+                  manage_ajax_response(response);
                 },
               });
             });
@@ -157,7 +149,7 @@
   <div class="section_content">
     <table class="display" id="TWUserTable" width="100%" drawn='False'>
       <script class="tableVars">
-        var modelName = 'ItemHarvester';
+        var modelName = 'TWUser';
         var srcs = [
           {
             attr: 'twitterUsersToHarvest',
@@ -166,23 +158,23 @@
         var columns = [
           {
             'colStr': 'Nom',
-            'fields': ['twitter_user__name', 'twitter_user__getLink'],
+            'fields': ['name', 'getLink'],
             'render': function (data, type, row) {
-              if (row['twitter_user__name'] == null) {
+              if (row['name'] == null) {
                 return undefinedTag();
               } else {
-                return tableToolLink(row['twitter_user__getLink'],
-                  truncate_text(row['twitter_user__name'], 30, true)
+                return tableToolLink(row['getLink'],
+                  truncate_text(row['name'], 30, true),
                 );
               }
             },
           },
           {
             'colStr': 'Nom d\'utilisateur',
-            'fields': ['twitter_user__screen_name', 'twitter_user__error_on_update'],
+            'fields': ['screen_name', 'error_on_update'],
             'render': function (data, type, row) {
-              var str = '<span>' + row['twitter_user__screen_name'] + '</span>';
-              if (row['twitter_user__error_on_update']) {
+              var str = '<span>' + row['screen_name'] + '</span>';
+              if (row['error_on_update']) {
                 str = `<span
                         style="cursor:pointer;"
                         title="Cet utilisateur n'existe pas ou ses informations sont privées."
@@ -195,46 +187,46 @@
           },
           {
             'colStr': 'Nombre d\'abonnés',
-            'fields': ['twitter_user__followers_count'],
+            'fields': ['followers_count'],
             'render': function (data, type, row) {
-              if (row['twitter_user__followers_count'] == null) {
+              if (row['followers_count'] == null) {
                 return '';
               }
               ;
-              return centeredTag(row['twitter_user__followers_count']);
+              return centeredTag(row['followers_count']);
             },
           },
           {
             'colStr': 'Nombre d\'abonnements',
-            'fields': ['twitter_user__friends_count'],
+            'fields': ['friends_count'],
             'render': function (data, type, row) {
-              if (row['twitter_user__friends_count'] == null) {
+              if (row['friends_count'] == null) {
                 return '';
               }
               ;
-              return centeredTag(row['twitter_user__friends_count']);
+              return centeredTag(row['friends_count']);
             },
           },
           {
             'colStr': 'Nombre de status',
-            'fields': ['twitter_user__statuses_count'],
+            'fields': ['statuses_count'],
             'render': function (data, type, row) {
-              if (row['twitter_user__statuses_count'] == null) {
+              if (row['statuses_count'] == null) {
                 return '';
               }
               ;
-              return centeredTag(row['twitter_user__statuses_count']);
+              return centeredTag(row['statuses_count']);
             },
           },
           {
             'colStr': 'Location',
-            'fields': ['twitter_user__location'],
+            'fields': ['location'],
             'render': function (data, type, row) {
-              if (row['twitter_user__location'] == null) {
+              if (row['location'] == null) {
                 return '';
               }
               ;
-              return truncate_text(row['twitter_user__location'], 50, true);
+              return truncate_text(row['location'], 50, true);
             },
           },
         ];

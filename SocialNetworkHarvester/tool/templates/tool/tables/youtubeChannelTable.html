@@ -16,57 +16,55 @@
       <div class="popup" id="addNewChannel">
         <div id="title">Ajouter une nouvelle chaîne</div>
         <div id="help">
-          Ajoutez une nouvelle chaîne en collant son URL dans le champ indiqué
+          Ajoutez une nouvelle chaîne en collant son URL dans le champ indiqué et en indiquant
+          les dates de début et de fin de sa collecte.
         </div>
         <div id="content">
-          <form style="max-width:450px;" method="post" action="/youtube/forms/YTAddChannel"
-                enctype="multipart/form-data" id="addChannelPopupForm">
+          <form
+              style="text-align: center;"
+              method="post"
+              action="/youtube/forms/YTAddChannel"
+              enctype="multipart/form-data"
+              id="addChannelPopupForm"
+          >
             {% csrf_token %}
             <p>Spécifiez toutes les urls de chaînes:</p>
-            <center>
-              <table>
-                <tr>
-                </tr>
-              </table>
-              <br>
-              <div onclick="addChannelLine()" id="addLineButton">
-                <div class="plusIconInput">
-                  {% include "tool/icons.html" with x=3 y=3 %}
-                </div>
-              </div>
-            </center>
-            <hr>
-            <p>Alternativement, sélectionnez un fichier .csv:</p>
-            <input type="file" name="Browse" size="chars">
+            <table>
+              <tr>
+                <th>URL de la chaîne</th>
+                <th>Début de la collecte</th>
+                <th>Fin de la collecte</th>
+              </tr>
+              <tr>
+                <td><input type="text" name="url_0" placeholder="url"></td>
+                <td><input type="date" name="since_0"></td>
+                <td><input type="date" name="until_0"></td>
+              </tr>
+              <tr>
+                <td><input type="text" name="url_1" placeholder="url"></td>
+                <td><input type="date" name="since_1"></td>
+                <td><input type="date" name="until_1"></td>
+              </tr>
+              <tr>
+                <td><input type="text" name="url_2" placeholder="url"></td>
+                <td><input type="date" name="since_2"></td>
+                <td><input type="date" name="until_2"></td>
+              </tr>
+            </table>
             <br><br>
-            <center><input type="submit" value="Submit" style="right:0px;"></input></center>
+            <input type="submit" value="Soummettre">
+            <br><br>
           </form>
         </div>
         <script id="functions">
-          function addChannelLine() {
-            select_popup_content('tr').last().after(function () {
-              return $(
-                '<tr>' +
-                '<td><input type="text" name="channelURL" placeholder="url" value="" style="width:300px"></td>' +
-                '</tr>',
-              );
-            });
-            $('.datePicker').datepicker();
-          }
-
           function addChannelPopup() {
-            var addLine = lastPopupId != 'addNewChannel';
-            displayCenterPopup('addNewChannel', function () {
-              if (addLine) {
-                addChannelLine();
-              }
-              ;
-            });
-            $('#centerPopupContent').find('#addChannelPopupForm').unbind('submit');
-            $('#centerPopupContent').find('#addChannelPopupForm').submit(function (event) {
+            displayCenterPopup('addNewChannel');
+            select_popup_content('#addChannelPopupForm').unbind('submit');
+            select_popup_content('#addChannelPopupForm').submit(function (event) {
               event.preventDefault();
               var formData = new FormData($(this)[0]);
-              $('#centerPopupInner').addClass('waitingMask');
+              set_popup_waiting(true);
+              set_popup_selectable(false);
               $.ajax({
                 url: $(this).attr('action'),
                 type: 'POST',
@@ -74,15 +72,11 @@
                 processData: false,
                 contentType: false,
                 success: function (response) {
-                  $('#centerPopupInner').removeClass('waitingMask');
-                  $('#centerPopupOutter').hide();
+                  closeCenterPopup();
+                  set_popup_waiting(false);
+                  set_popup_selectable(true);
+                  manage_ajax_response(response);
                   reloadTable('#YTChannelTable');
-                  if (response['status'] == 'ok') {
-                    displayNewMessages(response['messages']);
-                  } else if (response['status'] == 'exception') {
-                    displayNewErrors(response['errors']);
-                  }
-                  ;
                 },
               });
             });

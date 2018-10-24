@@ -29,11 +29,8 @@ def jsonUnauthorizedError():
 
 def jsonUnknownError():
     return jResponse({
-        'error': {
-            'code': 500,
-            'message': 'Internal Server Error',
-            'reason': 'An unknown error has occured while proceeding the request. Please contact the administrator.'
-        }
+        'status': 'error',
+        'errors': ['Une erreur inconnue est survenue. Veuillez réessayer.']
     })
 
 
@@ -85,11 +82,11 @@ def jsonNotFound():
     })
 
 
-def jsonMessage(messages):
+def jsonMessages(messages):
     if not isinstance(messages, list):
         messages = [messages]
     return jResponse({
-        'status': 'messages',
+        'status': 'ok',
         'messages': messages
     })
 

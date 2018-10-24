@@ -4,6 +4,8 @@ from django.core.exceptions import MultipleObjectsReturned
 from django.db import models, IntegrityError
 from django.utils.timezone import now, utc
 
+from SocialNetworkHarvester.settings import HARVEST_SINCE_OLDEST_DATE, HARVEST_MAX_PERIOD
+
 
 def djangoNow():
     return now().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=utc)
@@ -45,3 +47,29 @@ def get_from_any_or_create(table, **kwargs):
         except IntegrityError:  # sometimes the table entry is created while this run...
             return get_from_any_or_create(table, **kwargs)
         return item, True
+
+
+def validate_harvest_dates(harvest_since, harvest_until):
+    if not harvest_since or not harvest_until:
+        raise InvalidHarvestDatesException('Veuillez spécifier les dates de début et de fin.')
+    try:
+        since = datetime.strptime(harvest_since, '%Y-%m-%d').replace(tzinfo=utc)
+        until = datetime.strptime(harvest_until, '%Y-%m-%d').replace(tzinfo=utc)
+    except ValueError:
+        raise InvalidHarvestDatesException(f"L'une des dates spécifiée {harvest_since}, "
+                                           f"{harvest_until} est invalide.")
+    if since >= until:
+        raise InvalidHarvestDatesException('La date de fin doit être après la date de début!')
+    if since + HARVEST_MAX_PERIOD < until:
+        raise InvalidHarvestDatesException(
+            f"La durée maximale d'une collecte est de {HARVEST_MAX_PERIOD.days} jours."
+        )
+    if since + HARVEST_SINCE_OLDEST_DATE < today():
+        raise InvalidHarvestDatesException(
+            f"La date de début d'une collecte ne peut pas remonter à avant les 6 derniers mois. "
+            f"Limite actuelle: {(today()-HARVEST_SINCE_OLDEST_DATE).strftime('%Y-%m-%d')}."
+        )
+
+
+class InvalidHarvestDatesException(Exception):
+    pass

@@ -5,7 +5,8 @@ import re
 
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
-from django.shortcuts import *
+from django.http import HttpResponse
+from django.shortcuts import render
 
 from AspiraUser.models import getUserSelection, resetUserSelection
 from SocialNetworkHarvester.loggers.viewsLogger import logError
@@ -117,7 +118,7 @@ def linechart_userActivity(request):
     chartGen = LinechartGenerator()
     tableSelection = getUserSelection(request)
     selectedTWUsers = tableSelection.getSavedQueryset('TWUser', 'TWUserTable')
-    selectedTWHashHarvs = tableSelection.getSavedQueryset('HashtagHarvester', 'TWHashtagTable')
+    selectedTWHashHarvs = tableSelection.getSavedQueryset('Hashtag', 'TWHashtagTable')
     selectedFBPages = tableSelection.getSavedQueryset('FBPage', 'FacebookPagesPosts')
 
     if selectedTWHashHarvs.count() + selectedTWUsers.count() + selectedFBPages.count() > 10:
@@ -132,8 +133,8 @@ def linechart_userActivity(request):
                               .annotate(date_count=Count('id')))
 
     for source in selectedTWHashHarvs:
-        chartGen.addColum({'label': '#%s (Tweets)' % source.hashtag.term, 'type': 'number'})
-        tweets = source.hashtag.tweets.exclude(created_at__isnull=True)
+        chartGen.addColum({'label': '#%s (Tweets)' % source.term, 'type': 'number'})
+        tweets = source.tweets.exclude(created_at__isnull=True)
         chartGen.insertValues(tweets.extra({'date_created': "date(created_at)"}) \
                               .values('date_created') \
                               .annotate(date_count=Count('id')))
@@ -264,16 +265,16 @@ def generatepieChartTable(request):
 def piechart_location(request):
     threshold = 1
     if 'visibility_threshold' in request.GET: threshold = int(request.GET['visibility_threshold'])
-    chartGen = PieChartGenerator()
-    tableSelection = getUserSelection(request)
-    twUserFollowerLoc = tableSelection.getSavedQueryset('TWUser', 'TWUserTableFollowerLoc')
-    selectedTWHashHarvs = tableSelection.getSavedQueryset('HashtagHarvester', 'TWHashtagTable')
+    chart_gen = PieChartGenerator()
+    table_selection = getUserSelection(request)
+    twuser_follower_location = table_selection.getSavedQueryset('TWUser', 'TWUserTableFollowerLoc')
+    selected_twitter_hashtags = table_selection.getSavedQueryset('Hashtag', 'TWHashtagTable')
 
-    if selectedTWHashHarvs.count() + twUserFollowerLoc.count() > 10:
+    if selected_twitter_hashtags.count() + twuser_follower_location.count() > 10:
         raise Exception('Veuillez sélectionner au plus 10 éléments')
 
     followers = follower.objects.none()
-    for source in twUserFollowerLoc:
+    for source in twuser_follower_location:
         followers = followers | source.followers.filter(ended__isnull=True)
     locations = followers \
         .values('value__location') \
@@ -281,13 +282,13 @@ def piechart_location(request):
         .filter(c__gte=threshold)
     for location in locations:  # TODO: This can take an awful long time. Optimise this.
         if location['value__location']:
-            cleanKey = location['value__location'].split(',')[0]
-            cleanKey = cleanKey.title()
-            chartGen.put(cleanKey, location['c'])
+            clean_key = location['value__location'].split(',')[0]
+            clean_key = clean_key.title()
+            chart_gen.put(clean_key, location['c'])
 
     tweets = Tweet.objects.none()
-    for harv in selectedTWHashHarvs:
-        tweets = tweets | harv.hashtag.tweets.filter(deleted_at__isnull=True)
+    for harv in selected_twitter_hashtags:
+        tweets = tweets | harv.tweets.filter(deleted_at__isnull=True)
     posters_locations = \
         tweets.distinct() \
             .values('user__location') \
@@ -295,10 +296,10 @@ def piechart_location(request):
             .filter(c__gte=threshold)
     for location in posters_locations:
         if location['user__location']:
-            cleanKey = location['user__location'].split(',')[0]
-            cleanKey = cleanKey.title()
-            chartGen.put(cleanKey, location['c'])
-    return chartGen.generate()
+            clean_key = location['user__location'].split(',')[0]
+            clean_key = clean_key.title()
+            chart_gen.put(clean_key, location['c'])
+    return chart_gen.generate()
 
 
 #####################  GEOCHART  #############################

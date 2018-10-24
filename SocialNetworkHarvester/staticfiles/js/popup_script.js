@@ -1,7 +1,7 @@
 $(document).ready(function () {
   $('#centerPopupCloser').click(function () {
     closeCenterPopup();
-    clear_last_popup_content()
+    clear_last_popup_content();
   });
   $('body').on('mouseover', '#centerPopupHelper', function (event) {
     $('#centerPopupHelpText').position({
@@ -52,6 +52,8 @@ function closeCenterPopup() {
         innerPopup.unbind('clickoutside');
       });
   }
+  set_popup_waiting(false);
+  set_popup_selectable(true);
 }
 
 function displayCenterPopup(containerId, afterFunction) {
@@ -96,4 +98,21 @@ function select_popup_content(selector) {
 
 function clear_last_popup_content() {
   lastPopupId = null;
+}
+
+function set_popup_waiting(val) {
+  if (val) {
+    $('#centerPopupInner').addClass('waitingMask');
+  } else {
+    $('#centerPopupInner').removeClass('waitingMask');
+  }
+}
+
+
+function set_popup_selectable(val) {
+  if (val) {
+    $('#centerPopupContent').removeClass('unselectable');
+  } else {
+    $('#centerPopupContent').addClass('unselectable');
+  }
 }

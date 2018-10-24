@@ -9,12 +9,17 @@
 </div>
 
 {% elif tool == "addRemoveFromList" %}
-{% if item|in_harvest_list:user.userProfile %}
+{% with harvester=item|get_item_harvester:user.userProfile %}
+{% if harvester %}
 <span class="document_title document_menu" title="Retirer de ma liste de collecte"
       style="background-color : rgba(0, 222, 0, 0.85);">
     <a onclick=displayCenterPopup("removeFromList")>
-        {% include "tool/icons.html" with x=5 y=5 style='height:15px;width:15px;vertical-align:middle'%}
-        Ajouté à ma liste
+      {% with x=5 y=5 style='height:15px;width:15px;vertical-align:middle' %}
+      {% include "tool/icons.html" %}
+      {% endwith %}
+
+      Présentement collecté du <i>{{ harvester.harvest_since_str }}</i>
+      au <i>{{ harvester.harvest_until_str }}</i>
     </a>
 </span>
 <div class="popup" id="removeFromList">
@@ -64,7 +69,7 @@
       </div>
     </div>
     {% endif %}
-
+    {% endwith %}
     <script id="functions">
       function cancelOperation() {
         closeCenterPopup();

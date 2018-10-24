@@ -54,7 +54,7 @@
           });
         }
 
-        $('#centerPopupContent').find('#collection_search_input').keyup(function (event) {
+        select_popup_content('#collection_search_input').keyup(function (event) {
           debounce(function () {
             search_collection(event.target.value);
           }, 500);
@@ -64,26 +64,26 @@
         });
 
         function search_collection(query) {
-          $('#centerPopupContent').find('#collection_search_results_spinner').show();
-          $('#centerPopupContent').find('#collection_search_results').hide();
-          $('#centerPopupContent').find('#follow_collection_submit_button').hide();
-          $('#centerPopupContent').find('#collection_list_no_results').hide();
+          select_popup_content('#collection_search_results_spinner').show();
+          select_popup_content('#collection_search_results').hide();
+          select_popup_content('#follow_collection_submit_button').hide();
+          select_popup_content('#collection_list_no_results').hide();
           $.get('/collection/ajax/search', {
             'query': query,
           }, function (response) {
-            $('#centerPopupContent').find('#collection_search_results_spinner').hide();
+            select_popup_content('#collection_search_results_spinner').hide();
             if (response.data.length > 0) {
               display_collection_list(response.data);
-              $('#centerPopupContent').find('#collection_search_results').show();
-              $('#centerPopupContent').find('#follow_collection_submit_button').show();
+              select_popup_content('#collection_search_results').show();
+              select_popup_content('#follow_collection_submit_button').show();
             } else {
-              $('#centerPopupContent').find('#collection_list_no_results').show();
+              select_popup_content('#collection_list_no_results').show();
             }
           });
         }
 
         function display_collection_list(collections) {
-          result_table = $('#centerPopupContent').find('#collection_search_results');
+          result_table = select_popup_content('#collection_search_results');
           result_table.html($('#collection_search_results_header').html());
           set_select_all_checkbox();
           collections.forEach(function (item, i) {
@@ -106,9 +106,9 @@
         }
 
         function set_select_all_checkbox() {
-          let master_select = $('#centerPopupContent').find('#selection_table_all_selector');
+          let master_select = select_popup_content('#selection_table_all_selector');
           master_select.click(function (event) {
-            $('#centerPopupContent').find('.collection_selector').each(function (i, item) {
+            select_popup_content('.collection_selector').each(function (i, item) {
               item.checked = event.target.checked;
               $(item).click(function (event) {
                 master_select.attr('checked', false);
@@ -118,7 +118,7 @@
         }
 
         function submit_follow_collections() {
-          $('#centerPopupContent').find('#collection_follow_form').submit();
+          select_popup_content('#collection_follow_form').submit();
         }
       </script>
         </div>

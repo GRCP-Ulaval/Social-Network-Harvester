@@ -45,19 +45,19 @@ class UserProfile(models.Model):
         return not self.youtubeApp_parameters_error
 
     def twitterUsersToHarvest(self):
-        return self.user.harvested_items.filter(twitter_user__isnull=False)
+        return TWUser.objects.filter(harvested_by__user=self.user)
 
     def twitterHashtagsToHarvest(self):
-        return self.user.harvested_items.filter(twitter_hashtag__isnull=False)
+        return Hashtag.objects.filter(harvested_by__user=self.user)
 
     def facebookPagesToHarvest(self):
-        return self.user.harvested_items.filter(facebook_page__isnull=False)
+        return FBPage.objects.filter(harvested_by__user=self.user)
 
     def ytChannelsToHarvest(self):
-        return self.user.harvested_items.filter(youtube_channel__isnull=False)
+        return YTChannel.objects.filter(harvested_by__user=self.user)
 
     def ytPlaylistsToHarvest(self):
-        return self.user.harvested_items.filter(youtube_playlist__isnull=False)
+        return YTPlaylist.objects.filter(harvested_by__user=self.user)
 
     def get_harvest_limit(self, model):
         return {
@@ -100,15 +100,15 @@ class UserProfile(models.Model):
 
     def get_item_harvester(self, item):
         if isinstance(item, TWUser):
-            return self.user.harvested_items.get(twitter_user=item)
+            return self.user.harvested_items.filter(twitter_user=item).first()
         elif isinstance(item, Hashtag):
-            return self.user.harvested_items.get(twitter_hashtag=item)
+            return self.user.harvested_items.filter(twitter_hashtag=item).first()
         elif isinstance(item, FBPage):
-            return self.user.harvested_items.get(facebook_page=item)
+            return self.user.harvested_items.filter(facebook_page=item).first()
         elif isinstance(item, YTChannel):
-            return self.user.harvested_items.get(youtube_channel=item)
+            return self.user.harvested_items.filter(youtube_channel=item).first()
         elif isinstance(item, YTPlaylist):
-            return self.user.harvested_items.get(youtube_playlist=item)
+            return self.user.harvested_items.filter(youtube_playlist=item).first()
         else:
             raise Exception(f'Invalid item instance: "{item.__class__}"')
 

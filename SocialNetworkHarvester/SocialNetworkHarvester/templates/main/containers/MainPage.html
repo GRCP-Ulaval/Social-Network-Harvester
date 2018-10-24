@@ -115,8 +115,8 @@
           }
 
           function checkEmailValid() {
-            var emailInput = $('#centerPopupContent').find('#emailInput');
-            var emailSubmitButton = $('#centerPopupContent').find('#emailSubmitButton');
+            var emailInput = select_popup_content('#emailInput');
+            var emailSubmitButton = select_popup_content('#emailSubmitButton');
             if (emailInput.prop('value') != 'undefined' &&
               emailInput.prop('value') != '' &&
               emailInput[0].validity.valid) {
@@ -130,8 +130,8 @@
 
           function submitPasswordResetForm() {
             if (checkEmailValid()) {
-              var emailInput = $('#centerPopupContent').find('#emailInput');
-              $('#centerPopupContent').find('#emailSubmitButton').prop('disabled', true);
+              var emailInput = select_popup_content('#emailInput');
+              select_popup_content('#emailSubmitButton').prop('disabled', true);
               $.post('/user/forms/resetPW', {
                   'email': emailInput.prop('value'),
                   'csrfmiddlewaretoken': '{{ csrf_token }}',

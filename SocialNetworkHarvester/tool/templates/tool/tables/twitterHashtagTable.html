@@ -33,60 +33,52 @@
           <br> est un format valide.
         </div>
         <div id="content">
-          <form style="max-width:450px;" method="post" action="/twitter/addHashtag"
-                enctype="multipart/form-data" id="addHashtagPopupForm">
+          <form
+              style="text-align: center"
+              method="post"
+              action="/twitter/addHashtag"
+              enctype="multipart/form-data"
+              id="addHashtagPopupForm"
+          >
             {% csrf_token %}
             <p>Spécifiez tous les hashtags:</p>
-            <center>
-              <table>
-                <tr>
-                  <td>Terme</td>
-                  <td>Date de début</td>
-                  <td>Date de fin</td>
-                </tr>
-              </table>
-              <br>
-              <div onclick="addHashtagLine()" id="addLineButton">
-                <div class="plusIconInput">
-                  {% include "tool/icons.html" with x=3 y=3 %}
-                </div>
-              </div>
-            </center>
-            <hr>
-            <p>Alternativement, sélectionnez un fichier .csv:</p>
-            <input type="file" name="Browse" size="chars">
+            <table>
+              <tr>
+                <th>Terme</th>
+                <th>Date de début</th>
+                <th>Date de fin</th>
+              </tr>
+              <tr>
+                <td><input type="text" name="term_0" placeholder="hashtag"></td>
+                <td><input type="date" name="since_0"></td>
+                <td><input type="date" name="until_0"></td>
+              </tr>
+              <tr>
+                <td><input type="text" name="term_1" placeholder="hashtag"></td>
+                <td><input type="date" name="since_1"></td>
+                <td><input type="date" name="until_1"></td>
+              </tr>
+              <tr>
+                <td><input type="text" name="term_2" placeholder="hashtag"></td>
+                <td><input type="date" name="since_2"></td>
+                <td><input type="date" name="until_2"></td>
+              </tr>
+            </table>
             <br><br>
-            <center><input type="submit" value="Soumettre" style="right:0px;"></input></center>
+            <input type="submit" value="Soummettre">
+            <br><br>
           </form>
         </div>
         <script id="functions">
-          function addHashtagLine() {
-            select_popup_content('tr').last().after(function () {
-              return $(
-                '<tr>' +
-                '<td><input type="text" name="hashtags" placeholder="Terme" value=""></td>' +
-                '<td><input type="text" name="starts" class="datePicker"></td> ' +
-                '<td><input type="text" name="ends" class="datePicker"></td>' +
-                '</tr>',
-              );
-            });
-            $('.datePicker').datepicker();
-          }
 
           function addAshtagPopup() {
-            var addLine = lastPopupId != 'addNewHashtag';
-            displayCenterPopup('addNewHashtag', function () {
-              if (addLine) {
-                addHashtagLine();
-              }
-              ;
-            });
-            $('#centerPopupContent').find('#addHashtagPopupForm').unbind('submit');
-            $('#centerPopupContent').find('#addHashtagPopupForm').submit(function (event) {
+            displayCenterPopup('addNewHashtag');
+            select_popup_content('#addHashtagPopupForm').unbind('submit');
+            select_popup_content('#addHashtagPopupForm').submit(function (event) {
               event.preventDefault();
               var formData = new FormData($(this)[0]);
-              $('#centerPopupInner').addClass('waitingMask');
-              $('#centerPopupContent').addClass('unselectable');
+              set_popup_waiting(true);
+              set_popup_selectable(false);
               $.ajax({
                 url: $(this).attr('action'),
                 type: 'POST',
@@ -94,16 +86,11 @@
                 processData: false,
                 contentType: false,
                 success: function (response) {
-                  $('#centerPopupInner').removeClass('waitingMask');
-                  $('#centerPopupContent').removeClass('unselectable');
-                  $('#centerPopupOutter').hide();
+                  closeCenterPopup();
+                  set_popup_waiting(false);
+                  set_popup_selectable(true);
+                  manage_ajax_response(response);
                   reloadTable('#TWHashtagTable');
-                  if (response['status'] == 'ok') {
-                    displayNewMessages(response['messages']);
-                  } else if (response['status'] == 'exception') {
-                    displayNewErrors(response['errors']);
-                  }
-                  ;
                 },
               });
             });
@@ -154,23 +141,15 @@
         </script>
       </div>
 
-      <!-- DOWNLOAD FIELDS -->
-      {% with name="add_to_collection" model_name="HashtagHarvester" table_id="TWHashtagTable" %}
+      <!-- ADD TO COLLECTION -->
+      {% with name="add_to_collection" model_name="Hashtag" table_id="TWHashtagTable" %}
       {% include "tool/tables/tableMenuItems.html" %}
       {% endwith %}
 
-      <span>|</span>
-
-      <span id="HashtagHarvester" class="section_menuItem tableDownloader" filename="Harvested_Hashtags"
-            title="Télécharger la sélection">
-      {% include "tool/icons.html" with x=5 y=4 className="tableOptionIcon" %}
-        <!-- DOWNLOAD FIELDS -->
-      <div class="downloadFields">
-        {% for key,val in 'Hashtag'|getFields %}
-        <div field="hashtag__{{key}}" helper="{{val.description}}">{{ val.name }}</div>
-        {% endfor %}
-      </div>
-    </span>
+      <!-- DOWNLOAD FIELDS -->
+      {% with name="downloadFields" className="Hashtag" filename="Collected_hashtags" %}
+      {% include "tool/tables/tableMenuItems.html" %}
+      {% endwith %}
 
       {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
     </div>
@@ -179,7 +158,7 @@
   <div class="section_content">
     <table class="display" id="TWHashtagTable" width="100%" drawn='False'>
       <script class="tableVars">
-        var modelName = 'ItemHarvester';
+        var modelName = 'Hashtag';
         var srcs = [
           {
             attr: 'twitterHashtagsToHarvest',
@@ -188,13 +167,13 @@
         var columns = [
           {
             'colStr': 'Terme',
-            'fields': ['twitter_hashtag__term', 'twitter_hashtag__getLink'],
+            'fields': ['term', 'getLink'],
             'render': function (data, type, row) {
-              if (row['twitter_hashtag__term'] == null) {
+              if (row['term'] == null) {
                 return undefinedTag();
               } else {
-                return tableToolLink(row['twitter_hashtag__getLink'],
-                  truncate_text(row['twitter_hashtag__term'], 30, true));
+                return tableToolLink(row['getLink'],
+                  truncate_text(row['term'], 30, true));
               }
             },
           },
@@ -202,35 +181,13 @@
             'orderable': false,
             'searchable': false,
             'colStr': 'Nombre de tweets',
-            'fields': ['twitter_hashtag__tweets__count'],
+            'fields': ['tweets__count'],
             'render': function (data, type, row) {
-              if (row['twitter_hashtag__tweets__count'] == null) {
+              if (row['tweets__count'] == null) {
                 return '';
               }
               ;
-              return centeredTag(row['twitter_hashtag__tweets__count']);
-            },
-          },
-          {
-            'colStr': 'Collecté à partir du',
-            'fields': ['harvest_since'],
-            'render': function (data, type, row) {
-              if (row['harvest_since'] == null) {
-                return '';
-              }
-              ;
-              return row['harvest_since'];
-            },
-          },
-          {
-            'colStr': 'Collecté jusqu\'au',
-            'fields': ['harvest_until'],
-            'render': function (data, type, row) {
-              if (row['harvest_until'] == null) {
-                return '';
-              }
-              ;
-              return row['harvest_until'];
+              return centeredTag(row['tweets__count']);
             },
           },
         ];
@@ -310,7 +267,7 @@
   <div class="section_content">
     <table class="display" id="TWHashtagTable" width="100%" drawn='False'>
       <script class="tableVars">
-        var modelName = 'HashtagHarvester';
+        var modelName = 'Hashtag';
         var srcs = [
           {
             attr: 'twitterHashtagsToHarvest',
@@ -319,13 +276,13 @@
         var columns = [
           {
             'colStr': 'Terme',
-            'fields': ['hashtag__term', 'hashtag__pk'],
+            'fields': ['term', 'getLink'],
             'render': function (data, type, row) {
-              if (row['hashtag__term'] == null) {
+              if (row['term'] == null) {
                 return undefinedTag();
               } else {
-                return tableToolLink('/twitter/hashtag/' + row['hashtag__pk'],
-                  truncate_text(row['hashtag__term'], 30, true));
+                return tableToolLink(row['getLink'],
+                  truncate_text(row['term'], 30, true));
               }
             },
           },
@@ -333,35 +290,13 @@
             'orderable': false,
             'searchable': false,
             'colStr': 'Nombre de tweets',
-            'fields': ['hashtag__tweets__count'],
+            'fields': ['tweets__count'],
             'render': function (data, type, row) {
-              if (row['hashtag__tweets__count'] == null) {
+              if (row['tweets__count'] == null) {
                 return '';
               }
               ;
-              return row['hashtag__tweets__count'];
-            },
-          },
-          {
-            'colStr': 'Collecté depuis',
-            'fields': ['_harvest_since'],
-            'render': function (data, type, row) {
-              if (row['_harvest_since'] == null) {
-                return '';
-              }
-              ;
-              return row['_harvest_since'];
-            },
-          },
-          {
-            'colStr': 'Collecté jusqu\'à',
-            'fields': ['_harvest_until'],
-            'render': function (data, type, row) {
-              if (row['_harvest_until'] == null) {
-                return '';
-              }
-              ;
-              return row['_harvest_until'];
+              return row['tweets__count'];
             },
           },
         ];
@@ -371,77 +306,55 @@
 </section>
 
 {% elif source == "ToolPiechartHashtagPosterLocation" %}
-<section class="tableContainer halfWidth"
-<div class="section_menu">
+<section class="tableContainer halfWidth">
+  <div class="section_menu">
     <span class="section_title">
       <b>Location des auteurs de tweets contenant un hashtag</b>
     </span>
-  <div class="section_options">
-    {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+    <div class="section_options">
+      {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
+    </div>
+    {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
   </div>
-  {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
-</div>
-<div class="section_content">
-  <table class="display" id="TWHashtagTable" width="100%" drawn='False'>
-    <script class="tableVars">
-      var modelName = 'HashtagHarvester';
-      var srcs = [
-        {
-          attr: 'twitterHashtagsToHarvest',
-        },
-      ];
-      var columns = [
-        {
-          'colStr': 'Terme',
-          'fields': ['hashtag__term', 'hashtag__pk'],
-          'render': function (data, type, row) {
-            if (row['hashtag__term'] == null) {
-              return undefinedTag();
-            } else {
-              return tableToolLink('/twitter/hashtag/' + row['hashtag__pk'],
-                truncate_text(row['hashtag__term'], 30, true));
-            }
+  <div class="section_content">
+    <table class="display" id="TWHashtagTable" width="100%" drawn='False'>
+      <script class="tableVars">
+        var modelName = 'Hashtag';
+        var srcs = [
+          {
+            attr: 'twitterHashtagsToHarvest',
           },
-        },
-        {
-          'orderable': false,
-          'searchable': false,
-          'colStr': 'Nombre de tweets',
-          'fields': ['harvest_count'],
-          'render': function (data, type, row) {
-            if (row['harvest_count'] == null) {
-              return '';
-            }
-            ;
-            return row['harvest_count'];
+        ];
+        var columns = [
+          {
+            'colStr': 'Terme',
+            'fields': ['term', 'getLink'],
+            'render': function (data, type, row) {
+              if (row['term'] == null) {
+                return undefinedTag();
+              } else {
+                return tableToolLink(row['getLink'],
+                  truncate_text(row['term'], 30, true));
+              }
+            },
           },
-        },
-        {
-          'colStr': 'Collecté depuis',
-          'fields': ['_harvest_since'],
-          'render': function (data, type, row) {
-            if (row['_harvest_since'] == null) {
-              return '';
-            }
-            ;
-            return row['_harvest_since'];
+          {
+            'orderable': false,
+            'searchable': false,
+            'colStr': 'Nombre de tweets',
+            'fields': ['tweets__count'],
+            'render': function (data, type, row) {
+              if (row['tweets__count'] == null) {
+                return '';
+              }
+              ;
+              return row['tweets__count'];
+            },
           },
-        },
-        {
-          'colStr': 'Collecté jusqu\'à',
-          'fields': ['_harvest_until'],
-          'render': function (data, type, row) {
-            if (row['_harvest_until'] == null) {
-              return '';
-            }
-            ;
-            return row['_harvest_until'];
-          },
-        },
-      ];
-    </script>
-  </table>
-</div>
+        ];
+      </script>
+    </table>
+  </div>
 </section>
 
 {% elif source == "searchResult" %}
@@ -454,6 +367,7 @@
       {% with name="downloadFields" className="Hashtag" filename="TwitterHashtagsSearchResults_"|join:query %}
       {% include "tool/tables/tableMenuItems.html" %}
       {% endwith %}
+
       {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
     </div>
     {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
@@ -506,47 +420,46 @@
   <b>Hashtags Twitter</b>
   </span>
     <div class="section_options">
-      <span>|</span>
 
       <!-- DOWNLOAD FIELDS -->
-      <span class="section_menuItem tableDownloader"
-            filename="Collecte_twitter_hashtags" title="Télécharger la sélection">
-        {% include "tool/icons.html" with x=5 y=4 className="tableOptionIcon" %}
-        <div class="downloadFields">
-          {% for key,val in 'HashtagHarvester'|getFields %}
-          <div field="twitter_hashtag__{{key}}" helper="{{val.description}}">{{ val.name }}</div>
-          {% endfor %}
-        </div>
-      </span>
-
+      {% with name="downloadFields" className="Hashtag" filename="Collection_twitter_hashtags"%}
+      {% include "tool/tables/tableMenuItems.html" %}
+      {% endwith %}
 
       {% include "tool/tables/tableMenuItems.html" with name="reloadTable" %}
     </div>
     {% include "tool/tables/tableMenuItems.html" with name="openCloseIcon" %}
   </div>
   <div class="section_content">
-    <table class="display" id="collection_hashtag_harvester_table" width="100%" drawn='False'>
+    <table class="display" id="collection_hashtag_table" width="100%" drawn='False'>
 
       <script class="tableVars">
         var modelName = 'CollectionItem';
         var srcs = [
           {
             modelName: 'Collection',
-            attr: 'items_hashtag_harvesters',
+            attr: 'collection_items',
             id: '{{ collection.pk }}',
           },
         ];
         var columns = [
           {
             'colStr': 'Terme',
-            'fields': ['twitter_hashtag__hashtag__term', 'twitter_hashtag__hashtag__pk'],
+            'fields': ['twitter_hashtag__term', 'twitter_hashtag__getLink'],
             'render': function (data, type, row) {
-              if (row['twitter_hashtag__hashtag__term'] == null) {
+              if (row['twitter_hashtag__term'] == null) {
                 return undefinedTag();
               } else {
-                return tableToolLink('/twitter/hashtag/' + row['twitter_hashtag__hashtag__pk'],
-                  truncate_text(row['twitter_hashtag__hashtag__term'], 30, true));
+                return tableToolLink(row['twitter_hashtag__getLink'],
+                  truncate_text(row['twitter_hashtag__term'], 30, true));
               }
+            },
+          },
+          {
+            'colStr': 'Nombre de Tweets',
+            'fields': ['twitter_hashtag__tweets__count'],
+            'render': function (data, type, row) {
+              return centeredTag(row['twitter_hashtag__tweets__count']);
             },
           },
         ];

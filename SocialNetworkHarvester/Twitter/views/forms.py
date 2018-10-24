@@ -1,68 +1,105 @@
+import re
+from datetime import datetime
+
 import tweepy
 from django.contrib.auth.decorators import login_required
 
+from AspiraUser.models import ItemHarvester
 from SocialNetworkHarvester.jsonResponses import *
-from SocialNetworkHarvester.loggers.viewsLogger import logError
+from SocialNetworkHarvester.loggers.viewsLogger import logError, log
+from SocialNetworkHarvester.utils import validate_harvest_dates, InvalidHarvestDatesException
 from Twitter.models import *
 
 
 @login_required()
 def addUser(request):
-    occuredErrors = []
-    userProfile = request.user.userProfile
+    for key in ['screen_name_0', 'since_0', 'until_0', 'screen_name_1', 'since_1',
+                'until_1', 'screen_name_2', 'since_2', 'until_2']:
+        if key not in request.POST:
+            return missingParam(key)
+
+    datasets = [
+        (
+            request.POST.get('screen_name_0'),
+            request.POST.get('since_0'),
+            request.POST.get('until_0'),
+        ),
+        (
+            request.POST.get('screen_name_1'),
+            request.POST.get('since_1'),
+            request.POST.get('until_1'),
+        ),
+        (
+            request.POST.get('screen_name_2'),
+            request.POST.get('since_2'),
+            request.POST.get('until_2'),
+        ),
+    ]
+
+    occured_errors = []
+    successful_operations = 0
+    for dataset in datasets:
+        if dataset[0]:  # if first_element was specified
+            try:
+                add_twitter_user(request.user, *dataset)
+                successful_operations += 1
+            except AddTwitterHarvestItemException as e:
+                occured_errors.append(e)
+            except Exception:
+                logError("An unknown error occured while adding a new Twitter user.")
+                return jsonErrors(['Une erreur inconnue est survenue. Veuillez réessayer'])
+
+    response = {'status': 'success'}
+    if occured_errors:
+        response['status'] = 'error',
+        response['errors'] = [str(e) for e in occured_errors]
+    if successful_operations:
+        plural = successful_operations > 1
+        response['messages'] = [
+            f'{successful_operations} utilisateur{"s"*plural} {"ont" if plural else "a"} '
+            f'été ajouté{"s"*plural} à votre liste de collecte.'
+        ]
+    return jResponse(response)
+
+
+def add_twitter_user(user, screen_name, since, until):
+    user_profile = user.userProfile
+
+    if user_profile.twitterUsersToHarvest().count() >= user_profile.twitterUsersToHarvestLimit:
+        raise AddTwitterHarvestItemException(
+            f'Vous avez atteint la limite d\'utilisateurs Twitter pour ce compte! '
+            f'(limite: {user_profile.twitterUsersToHarvestLimit})'
+        )
+
+    twitter_user = TWUser.objects.filter(screen_name=screen_name).first()
+    if not twitter_user:
+        api = getTwitterApi(user_profile)
+        twitter_user = fetch_new_twitter_user(api, screen_name)
+
+    if ItemHarvester.objects.filter(twitter_user=twitter_user, user=user).exists():
+        raise AddTwitterHarvestItemException(f'L\'utilisateur "{screen_name}" est déjà dans votre liste de collecte!')
+
     try:
-        api = getTwitterApi(userProfile)
-    except Exception as e:
-        return HttpResponse(json.dumps({'status': 'exception', 'errors': str(e)}), content_type='application/json')
-    screen_names = [sn for sn in request.POST.getlist('screen_name') if sn != '']
-    if 'Browse' in request.FILES:
-        sns, errors = readScreenNamesFromCSV(request.FILES['Browse'])
-        screen_names += sns
-        for error in errors:
-            occuredErrors.append(
-                'Une erreur est survenue lors de la lecture de votre fichier csv. à la ligne %i.' % error)
+        validate_harvest_dates(since, until)
+    except InvalidHarvestDatesException as e:
+        raise AddTwitterHarvestItemException(str(e))
 
-    if not screen_names:
-        occuredErrors.append("Écrivez au moins un nom d'utilisateur.")
+    ItemHarvester.create(user, twitter_user, since, until)
 
-    added_screen_names = []
-    for screen_name_list in [screen_names[x:x + 100] for x in range(0, len(screen_names), 100)]:
-        if userProfile.twitterUsersToHarvest.count() >= userProfile.twitterUsersToHarvestLimit:
-            occuredErrors.append(
-                'Vous avez atteint la limite d\'utilisateurs Twitter pour ce compte! (limite: %i)' %
-                userProfile.twitterUsersToHarvestLimit
+
+def fetch_new_twitter_user(api, screen_name):
+    try:
+        response = api.lookup_users(screen_names=[screen_name])[0]._json
+    except tweepy.error.TweepError as e:
+        if e.api_code == 17:
+            raise AddTwitterHarvestItemException(
+                f'Aucun utilisateur Twitter ne correspond au screen_name "{screen_name}"'
             )
-            break
-        try:
-            response = api.lookup_users(screen_names=screen_name_list)
-            for item in response:
-                if userProfile.twitterUsersToHarvest.count() >= userProfile.twitterUsersToHarvestLimit:
-                    break
-                twUser, new = TWUser.objects.get_or_create(_ident=item.id)
-                if new:
-                    twUser.UpdateFromResponse(item._json)
-                twUser._update_frequency = 1
-                twUser.save()
-                userProfile.twitterUsersToHarvest.add(twUser)
-                added_screen_names.append(twUser.screen_name)
-        except tweepy.error.TweepError as e:
-            if e.api_code == 17:
-                pass
-            else:
-                raise
-
-    if occuredErrors:
-        response = {'status': 'exception', 'errors': occuredErrors}
-    else:
-        introuvables = [screen_name for screen_name in screen_names if screen_name not in added_screen_names]
-        response = {'status': 'ok', 'messages':
-            '%i L\'utilisateur Twitter %s a été ajouté à votre liste.' % (
-                len(added_screen_names), 's' if len(added_screen_names) > 1 else '')
-                    }
-        if introuvables:
-            response['errors'] = ["Le nom d'utilisateur <b>%s</b> est introuvable ou l'utilisateur préfère " \
-                                  "garder ses informations privées." % introuvable for introuvable in introuvables]
-    return HttpResponse(json.dumps(response), content_type='application/json')
+        else:
+            raise
+    new_user = TWUser.objects.create(_ident=response['id'])
+    new_user.UpdateFromResponse(response)
+    return new_user
 
 
 def getTwitterApi(userProfile):
@@ -72,13 +109,16 @@ def getTwitterApi(userProfile):
         userProfile.twitterApp_consumerKey,
         userProfile.twitterApp_consumer_secret
     ]):
-        raise Exception(
+        raise AddTwitterHarvestItemException(
             "Vous devez d'abord configurer votre application Twitter! Veuillez visiter votre page de "
-            "<a href='/user/settings' class='TableToolLink'>paramètres</a> et suivre la procédure décrite dans "
-            "la section \"Twitter\"."
+            "<a href='/user/settings' class='TableToolLink'>paramètres</a> et suivre la procédure "
+            "décrite dans la section \"Twitter\"."
         )
     try:
-        auth = tweepy.OAuthHandler(userProfile.twitterApp_consumerKey, userProfile.twitterApp_consumer_secret)
+        auth = tweepy.OAuthHandler(
+            userProfile.twitterApp_consumerKey,
+            userProfile.twitterApp_consumer_secret
+        )
         auth.set_access_token(userProfile.twitterApp_access_token_key, userProfile.twitterApp_access_token_secret)
         api = tweepy.API(auth)
         api.me()
@@ -88,119 +128,88 @@ def getTwitterApi(userProfile):
             userProfile.twitterApp_parameters_error = True
             userProfile.save()
             logError('Error in Twitter.forms.py: addUser')
-            raise Exception(
+            raise AddTwitterHarvestItemException(
                 "Un problème est survenu avec votre application Twitter! Veuillez visiter votre page de "
-                "<a href='/user/settings' class='TableToolLink'>paramètres</a> et assurez-vous que les informations "
-                "inscrites dans la section \"Twitter\" sont correctes."
+                "<a href='/user/settings' class='TableToolLink'>paramètres</a> et assurez-vous que les "
+                "informations inscrites dans la section \"Twitter\" sont correctes."
             )
         else:
             raise
 
 
-# @viewsLogger.debug(showArgs=True)
-def readScreenNamesFromCSV(file):
-    screen_names = []
-    errors = []
-    rowNum = 0
-    for row in file:
-        rowNum += 1
-        try:
-            decodedRow = row.decode('utf8')
-            decodedRow = re.sub('[\\r\\n]', '', decodedRow)
-            screen_names.append(decodedRow)
-        except UnicodeDecodeError:
-            # log('an invalid line was retrieved')
-            errors.append(rowNum)
-    return screen_names, errors
-
-
-def screenNameIsValid(screen_name):
-    if re.match('^[a-zA-z0-9_]+$', screen_name):
-        return True
-    return False
-
-
 @login_required()
 def addHashtag(request):
-    errors = []
-    userProfile = request.user.userProfile
-    terms = request.POST.getlist('hashtags')
-    starts = request.POST.getlist('starts')
-    ends = request.POST.getlist('ends')
-    hashtags = [(terms[i], starts[i], ends[i]) for i in range(0, len(terms)) if terms[i] != '']
-    success_count = 0
+    datasets = [
+        (
+            request.POST.get('term_0'),
+            request.POST.get('since_0'),
+            request.POST.get('until_0'),
+        ),
+        (
+            request.POST.get('term_1'),
+            request.POST.get('since_1'),
+            request.POST.get('until_1'),
+        ),
+        (
+            request.POST.get('term_2'),
+            request.POST.get('since_2'),
+            request.POST.get('until_2'),
+        ),
+    ]
 
-    if 'Browse' in request.FILES:
-        hs, errors = readHashtagsFromCSV(request.FILES['Browse'])
-        hashtags += hs
-        for error in errors:
-            errors.append('Une erreur est survenue lors de la lecture de votre fichier, sur la ligne %i.' % error)
+    occured_errors = []
+    successful_operations = 0
+    for dataset in datasets:
+        if dataset[0]:  # if first element was specified
+            try:
+                add_twitter_hashtag(request.user, *dataset)
+                successful_operations += 1
+            except AddTwitterHarvestItemException as e:
+                occured_errors.append(e)
 
-    log(hashtags)
-    for hashtag in hashtags:
-        term = re.sub('(,+$)|#', '', hashtag[0])
-        try:
-            start = datetime.strptime(hashtag[1], '%m/%d/%Y')
-        except ValueError:
-            errors.append('La date de départ ("%s") n\'est pas valide' % hashtag[1])
-            continue
-        try:
-            end = datetime.strptime(hashtag[2], '%m/%d/%Y')
-        except ValueError:
-            errors.append('La date de fin ("%s") n\'est pas valide' % hashtag[2])
-            continue
-        if hashtagIsValid(term, start, end):
-            twHashtag, new = Hashtag.objects.get_or_create(term=term)
-            harvester, new = HashtagHarvester.objects.get_or_create(hashtag=twHashtag, _harvest_since=start,
-                                                                    _harvest_until=end)
-            if userProfile.twitterHashtagsToHarvest.count() < userProfile.twitterHashtagsToHarvestLimit:
-                if not userProfile.twitterHashtagsToHarvest.filter(pk=harvester.pk).exists():
-                    userProfile.twitterHashtagsToHarvest.add(harvester)
-                    success_count += 1
-            else:
-                errors.append(
-                    'Vous avez atteint la limite de hastags à aspirer pour ce compte! (limite: %i)' %
-                    userProfile.twitterHashtagsToHarvestLimit
-                )
-                break
-        else:
-            errors.append('Le format du hastag (%s) n\'est pas valide.' % str(hashtag))
-
-    if errors:
-        response = {'status': 'exception', 'errors': errors}
+    response = {'status': 'success'}
+    if occured_errors:
+        response['status'] = 'error',
+        response['errors'] = [str(e) for e in occured_errors]
+    elif successful_operations:
+        plural = successful_operations > 1
+        response['messages'] = [
+            f'{successful_operations} hashtags{"s"*plural} Twitter {"ont" if plural else "a"} '
+            f'été ajouté{"s"*plural} à votre liste de collecte.'
+        ]
     else:
-        response = {'status': 'ok', 'messages': ['%i nouveaux Hashtag%s %s été ajouté%s à votre liste.' % (
-            success_count, 's' if success_count > 1 else '', 'ont' if success_count > 1 else 'a',
-            's' if success_count > 1 else '')]}
-
-    return HttpResponse(json.dumps(response), content_type='application/json')
+        response['errors'] = ["Spécifiez au moins un Hashtag avec sa période de collecte."]
+    return jResponse(response)
 
 
-def hashtagIsValid(term, start, end):
-    log('hashtag: %s, %s-%s' % (term, start, end))
-    valid = True
+def add_twitter_hashtag(user, term, since, until):
+    user_profile = user.userProfile
+    if user_profile.twitterHashtagsToHarvest().count() >= user_profile.twitterHashtagsToHarvestLimit:
+        raise AddTwitterHarvestItemException(
+            f'Vous avez atteint la limite de hashtag Twitter pour ce compte! '
+            f'(limite: {user_profile.twitterHashtagsToHarvestLimit})'
+        )
+
     if not re.match('^#?[a-zA-z0-9_]+$', term):
-        valid = False
-    if start >= end:
-        valid = False
-    log('%s' % ('valid' if valid else 'invalid'))
-    return valid
+        raise AddTwitterHarvestItemException(
+            'Un hashtag Twitter ne peut que contenir des caractères simples (a-z, A-Z, 0-9).'
+        )
+
+    twitter_hashtag, new = Hashtag.objects.get_or_create(term=term)
+
+    if ItemHarvester.objects.filter(twitter_hashtag=twitter_hashtag, user=user).exists():
+        raise AddTwitterHarvestItemException(
+            f'Le hashtag "{twitter_hashtag}" est déjà dans '
+            f'votre liste de collecte!'
+        )
+
+    try:
+        validate_harvest_dates(since, until)
+    except InvalidHarvestDatesException as e:
+        raise AddTwitterHarvestItemException(str(e))
+
+    ItemHarvester.create(user, twitter_hashtag, since, until)
 
 
-def readHashtagsFromCSV(file):
-    hashtags = []
-    errors = []
-    rowNum = 0
-    for row in file:
-        rowNum += 1
-        try:
-            decodedRow = row.decode('utf8')
-            decodedRow = re.sub('[\\r\\n]', '', decodedRow)
-            decodedRow = re.sub(',+$', '', decodedRow)
-            log(decodedRow)
-            if decodedRow != '':
-                (term, start, end) = decodedRow.split(',')
-                hashtags.append((term, start, end))
-        except:
-            errors.append(rowNum)
-    return hashtags, errors
+class AddTwitterHarvestItemException(Exception):
+    pass

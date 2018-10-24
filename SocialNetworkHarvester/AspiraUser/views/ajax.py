@@ -1,12 +1,10 @@
-import json
 from datetime import datetime
 
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
 from django.utils.timezone import utc
 
-from AspiraUser.models import getUserSelection, getModel, ItemHarvester
-from SocialNetworkHarvester.jsonResponses import jsonBadRequest, missingParam, jResponse, jsonMessage
+from AspiraUser.models import getUserSelection, getModel, ItemHarvester, resetUserSelection
+from SocialNetworkHarvester.jsonResponses import jsonBadRequest, missingParam, jResponse, jsonMessages
 from SocialNetworkHarvester.loggers.viewsLogger import logError
 from SocialNetworkHarvester.settings import HARVEST_MAX_PERIOD, HARVEST_SINCE_OLDEST_DATE
 from SocialNetworkHarvester.utils import today
@@ -16,13 +14,25 @@ from SocialNetworkHarvester.utils import today
 def removeSelectedItems(request):
     """ Removes the selecteds ItemHarvesters from the user's harvesting list
     """
-    errors = []
     user = request.user
     selection = getUserSelection(request)
     queryset = selection.getSavedQueryset(None, request.GET['tableId'])
-    for item in queryset:
-        pass
-    return jsonMessage('La selection a été retirée de votre lsite de collecte')
+    count = queryset.count()
+    try:
+        for item in queryset:
+            user.userProfile.remove_item_from_harvest_list(item)
+    except Exception:
+        logError('An error occured while removing selection from harvesting list')
+        return jResponse({
+            'error': {
+                'code': 500, 'message': 'Une erreur est survenue. Veuillez réessayer.'
+            }
+        })
+    resetUserSelection(request)
+    return jsonMessages([f"{count} élément{'s' if count>1 else ''} "
+                         f"{'ont' if count>1 else 'a'} été retiré{'s' if count>1 else ''} "
+                         f"de votre liste de collecte."]
+                        )
 
 
 @login_required()
@@ -67,7 +77,7 @@ def addRemoveItemById(request, addRemove):
         if not user.userProfile.item_is_in_list(item):
             return jsonBadRequest(f"{item} is not in current list")
 
-        user.userProfile.get_item_harvester(item).delete()
+        user.userProfile.remove_item_from_harvest_list(item)
 
         return jResponse(
             {'message': {
@@ -75,28 +85,3 @@ def addRemoveItemById(request, addRemove):
             }
         )
 
-
-def validate_harvest_dates(harvest_since, harvest_until):
-    if not harvest_since or not harvest_until:
-        raise InvalidHarvestDatesException('Veuillez spécifier les dates de début et de fin.')
-    try:
-        since = datetime.strptime(harvest_since, '%Y-%m-%d').replace(tzinfo=utc)
-        until = datetime.strptime(harvest_until, '%Y-%m-%d').replace(tzinfo=utc)
-    except ValueError:
-        raise InvalidHarvestDatesException(f"L'une des dates spécifiée {harvest_since}, "
-                                           f"{harvest_until} est invalide.")
-    if since >= until:
-        raise InvalidHarvestDatesException('La date de fin doit être après la date de début!')
-    if since + HARVEST_MAX_PERIOD < until:
-        raise InvalidHarvestDatesException(
-            f"La durée maximale d'une collecte est de {HARVEST_MAX_PERIOD.days} jours."
-        )
-    if since + HARVEST_SINCE_OLDEST_DATE < today():
-        raise InvalidHarvestDatesException(
-            f"La date de début d'une collecte ne peut pas remonter à avant les 6 derniers mois. "
-            f"Limite actuelle: {(today()-HARVEST_SINCE_OLDEST_DATE).strftime('%Y-%m-%d')}."
-        )
-
-
-class InvalidHarvestDatesException(Exception):
-    pass

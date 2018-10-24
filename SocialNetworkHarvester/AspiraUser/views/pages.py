@@ -42,11 +42,9 @@ def getTwitterStats(user_profile):
 
     twitter_user_usage = user_profile.twitterUsersToHarvest().count()
     most_active_twitter_user = user_profile.twitterUsersToHarvest() \
-        .annotate(harvested_count=Count('twitter_user__tweets')) \
+        .annotate(harvested_count=Count('tweets')) \
         .order_by("-harvested_count") \
         .first()
-    if most_active_twitter_user:
-        most_active_twitter_user = most_active_twitter_user.twitter_user
 
     twitter_user_percent = 0
     if twuser_limit > 0:
@@ -62,10 +60,8 @@ def getTwitterStats(user_profile):
         hashtag_limit = 'inf'
 
     most_active_hashtag = user_profile.twitterHashtagsToHarvest() \
-        .annotate(harvested_count=Count('twitter_hashtag__harvested_tweets')) \
+        .annotate(harvested_count=Count('tweets')) \
         .order_by("-harvested_count").first()
-    if most_active_hashtag:
-        most_active_hashtag = most_active_hashtag.twitter_hashtag
 
     return {
         'twitterUserUsage': twitter_user_usage,
@@ -103,11 +99,9 @@ def getYoutubeStats(user_profile):
         .aggregate(count=Count('comments'))['count']
 
     most_active_channel = user_profile.ytChannelsToHarvest() \
-        .annotate(vidCount=Count('youtube_channel__videos')) \
+        .annotate(vidCount=Count('videos')) \
         .order_by('vidCount') \
         .first()
-    if most_active_channel:
-        most_active_channel = most_active_channel.youtube_channel
 
     most_active_yt_vid = YTVideo.objects \
         .filter(channel__harvested_by__user=user_profile.user) \
@@ -146,12 +140,9 @@ def getFacebookStats(user_profile):
         .aggregate(count=Count('fbProfile__posted_comments'))['count']
 
     most_active_page = user_profile.facebookPagesToHarvest() \
-        .annotate(statusCount=Count('facebook_page__fbProfile__postedStatuses')) \
+        .annotate(statusCount=Count('fbProfile__postedStatuses')) \
         .order_by('statusCount') \
         .first()
-
-    if most_active_page:
-        most_active_page = most_active_page.facebook_page
 
     most_active_status = FBPost.objects \
         .filter(from_profile__fbPage__isnull=False) \

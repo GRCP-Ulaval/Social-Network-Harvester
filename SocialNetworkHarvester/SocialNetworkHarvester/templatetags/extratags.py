@@ -59,5 +59,5 @@ def get_type_str(instance):
 
 
 @register.filter
-def in_harvest_list(item, user_profile):
-    return user_profile.item_is_in_list(item)
+def get_item_harvester(item, user_profile):
+    return user_profile.get_item_harvester(item)

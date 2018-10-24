@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from django.db import models
+from django.utils.timezone import utc
 
 from SocialNetworkHarvester.utils import today
 from .YTChannel import YTChannel

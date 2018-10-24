@@ -51,6 +51,12 @@ class ItemHarvester(models.Model):
         default=today()
     )
 
+    def harvest_since_str(self):
+        return self.harvest_since.strftime('%Y-%m-%d')
+
+    def harvest_until_str(self):
+        return self.harvest_until.strftime('%Y-%m-%d')
+
     def foreign_keys(self):
         return [
             self.twitter_hashtag,
@@ -87,7 +93,7 @@ class ItemHarvester(models.Model):
         return self.get_item().getLink()
 
     def get_obj_ident(self):
-        return "CollectionItem__%s" % self.pk
+        return "ItemHarvester__%s" % self.pk
 
     def get_fields_description(self):
         return self.get_item().get_fields_description()

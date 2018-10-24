@@ -106,9 +106,9 @@
 
                             </div>
                             <script id="functions">
-                                $('#centerPopupContent').find('#popup_checkbox').click(function () {
-                                    $('#centerPopupContent').find('#popup_submit').attr('disabled', !this.checked);
-                                    $('#centerPopupContent').find('#popup_submit').click(function () {
+                                select_popup_content('#popup_checkbox').click(function () {
+                                    select_popup_content('#popup_submit').attr('disabled', !this.checked);
+                                    select_popup_content('#popup_submit').click(function () {
                                         $('#registerForm').unbind().submit();
                                     })
                                 });
@@ -140,10 +140,10 @@
                     e.preventDefault();
                 })
             });
-            $('#centerPopupContent').find('#popup_checkbox').click(function () {
-                log($('#centerPopupContent').find('#popup_submit'));
-                $('#centerPopupContent').find('#popup_submit').attr('disabled', !this.checked);
-                $('#centerPopupContent').find('#popup_submit').click(function () {
+            select_popup_content('#popup_checkbox').click(function () {
+                log(select_popup_content('#popup_submit'));
+                select_popup_content('#popup_submit').attr('disabled', !this.checked);
+                select_popup_content('#popup_submit').click(function () {
                     $('#registerForm').unbind().submit();
                 })
             });

@@ -1,17 +1,19 @@
-from django.contrib.auth.decorators import login_required
+import re
 
+from django.contrib.auth.decorators import login_required
+from googleapiclient.discovery import build
+
+from AspiraUser.models import ItemHarvester
 from SocialNetworkHarvester.jsonResponses import *
-from SocialNetworkHarvester.loggers.viewsLogger import log, viewsLogger
+from SocialNetworkHarvester.loggers.viewsLogger import viewsLogger, logError
+from SocialNetworkHarvester.utils import validate_harvest_dates, InvalidHarvestDatesException
 from Youtube.models import *
-from tool.views.ajaxTables import readLinesFromCSV
 
 plurial = lambda i: 's' if int(i) > 1 else ''
 
 validFormNames = [
     'YTAddChannel',
-    'YTRemoveChannel',
     'YTAddPlaylist',
-    'YTRemovePlaylist',
 ]
 
 
@@ -26,117 +28,236 @@ def formBase(request, formName):
         return jsonUnknownError()
 
 
+###########  YOUTUBE CHANNELS  ###########
 def YTAddChannel(request):
-    if not 'channelURL' in request.POST and not 'Browse' in request.FILES:
-        return jsonBadRequest('No channel url specified')
-    limit = request.user.userProfile.ytChannelsToHarvestLimit
-    currentCount = request.user.userProfile.ytChannelsToHarvest.count()
-    if limit <= currentCount:
-        return jResponse({
-            'status': 'exception',
-            'errors': ["Vous avez atteint la limite de chaînes à collecter permise."],
-        })
-    channelUrls = request.POST.getlist('channelURL')
-    invalids = []
-    if 'Browse' in request.FILES:
-        fileUrls, errors = readLinesFromCSV(request)
-        channelUrls += fileUrls
-        invalids += errors
-    if limit <= currentCount + len(channelUrls):
-        channelUrls = channelUrls[:limit - currentCount]
-    invalids += addChannels(request, channelUrls)
+    datasets = [
+        (
+            request.POST.get('url_0'),
+            request.POST.get('since_0'),
+            request.POST.get('until_0'),
+        ),
+        (
+            request.POST.get('url_1'),
+            request.POST.get('since_1'),
+            request.POST.get('until_1'),
+        ),
+        (
+            request.POST.get('url_2'),
+            request.POST.get('since_2'),
+            request.POST.get('until_2'),
+        ),
+    ]
 
-    numChannelAdded = len(channelUrls) - len(invalids)
-    if not numChannelAdded:
-        return jResponse({
-            'status': 'exception',
-            'errors': ['"%s" n\'est pas une URL de chaîne valide' % url for url in invalids],
-        })
-    return jResponse({
-        'status': 'ok',
-        'messages': [
-            '%s chaînes%s ont été ajoutées à votre liste (%i erreurs%s)' % (numChannelAdded, plurial(numChannelAdded),
-                                                                            len(invalids), plurial(len(invalids)))]
-    })
+    occured_errors = []
+    successful_operations = 0
+    for dataset in datasets:
+        if dataset[0]:  # if first element was specified
+            try:
+                add_youtube_channel(request.user, *dataset)
+                successful_operations += 1
+            except AddYoutubeItemHarvesterException as e:
+                occured_errors.append(e)
 
-
-# @viewsLogger.debug(showArgs=True)
-def addChannels(request, channelUrls):
-    profile = request.user.userProfile
-    invalids = []
-    for url in channelUrls:
-        newChannel = None
-        match = re.match(r'https?://www.youtube.com/user/(?P<username>[\w\.-]+)/?.*', url)
-        if match:
-            newChannel, new = YTChannel.objects.get_or_create(userName=match.group('username'))
-        else:
-            match = re.match(r'https?://www.youtube.com/channel/(?P<channelId>[\w\.-]+)/?.*', url)
-            if match:
-                newChannel, new = YTChannel.objects.get_or_create(_ident=match.group('channelId'))
-            else:
-                invalids.append(url)
-        if newChannel:
-            profile.ytChannelsToHarvest.add(newChannel)
-            profile.save()
-    return invalids
+    response = {'status': 'success'}
+    if occured_errors:
+        response['status'] = 'error',
+        response['errors'] = [str(e) for e in occured_errors]
+    elif successful_operations:
+        plural = successful_operations > 1
+        response['messages'] = [
+            f'{successful_operations} chaîne{"s"*plural} Youtube {"ont" if plural else "a"} '
+            f'été ajouté{"s"*plural} à votre liste de collecte.'
+        ]
+    else:
+        response['errors'] = ["Spécifiez au moins un URL de chaine avec sa période de collecte."]
+    return jResponse(response)
 
 
-def YTRemoveChannel(request):
-    return jsonNotImplementedError(request)
+def add_youtube_channel(user, url, since, until):
+    user_profile = user.userProfile
+    if user_profile.ytChannelsToHarvest().count() >= user_profile.ytChannelsToHarvestLimit:
+        raise AddYoutubeItemHarvesterException(
+            f'Vous avez atteint la limite de chaînes Youtube pour ce compte! '
+            f'(limite: {user_profile.ytChannelsToHarvestLimit})'
+        )
+
+    channel_username = get_channel_username_from_url(url)
+
+    youtube_channel = YTChannel.objects.filter(_ident=channel_username).first()
+    if not youtube_channel:
+        api = get_youtube_api(user_profile)
+        youtube_channel = fetch_new_youtube_channel(api, channel_username)
+
+    if ItemHarvester.objects.filter(youtube_channel=youtube_channel, user=user).exists():
+        raise AddYoutubeItemHarvesterException(
+            f'La chaine Youtube "{youtube_channel}" est déjà dans '
+            f'votre liste de collecte!'
+        )
+
+    try:
+        validate_harvest_dates(since, until)
+    except InvalidHarvestDatesException as e:
+        raise AddYoutubeItemHarvesterException(str(e))
+
+    ItemHarvester.create(user, youtube_channel, since, until)
 
 
-# @viewsLogger.debug(showArgs=True)
+def get_channel_username_from_url(url):
+    match = re.match(r'https?://www.youtube.com/user/(?P<username>[\w\.-]+)/?.*', url)
+    if not match:
+        match = re.match(r'https?://www.youtube.com/channel/(?P<username>[\w\.-]+)/?.*', url)
+    if not match:
+        raise AddYoutubeItemHarvesterException(f'"{url}" ne semble pas être une URL valide.')
+    return match.group('username')
+
+
+def fetch_new_youtube_channel(api, channel_username):
+    try:
+        response = api.channels().list(
+            id=channel_username,
+            part='brandingSettings,contentOwnerDetails,id,'
+                 'invideoPromotion,localizations,snippet,statistics,status'
+        ).execute()
+    except:
+        logError("Unknown error while fetching new youtube channel")
+        raise AddYoutubeItemHarvesterException(
+            'Une erreur est survenue en tentant de trouver '
+            'l\'URL spécifiée. Veuillez réessayer.'
+        )
+
+    if 'items' not in response or not response['items']:
+        raise AddYoutubeItemHarvesterException(
+            f'L\'url contenant {channel_username} ne semble pas '
+            f'correspondre à une chaine Youtube. '
+            f'Veuillez re-vérifier.'
+        )
+    item = response['items'][0]
+    new_channel = YTChannel.objects.create(_ident=item['id'])
+    new_channel.update(item)
+    return new_channel
+
+
+###########  YOUTUBE PLAYLISTS  ###########
 def YTAddPlaylist(request):
-    if not 'playlistURL' in request.POST and not 'Browse' in request.FILES:
-        return jsonBadRequest('No playlist url specified')
-    limit = request.user.userProfile.ytPlaylistsToHarvestLimit
-    currentCount = request.user.userProfile.ytPlaylistsToHarvest.count()
-    if limit <= currentCount:
-        return jResponse({
-            'status': 'exception',
-            'errors': ["Vous avez atteint la limite de playlists à collecter permise."],
-        })
-    playlistURLs = request.POST.getlist('playlistURL')
-    invalids = []
-    if 'Browse' in request.FILES:
-        fileUrls, errors = readLinesFromCSV(request)
-        playlistURLs += fileUrls
-        invalids += errors
-    if limit <= currentCount + len(playlistURLs):
-        playlistURLs = playlistURLs[:limit - currentCount]
-    invalids += addPlaylists(request, playlistURLs)
+    datasets = [
+        (
+            request.POST.get('url_0'),
+            request.POST.get('since_0'),
+            request.POST.get('until_0'),
+        ),
+        (
+            request.POST.get('url_1'),
+            request.POST.get('since_1'),
+            request.POST.get('until_1'),
+        ),
+        (
+            request.POST.get('url_2'),
+            request.POST.get('since_2'),
+            request.POST.get('until_2'),
+        ),
+    ]
 
-    numPlaylistAdded = len(playlistURLs) - len(invalids)
-    if not numPlaylistAdded:
-        return jResponse({
-            'status': 'exception',
-            'errors': ['"%s" n\'est pas une URL de playlist valide' % url for url in invalids],
-        })
-    return jResponse({
-        'status': 'ok',
-        'messages': ['%s playlists%s ont été ajoutées à votre liste (%i erreurs%s)' % (
-            numPlaylistAdded, plurial(numPlaylistAdded), len(invalids), plurial(len(invalids)))]
-    })
+    occured_errors = []
+    successful_operations = 0
+    for dataset in datasets:
+        if dataset[0]:  # if first element was specified
+            try:
+                add_youtube_playlist(request.user, *dataset)
+                successful_operations += 1
+            except AddYoutubeItemHarvesterException as e:
+                occured_errors.append(e)
 
-
-@viewsLogger.debug(showArgs=True)
-def addPlaylists(request, playlistURLs):
-    profile = request.user.userProfile
-    invalids = []
-    for url in playlistURLs:
-        newPlaylist = None
-        match = re.match(r'.*list=(?P<ident>[\w\.-]+)&?.*', url)
-        log(url)
-        if match:
-            log('match!')
-            log(match.group('ident'))
-            newPlaylist, new = YTPlaylist.objects.get_or_create(_ident=match.group('ident'))
-            profile.ytPlaylistsToHarvest.add(newPlaylist)
-            profile.save()
-        else:
-            invalids.append(url)
-    return invalids
+    response = {'status': 'success'}
+    if occured_errors:
+        response['status'] = 'error',
+        response['errors'] = [str(e) for e in occured_errors]
+    elif successful_operations:
+        plural = successful_operations > 1
+        response['messages'] = [
+            f'{successful_operations} playlist{"s"*plural} Youtube {"ont" if plural else "a"} '
+            f'été ajouté{"s"*plural} à votre liste de collecte.'
+        ]
+    else:
+        response['errors'] = ["Spécifiez au moins un URL de chaine avec sa période de collecte."]
+    return jResponse(response)
 
 
-def YTRemovePlaylist(request):
-    return jsonNotImplementedError(request)
+def add_youtube_playlist(user, url, since, until):
+    user_profile = user.userProfile
+    if user_profile.ytPlaylistsToHarvest().count() >= user_profile.ytPlaylistsToHarvestLimit:
+        raise AddYoutubeItemHarvesterException(
+            f'Vous avez atteint la limite de playlists Youtube pour ce compte! '
+            f'(limite: {user_profile.ytPlaylistsToHarvestLimit})'
+        )
+
+    playlist_ident = get_playlist_ident_from_url(url)
+
+    youtube_playlist = YTPlaylist.objects.filter(_ident=playlist_ident).first()
+    if not youtube_playlist:
+        api = get_youtube_api(user_profile)
+        youtube_playlist = fetch_new_youtube_playlist(api, playlist_ident)
+
+    if ItemHarvester.objects.filter(youtube_playlist=youtube_playlist, user=user).exists():
+        raise AddYoutubeItemHarvesterException(
+            f'La playlist Youtube "{youtube_playlist}" est déjà dans '
+            f'votre liste de collecte!'
+        )
+
+    try:
+        validate_harvest_dates(since, until)
+    except InvalidHarvestDatesException as e:
+        raise AddYoutubeItemHarvesterException(str(e))
+
+    ItemHarvester.create(user, youtube_playlist, since, until)
+
+
+def get_playlist_ident_from_url(url):
+    match = re.match(r'.*list=(?P<ident>[\w\.-]+)&?.*', url)
+    if not match:
+        raise AddYoutubeItemHarvesterException(f'"{url}" ne semble pas être une URL valide.')
+    return match.group('ident')
+
+
+def fetch_new_youtube_playlist(api, playlist_ident):
+    try:
+        response = api.playlists().list(
+            id=playlist_ident,
+            part='snippet,id,status'
+        ).execute()
+    except:
+        logError("Unknown error while fetching new youtube playlist")
+        raise AddYoutubeItemHarvesterException(
+            'Une erreur est survenue en tentant de trouver '
+            'l\'URL spécifiée. Veuillez réessayer.'
+        )
+
+    if 'items' not in response or not response['items']:
+        raise AddYoutubeItemHarvesterException(
+            f'L\'url contenant {playlist_ident} ne semble pas '
+            f'correspondre à une playlist Youtube. '
+            f'Veuillez re-vérifier celle-ci.'
+        )
+    item = response['items'][0]
+    new_playlist = YTPlaylist.objects.create(_ident=item['id'])
+    new_playlist.update(item)
+    return new_playlist
+
+
+def get_youtube_api(user_profile):
+    try:
+        api = build("youtube", "v3", developerKey=user_profile.youtubeApp_dev_key)
+        api.i18nLanguages().list(part='snippet').execute()  # testing
+        return api
+    except:
+        user_profile.youtubeApp_parameters_error = True
+        user_profile.save()
+        logError('Error in Youtube forms: get_youtube_api')
+        raise AddYoutubeItemHarvesterException(
+            "Un problème est survenu avec votre application Youtube! Veuillez visiter votre page de "
+            "<a href='/user/settings' class='TableToolLink'>paramètres</a> et assurez-vous que les "
+            "informations inscrites dans la section \"Youtube\" sont correctes."
+        )
+
+
+class AddYoutubeItemHarvesterException(Exception):
+    pass

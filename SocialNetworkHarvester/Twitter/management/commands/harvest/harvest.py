@@ -4,8 +4,7 @@ from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
 from django.core.paginator import Paginator
 
-from AspiraUser.models import UserProfile, TWUser, Tweet
-from SocialNetworkHarvester.loggers.twitterLogger import log, logError
+from AspiraUser.models import UserProfile
 from SocialNetworkHarvester.settings import LOG_DIRECTORY
 from .twFavTweetUpdater import *
 from .twFollowersUpdater import *
