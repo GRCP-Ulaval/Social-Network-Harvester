@@ -54,7 +54,7 @@ INSTALLED_APPS = [
 
 # Applications in which there is an 'harvest' module
 HARVEST_APPS = [
-    'Facebook',
+    #'Facebook',
     'Twitter',
     'Youtube',
 ]

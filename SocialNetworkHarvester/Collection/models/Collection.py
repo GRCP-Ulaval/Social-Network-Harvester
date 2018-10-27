@@ -40,9 +40,7 @@ class Collection(models.Model):
     def items_twitter_users(self):
         return self.collection_items.filter(twitter_user__isnull=False)
 
-    def items_hashtag_harvesters(self):
-        items = self.collection_items.filter(twitter_hashtag__isnull=False)
-        return items
+    def items_twitter_hashtags(self):
         return self.collection_items.filter(twitter_hashtag__isnull=False)
 
     def items_facebook_pages(self):

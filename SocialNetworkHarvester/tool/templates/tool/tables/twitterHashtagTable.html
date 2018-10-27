@@ -438,7 +438,7 @@
         var srcs = [
           {
             modelName: 'Collection',
-            attr: 'collection_items',
+            attr: 'items_twitter_hashtags',
             id: '{{ collection.pk }}',
           },
         ];
@@ -447,7 +447,7 @@
             'colStr': 'Terme',
             'fields': ['twitter_hashtag__term', 'twitter_hashtag__getLink'],
             'render': function (data, type, row) {
-              if (row['twitter_hashtag__term'] == null) {
+              if (!row['twitter_hashtag__term']) {
                 return undefinedTag();
               } else {
                 return tableToolLink(row['twitter_hashtag__getLink'],

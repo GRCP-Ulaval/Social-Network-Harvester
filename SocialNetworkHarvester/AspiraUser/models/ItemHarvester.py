@@ -44,11 +44,10 @@ class ItemHarvester(models.Model):
         **nullable,
         on_delete=models.PROTECT
     )
-    harvest_since = models.DateTimeField(
-        default=x_days_ago(30)
-    )
-    harvest_until = models.DateTimeField(
-        default=today()
+    harvest_since = models.DateTimeField()
+    harvest_until = models.DateTimeField()
+    harvest_completed = models.BooleanField(
+        default=False
     )
 
     def harvest_since_str(self):
