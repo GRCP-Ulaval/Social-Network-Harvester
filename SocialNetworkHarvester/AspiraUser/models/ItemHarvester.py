@@ -77,7 +77,7 @@ class ItemHarvester(models.Model):
                 return attr
 
     def __str__(self):
-        return "%s harvested item: %s" % (self.user, self.get_item())
+        return "%s's harvested item: %s" % (self.user, self.get_item())
 
     def str(self):
         item = self.get_item()

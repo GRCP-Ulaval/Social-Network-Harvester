@@ -1,7 +1,9 @@
 import importlib
 import inspect
+import os
 import time
 
+from django.utils.timezone import now
 from django_extensions.management.jobs import BaseJob
 
 from SocialNetworkHarvester.harvest import BaseTaskProducer
@@ -13,14 +15,12 @@ from SocialNetworkHarvester.harvest.utils import (
     get_running_time_in_seconds,
     get_formated_job_counts)
 from SocialNetworkHarvester.loggers.jobsLogger import log, logError, mail_log
-from SocialNetworkHarvester.settings import HARVEST_APPS, DEBUG
+from SocialNetworkHarvester.settings import HARVEST_APPS, DEBUG, LOG_DIRECTORY
+from Twitter.harvest.globals import clients_queue as twitter_clients_queue
 
 TASK_CONSUMERS_COUNT = 10
 
-DISPLAY_JOBS_STATUS_DELAY_IN_MINUTES = 0.1
-
 MONITORING_DELAY_IN_SECONDS = 3
-
 
 threads_list = [[]]
 
@@ -51,9 +51,6 @@ def generate_producers():
         threads_list[0].append(t)
         t.start()
 
-def monitoring_delay_passed():
-    return get_running_time_in_seconds() % (DISPLAY_JOBS_STATUS_DELAY_IN_MINUTES * 60) < MONITORING_DELAY_IN_SECONDS
-
 
 def monitor_progress():
     time.sleep(MONITORING_DELAY_IN_SECONDS)
@@ -62,18 +59,20 @@ def monitor_progress():
             thread, error = global_errors.get()
             log(f'ERROR OCCURED IN THREAD: {thread}')
             manage_exception(error)
-        elif monitoring_delay_passed():
-            display_jobs_statuses()
+        display_jobs_statuses()
         time.sleep(MONITORING_DELAY_IN_SECONDS)
 
 
 def display_jobs_statuses():
-    simple_log_kwargs = {'showDate': False, 'showTime': False, 'showThread': False}
-    log(f'Current running time: {int(get_running_time_in_minutes())} minutes '
-        f'{int(get_running_time_in_seconds() % 60)} seconds', **simple_log_kwargs)
-    formated = get_formated_job_counts()
-    if formated:
-        log(formated, **simple_log_kwargs)
+    with open(os.path.join(LOG_DIRECTORY, 'harvest_job_tasks_stauts.log'), 'w') as f:
+        f.write(f'Last updated: {now().strftime("%Y/%m/%d %H:%M")}\n')
+        f.write(f'Current running time: {int(get_running_time_in_minutes())} minutes '
+                f'{int(get_running_time_in_seconds() % 60)} seconds\n')
+        f.write(f'{get_formated_job_counts()}\n')
+        for i in range(twitter_clients_queue.qsize()):
+            client = twitter_clients_queue.get()
+            f.write(f'{client.name} remaining calls: {client.pretty_limit_status()}\n')
+            twitter_clients_queue.put(client)
 
 
 def manage_exception(error):
@@ -83,6 +82,7 @@ def manage_exception(error):
             mail_log('Aspira Harvest Error - %s' % error.title, error.message)
         monitor_progress()
     else:
+        end_threads()
         raise error
 
 

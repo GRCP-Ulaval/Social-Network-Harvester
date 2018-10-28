@@ -83,7 +83,8 @@ class TWUser(models.Model):
     def error_on_network_harvest(self):
         return self._error_on_network_harvest
 
-    _update_frequency = models.IntegerField(default=5)  # 1 = every day, 2 = every 2 days, etc.
+    # 1 = every day, 2 = every 2 days, etc.
+    _update_frequency = models.IntegerField(default=5)
 
     def update_frequency(self):
         return self._update_frequency

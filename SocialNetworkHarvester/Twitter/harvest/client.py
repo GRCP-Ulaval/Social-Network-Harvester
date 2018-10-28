@@ -1,10 +1,10 @@
 import re
 import time
+from pprint import pformat
 
 import tweepy
 
 from SocialNetworkHarvester.harvest.utils import check_stop_flag_raised
-from SocialNetworkHarvester.loggers.jobsLogger import pretty
 from Twitter.harvest.globals import clients_queue
 
 
@@ -70,15 +70,15 @@ class Client:
         return self.limits[re.search(r'(?<=/)\w+(?=/)', call_identifier).group(0)][call_identifier]['reset']
 
     def pretty_limit_status(self):
-        d = {'client': str(self)}
+        ret = {'client': str(self)}
         for call_name in self.calls_map:
             call_identifier = self.calls_map[call_name]
-            d["{:<20}".format(call_name)] = "{}/{} (resets in {:0.0f} seconds)".format(
+            ret["{:<20}".format(call_name)] = "{}/{} (resets in {:0.0f} seconds)".format(
                 self.limits[re.search(r'(?<=/)\w+(?=/)', call_identifier).group(0)][call_identifier]['remaining'],
                 self.limits[re.search(r'(?<=/)\w+(?=/)', call_identifier).group(0)][call_identifier]['limit'],
                 self.limits[re.search(r'(?<=/)\w+(?=/)', call_identifier).group(0)][call_identifier]
                 ['reset'] - time.time())
-        pretty(d)
+        return pformat(ret)
 
 
 def get_client(call_name):
@@ -92,7 +92,7 @@ def get_client(call_name):
             client = None
         if not clients_queue.empty():
             client = clients_queue.get()
-    #client.pretty_limit_status()
+    # client.pretty_limit_status()
     return client
 
 
@@ -137,6 +137,7 @@ class CustomCursor:
         return_client(client)
 
     def next(self):
+        check_stop_flag_raised()
         if self.index == -1:
             return None
         if self.index < self.nbItems:

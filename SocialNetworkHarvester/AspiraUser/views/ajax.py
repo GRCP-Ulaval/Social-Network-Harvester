@@ -1,13 +1,9 @@
-from datetime import datetime
-
 from django.contrib.auth.decorators import login_required
-from django.utils.timezone import utc
 
 from AspiraUser.models import getUserSelection, getModel, ItemHarvester, resetUserSelection
 from SocialNetworkHarvester.jsonResponses import jsonBadRequest, missingParam, jResponse, jsonMessages
 from SocialNetworkHarvester.loggers.viewsLogger import logError
-from SocialNetworkHarvester.settings import HARVEST_MAX_PERIOD, HARVEST_SINCE_OLDEST_DATE
-from SocialNetworkHarvester.utils import today
+from SocialNetworkHarvester.utils import validate_harvest_dates, InvalidHarvestDatesException
 
 
 @login_required()
@@ -71,17 +67,15 @@ def addRemoveItemById(request, addRemove):
             )
 
         ItemHarvester.create(user, item, harvest_since, harvest_until)
-        return jResponse(
-            {'message': {"code": 200, "message": "<b>%s</b> as été ajouté de votre liste de collecte." % item}})
+        return jResponse({
+            'messages': [f"<b>{item}</b> as été ajouté à votre liste de collecte."]
+        })
     else:
         if not user.userProfile.item_is_in_list(item):
             return jsonBadRequest(f"{item} is not in current list")
 
         user.userProfile.remove_item_from_harvest_list(item)
 
-        return jResponse(
-            {'message': {
-                "code": 200, "message": f"<b>{item}</b> as été retiré de votre liste de collecte."}
-            }
-        )
-
+        return jResponse({
+            "messages": [f"<b>{item}</b> as été retiré de votre liste de collecte."]
+        })

@@ -63,7 +63,7 @@ HARVEST_APPS = [
 HARVEST_MAX_PERIOD = timedelta(days=30)
 
 # Oldest date from today on which an HarvestItem can begin an harvest.
-HARVEST_SINCE_OLDEST_DATE = timedelta(days=183)  # half a year
+HARVEST_SINCE_OLDEST_DATE = timedelta(days=183)
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

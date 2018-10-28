@@ -9,38 +9,33 @@ def jResponse(dictResponse):
 
 def jsonForbiddenError():
     return jResponse({
-        'error': {
-            'code': 403,
-            'message': 'Forbidden',
-            'reason': 'This ressource is forbiden.'
-        }
+        "status": "error",
+        "errors": ["Cette ressource n'est pas accessible sans authorisation."],
+        "code": 403
     })
 
 
 def jsonUnauthorizedError():
     return jResponse({
-        'error': {
-            'code': 401,
-            'message': 'Unauthorized',
-            'reason': 'This ressource needs an authentification.'
-        }
+        "status": "error",
+        "errors": ["Cette ressource n'est pas accessible sans identification."],
+        "code": 401
     })
 
 
 def jsonUnknownError():
     return jResponse({
         'status': 'error',
-        'errors': ['Une erreur inconnue est survenue. Veuillez réessayer.']
+        'errors': ['Une erreur inconnue est survenue. Veuillez réessayer.'],
+        "code": 500
     })
 
 
 def jsonBadRequest(reason):
     return jResponse({
-        'error': {
-            'code': 400,
-            'message': 'Bad Request',
-            'reason': reason
-        }
+        "status": "error",
+        "errors": [reason],
+        "code": 400
     })
 
 
@@ -54,31 +49,25 @@ def invalidParam(paramName):
 
 def jsonDone():
     return jResponse({
-        "code": 200,
-        'message': {
-            'code': 200,
-            'message': 'Completed',
-        }
+        "status": "message",
+        "messages": ["Opération complétée"],
+        "code":200
     })
 
 
 def jsonNotImplementedError():
     return jResponse({
-        'message': {
-            'code': 501,
-            'message': 'Not Implemented',
-            'reason': 'Ressource not implemented yet.'
-        }
+        "status": "error",
+        "errors": ["Cette fonctionnalité sera disponible prochainement."],
+        "code": 501
     })
 
 
 def jsonNotFound():
     return jResponse({
-        'message': {
-            'code': 404,
-            'message': 'Not Found',
-            'reason': 'Ressource cannot be found.'
-        }
+        "status": "error",
+        "errors": ["Cette ressource est introuvable"],
+        "code": 404
     })
 
 
@@ -86,8 +75,9 @@ def jsonMessages(messages):
     if not isinstance(messages, list):
         messages = [messages]
     return jResponse({
-        'status': 'ok',
-        'messages': messages
+        'status': 'message',
+        'messages': messages,
+        'code':200
     })
 
 

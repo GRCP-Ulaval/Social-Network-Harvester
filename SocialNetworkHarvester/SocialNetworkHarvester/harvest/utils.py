@@ -51,8 +51,6 @@ def decrement_job_count(job_name):
 
 
 def get_formated_job_counts():
-    if not any(job_counts_in_queue[0].values()):
-        return None
     formated_string = 'Current tasks in queue: {\n'
     job_counts_in_queue_lock.acquire()
     for key, val in job_counts_in_queue[0].items():

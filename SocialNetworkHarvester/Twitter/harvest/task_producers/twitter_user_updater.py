@@ -7,7 +7,7 @@ from Twitter.models import TWUser
 
 class TwitterUserUpdater(BaseTaskProducer):
     batch_size = 100
-    name = 'TwitterUserUpdater'
+    name = 'Twitter Users Updater'
 
     def generate_tasks(self):
         priority_updates = order_queryset(
@@ -22,15 +22,17 @@ class TwitterUserUpdater(BaseTaskProducer):
             delay=5
         )
 
-        log('%s/%s total twitter users to update.' % (
-            priority_updates.count() + all_users_to_update.count(),
-            TWUser.objects.all().count()
-        ))
+        to_update_count = priority_updates.count() + all_users_to_update.count()
+        if to_update_count:
+            log(
+                f'{to_update_count}/{TWUser.objects.all().count()} total '
+                f'twitter users to update.'
+            )
 
-        for index in range(0, priority_updates.count() - 1, self.batch_size):
+        for index in range(0, priority_updates.count(), self.batch_size):
             if priority_updates[index: index + self.batch_size]:
-                yield update_twitter_users, [priority_updates[index: index + self.batch_size]]
+                yield update_twitter_users, [priority_updates[index: index + self.batch_size - 1]]
 
-        for index in range(0, all_users_to_update.count() - 1, self.batch_size):
+        for index in range(0, all_users_to_update.count(), self.batch_size):
             if all_users_to_update[index: index + self.batch_size]:
-                yield update_twitter_users, [all_users_to_update[index: index + self.batch_size]]
+                yield update_twitter_users, [all_users_to_update[index: index + self.batch_size - 1]]

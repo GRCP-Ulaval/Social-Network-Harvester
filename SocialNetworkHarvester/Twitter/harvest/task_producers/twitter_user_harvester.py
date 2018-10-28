@@ -1,20 +1,34 @@
-from AspiraUser.models import UserProfile
+from AspiraUser.models import UserProfile, ItemHarvester
 from SocialNetworkHarvester.harvest import BaseTaskProducer
-from SocialNetworkHarvester.harvest.utils import order_queryset
+from SocialNetworkHarvester.loggers.jobsLogger import log
+from Twitter.harvest.tasks import harvest_twitter_user
 from Twitter.models import TWUser
+
+
+class TwitterUserHarvester(BaseTaskProducer):
+    batch_size = 100
+    name = 'Twitter Users Harvester'
+
+    def generate_tasks(self):
+        twitter_user_harvesters = _get_twitter_user_list()
+
+        twitter_user_harvesters_count = twitter_user_harvesters.count()
+        if twitter_user_harvesters_count:
+            log(
+                f"{twitter_user_harvesters_count}/"
+                f"{ItemHarvester.objects.filter(twitter_user__isnull=False).count()} "
+                f"Twitter users to tweet-harvest"
+            )
+
+        for twitter_user in twitter_user_harvesters:
+            yield harvest_twitter_user, [twitter_user]
 
 
 def _get_twitter_user_list():
     profiles = UserProfile.objects.filter(twitterApp_parameters_error=False)
     twitter_users = TWUser.objects.none()
     for profile in profiles:
-        twitter_users = twitter_users | profile.twitterUsersToHarvest.filter(_error_on_harvest=False, protected=False)
-    return order_queryset(twitter_users, '_last_tweet_harvested', delay=1)
-
-
-class TwitterUserHarvester(BaseTaskProducer):
-    batch_size = 100
-    name = 'Twitter Users Harvest'
-
-    def generate_tasks(self):
-        twitter_users = _get_twitter_user_list()
+        twitter_users = twitter_users | profile.user.harvested_items \
+            .filter(twitter_user__isnull=False, harvest_completed=False) \
+            .filter(twitter_user___error_on_harvest=False)
+    return twitter_users

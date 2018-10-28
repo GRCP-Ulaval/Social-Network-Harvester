@@ -7,6 +7,9 @@ from Twitter.harvest.client import get_client, return_client
 
 
 def update_twitter_users(twitter_user_batch):
+    if not twitter_user_batch.count():
+        return
+
     twitter_user_batch = list(twitter_user_batch)
     client = get_client('lookup_users')
     try:

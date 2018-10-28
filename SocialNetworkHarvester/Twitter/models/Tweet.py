@@ -6,6 +6,7 @@ from django.db import models
 
 from SocialNetworkHarvester.loggers.jobsLogger import log
 from SocialNetworkHarvester.utils import get_from_any_or_create, today
+from Twitter import models as this_module
 from .Hashtag import Hashtag
 from .TWPlace import TWPlace
 from .TWUser import TWUser
@@ -50,6 +51,8 @@ class Tweet(models.Model):
     hashtags = models.ManyToManyField(Hashtag, related_name='tweets')
 
     _last_updated = models.DateTimeField(null=True)
+    # 1 = every day, 2 = every 2 days, etc.
+    _update_frequency = models.IntegerField(default=5)
 
     def last_updated(self):
         return self._last_updated
@@ -71,8 +74,15 @@ class Tweet(models.Model):
 
     _date_time_fields = ['created_at']
     _time_labels = ['retweet_count']
-    _relationals = ['place_id', 'in_reply_to_user_id', 'in_reply_to_status_id', 'quoted_status_id', 'retweet_of_id',
-                    'user_id', 'hashtags_id']
+    _relationals = [
+        'place_id',
+        'in_reply_to_user_id',
+        'in_reply_to_status_id',
+        'quoted_status_id',
+        'retweet_of_id',
+        'user_id',
+        'hashtags_id'
+    ]
 
     def get_fields_description(self):
         return {
@@ -239,24 +249,30 @@ class Tweet(models.Model):
         self.copyBasicFields(jObject)
         self.copyDateTimeFields(jObject)
         self.updateTimeLabels(jObject)
+
         if "entities" in jObject:
             self.setUserMentions(jObject['entities'])
             self.setHashtags(jObject['entities'])
+
         if "retweeted_status" in jObject:
             self.setRetweetOf(jObject['retweeted_status'])
-        if 'user' in jObject and not self.user:
-            self.setUser(jObject['user'])
+
+        if not self.user and 'user' in jObject:
+            self.set_author(jObject['user'])
+
         if jObject['in_reply_to_user_id']:
             self.setInReplyToUser(screen_name=jObject['in_reply_to_screen_name'], _ident=jObject['in_reply_to_user_id'])
-            # self.setInReplyToUser(screen_name=jObject['in_reply_to_screen_name'], _ident=jObject[
-            # 'in_reply_to_user_id'])
+
         if jObject['in_reply_to_status_id']:
             self.setInReplyToStatus(jObject['in_reply_to_status_id'])
+
         if 'quoted_status_id' in jObject:
             self.setQuotedStatus(jObject['quoted_status_id'])
+
         if jObject['place']:
             self.setPlace(jObject['place'])
 
+        self._last_updated = today()
         self._ident = jObject['id']
         try:
             self.save()
@@ -266,21 +282,10 @@ class Tweet(models.Model):
             self.text = text
             self.save()
 
-    def setUser(self, jObject):
-        ident = jObject['id']
-        screen_name = None
-        if "screen_name" in jObject:
-            screen_name = jObject['screen_name']
-        try:
-            twuser, new = get_from_any_or_create(TWUser, _ident=ident, screen_name=screen_name)
-        except:
-            doubles = TWUser.objects.filter(screen_name=screen_name)
-            doubles[0]._has_duplicate = True
-            doubles[0].save()
-            log('TWUSER %s HAS %s DUPLICATES!' % (doubles[0], doubles.count() - 1))
-            raise
-            # twusers = TWUser.objects.filter(_ident=ident, screen_name=screen_name)
-            # twuser = joinTWUsers(twusers[0], twusers[1])
+    def set_author(self, jObject):
+        twuser, new = TWUser.objects.get_or_create(_ident=jObject['id'])
+        if new:
+            twuser.UpdateFromResponse(jObject)
         self.user = twuser
 
     def setInReplyToStatus(self, twid):
@@ -298,8 +303,7 @@ class Tweet(models.Model):
             log('TWUSER %s HAS %s DUPLICATES!' % (doubles[0], doubles.count() - 1))
             time.sleep(3)
             raise
-            # twusers = TWUser.objects.filter(**kwargs)
-            # twuser = joinTWUsers(twusers[0], twusers[1])
+
         self.in_reply_to_user = twuser
 
     def setQuotedStatus(self, twid):
@@ -338,14 +342,14 @@ class Tweet(models.Model):
         for atr in self._time_labels:
             if atr in jObject and jObject[atr]:
                 related_name = atr + 's'
-                lastItem = self.getLast(related_name)
-                if not lastItem or lastItem.recorded_time != today():
-                    className = globals()[atr]
-                    newItem = className(tweet=self, value=jObject[atr])
-                    newItem.save()
-                elif lastItem.value != jObject[atr]:
-                    lastItem.value = jObject[atr]
-                    lastItem.save()
+                last_item = self.getLast(related_name)
+                if not last_item or last_item.recorded_time != today():
+                    class_name = this_module.get_twitter_model_by_name(atr)
+                    new_item = class_name(tweet=self, value=jObject[atr])
+                    new_item.save()
+                elif last_item.value != jObject[atr]:
+                    last_item.value = jObject[atr]
+                    last_item.save()
 
     def getLast(self, related_name):
         queryset = getattr(self, related_name).order_by('-recorded_time')

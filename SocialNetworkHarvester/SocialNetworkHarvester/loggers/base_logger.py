@@ -48,14 +48,13 @@ class Logger():
         if showThread is None:
             showThread = self.showThread
         try:
-            self.logger.info('%s%s%s%s%s' % (
-                showDate * datetime.utcnow().strftime('%Y/%m/%d '),
-                showTime * datetime.utcnow().strftime('%H:%M | '),
-                showThread * '{:^30} | '.format(threading.current_thread().name),
-                ' ' * (self.indent_level),
-                message
+            self.logger.info(
+                f'{showDate * datetime.utcnow().strftime("%Y/%m/%d ")}'
+                f'{showTime * datetime.utcnow().strftime("%H:%M | ")}'
+                f'{showThread * f"{threading.current_thread().name:^30} | "}'
+                f'{" " * (self.indent_level)}'
+                f'{message}'
             )
-                             )
         except:
             self.logger.exception("AN ERROR OCCURED IN LOGGING ELEMENT!")
 
