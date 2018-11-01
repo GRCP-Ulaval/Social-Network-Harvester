@@ -26,9 +26,9 @@ class TwitterUserHarvester(BaseTaskProducer):
 
 def _get_twitter_user_list():
     profiles = UserProfile.objects.filter(twitterApp_parameters_error=False)
-    twitter_users = TWUser.objects.none()
+    twitter_users_harvester = ItemHarvester.objects.none()
     for profile in profiles:
-        twitter_users = twitter_users | profile.user.harvested_items \
+        twitter_users_harvester = twitter_users_harvester | profile.user.harvested_items \
             .filter(twitter_user__isnull=False, harvest_completed=False) \
             .filter(twitter_user___error_on_harvest=False)
-    return twitter_users
+    return twitter_users_harvester

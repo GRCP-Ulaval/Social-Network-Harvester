@@ -4,7 +4,7 @@ from pprint import pformat
 
 import tweepy
 
-from SocialNetworkHarvester.harvest.utils import check_stop_flag_raised
+from SocialNetworkHarvester.harvest.utils import monitor_stop_flag
 from Twitter.harvest.globals import clients_queue
 
 
@@ -86,7 +86,7 @@ def get_client(call_name):
     if not clients_queue.empty():
         client = clients_queue.get()
     while not client or client.get_remaining_calls(call_name) <= 0:
-        check_stop_flag_raised()
+        monitor_stop_flag()
         if client:
             clients_queue.put(client)
             client = None
@@ -137,7 +137,7 @@ class CustomCursor:
         return_client(client)
 
     def next(self):
-        check_stop_flag_raised()
+        monitor_stop_flag()
         if self.index == -1:
             return None
         if self.index < self.nbItems:

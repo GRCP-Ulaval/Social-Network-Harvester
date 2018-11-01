@@ -7,20 +7,21 @@ from django.utils.timezone import now
 from django_extensions.management.jobs import BaseJob
 
 from SocialNetworkHarvester.harvest import BaseTaskProducer
-from SocialNetworkHarvester.harvest.globals import global_errors, global_thread_stop_flag
+from SocialNetworkHarvester.harvest.globals import global_errors, global_thread_stop_flag, global_task_queue, \
+    global_process
 from SocialNetworkHarvester.harvest.taskConsumer import TaskConsumer
 from SocialNetworkHarvester.harvest.utils import (
     MailReportableException,
     get_running_time_in_minutes,
-    get_running_time_in_seconds,
-    get_formated_job_counts)
+    get_running_time_in_seconds, get_formated_thread_list, get_formated_ressource_usage, get_running_time_in_hours)
 from SocialNetworkHarvester.loggers.jobsLogger import log, logError, mail_log
 from SocialNetworkHarvester.settings import HARVEST_APPS, DEBUG, LOG_DIRECTORY
-from Twitter.harvest.globals import clients_queue as twitter_clients_queue
 
 TASK_CONSUMERS_COUNT = 10
 
-MONITORING_DELAY_IN_SECONDS = 3
+MONITORING_DELAY_IN_SECONDS = 1
+
+MAX_RAM_USAGE_LIMIT_IN_MEGABYTE = 600
 
 threads_list = [[]]
 
@@ -59,20 +60,23 @@ def monitor_progress():
             thread, error = global_errors.get()
             log(f'ERROR OCCURED IN THREAD: {thread}')
             manage_exception(error)
+        if global_process.memory_info()[0] // 1000000 > MAX_RAM_USAGE_LIMIT_IN_MEGABYTE:
+            raise MaxRAMUsageLimitReachedException
         display_jobs_statuses()
         time.sleep(MONITORING_DELAY_IN_SECONDS)
 
 
 def display_jobs_statuses():
-    with open(os.path.join(LOG_DIRECTORY, 'harvest_job_tasks_stauts.log'), 'w') as f:
+    with open(os.path.join(LOG_DIRECTORY, 'harvest_job_tasks_status.log'), 'w') as f:
+        f.write(f'\n' * 20)
+        f.write(f'####  HARVEST STATUS  ####\n')
         f.write(f'Last updated: {now().strftime("%Y/%m/%d %H:%M")}\n')
-        f.write(f'Current running time: {int(get_running_time_in_minutes())} minutes '
+        f.write(f'Current running time: {int(get_running_time_in_hours())} hours '
+                f'{int(get_running_time_in_minutes() % 3600)} minutes '
                 f'{int(get_running_time_in_seconds() % 60)} seconds\n')
-        f.write(f'{get_formated_job_counts()}\n')
-        for i in range(twitter_clients_queue.qsize()):
-            client = twitter_clients_queue.get()
-            f.write(f'{client.name} remaining calls: {client.pretty_limit_status()}\n')
-            twitter_clients_queue.put(client)
+        f.write(f'{get_formated_ressource_usage()}\n')
+        f.write(f'{global_task_queue.formated_tasks_counts()}\n')
+        f.write(f'{get_formated_thread_list(threads_list[0])}\n')
 
 
 def manage_exception(error):
@@ -92,7 +96,7 @@ def end_threads():
     for thread in threads_list[0]:
         if thread.is_alive():
             log('Joining thread %s' % thread.name)
-            thread.join()
+            thread.join(timeout=3)
     log('Successfully joined all threads')
 
 
@@ -113,6 +117,11 @@ class Job(BaseJob):
             generate_producers()
             monitor_progress()
             log('Job "{}" has completed.'.format(self.name))
+        except MaxRAMUsageLimitReachedException:
+            logError(f"Max RAM usage limit reached {MAX_RAM_USAGE_LIMIT_IN_MEGABYTE} Mb. Restarting")
+            end_threads()
+            global_task_queue.clear()
+            return self.execute()
         except Exception:
             end_threads()
             msg = "An unknown exception occured while harvesting data."
@@ -122,3 +131,7 @@ class Job(BaseJob):
             else:
                 mail_log('Aspira - Harvest Unknown Error', msg)
         log('harvest ended')
+
+
+class MaxRAMUsageLimitReachedException(Exception):
+    pass

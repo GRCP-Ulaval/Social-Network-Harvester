@@ -1,13 +1,13 @@
+from SocialNetworkHarvester.harvest.globals import global_task_queue
 from .baseThread import BaseThread
-from .globals import tasks_queue
-from .utils import safe_sleep, check_stop_flag_raised, add_task
+from .utils import safe_sleep, monitor_stop_flag
 
 
 class BaseTaskProducer(BaseThread):
     relaunch_delay_in_seconds = 60
     task_injection_delay_in_seconds = 0
-    in_between_routines_delay_in_seconds = 30
-    task_queue_target_size = 1000
+    in_between_routines_delay_in_seconds = 10
+    task_queue_target_size = 1
 
     def __init__(self):
         super().__init__()
@@ -20,20 +20,12 @@ class BaseTaskProducer(BaseThread):
         return self.name
 
     def execute(self):
-        self.create_tasks()
+        for task_group in self.generate_tasks():
+            monitor_stop_flag()
+            if task_group and global_task_queue.count(task_group[0]) < self.task_queue_target_size:
+                global_task_queue.add(*task_group)
+            safe_sleep(self.task_injection_delay_in_seconds)
         safe_sleep(self.in_between_routines_delay_in_seconds)
-
-    def put_in_task_queue(self, task):
-        while tasks_queue.qsize() > self.task_queue_target_size - 1:
-            check_stop_flag_raised()
-        add_task(*task)
-
-    def create_tasks(self):
-        for task in self.generate_tasks():
-            check_stop_flag_raised()
-            if task:
-                self.put_in_task_queue(task)
-                safe_sleep(self.task_injection_delay_in_seconds)
 
     def generate_tasks(self):
         """ This method should yield tuples of the following form:

@@ -5,8 +5,8 @@ from .globals import global_errors
 from .utils import (
     NonFatalExeption,
     safe_sleep,
-    check_stop_flag_raised,
-    GlobalStopFlagRaised
+    monitor_stop_flag,
+    GlobalStopFlag
 )
 
 
@@ -27,7 +27,7 @@ class BaseThread(Thread):
         log('%s has started' % self.name)
         try:
             while True:
-                check_stop_flag_raised()
+                monitor_stop_flag()
                 self.execute()
         except NonFatalExeption:
             logError(
@@ -36,7 +36,7 @@ class BaseThread(Thread):
             )
             safe_sleep(self.relaunch_delay_in_seconds)
             return self.run()
-        except GlobalStopFlagRaised:
+        except GlobalStopFlag:
             log("Thread ended gracefully.")
             return
         except Exception as e:

@@ -1,6 +1,6 @@
 from django.utils.timezone import utc
 
-from SocialNetworkHarvester.harvest.utils import add_task
+from SocialNetworkHarvester.harvest.globals import global_task_queue
 from SocialNetworkHarvester.loggers.jobsLogger import log
 from Twitter.harvest.client import CustomCursor
 from Twitter.harvest.tasks.update_tweets import update_tweet_from_response
@@ -32,7 +32,7 @@ def harvest_twitter_user(twitter_user_harvester):
         log(tweet.created_at)
         created_at = tweet.created_at.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=utc)
         if created_at <= twitter_user_harvester.harvest_until:
-            add_task(update_tweet_from_response, [tweet])
+            global_task_queue.add(update_tweet_from_response, [tweet])
 
         if created_at < twitter_user_harvester.harvest_since:
             break

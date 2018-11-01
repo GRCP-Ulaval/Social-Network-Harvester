@@ -1,6 +1,6 @@
 from SocialNetworkHarvester.harvest.baseThread import BaseThread
-from SocialNetworkHarvester.harvest.globals import tasks_queue
-from SocialNetworkHarvester.harvest.utils import check_stop_flag_raised, get_task
+from SocialNetworkHarvester.harvest.globals import global_task_queue
+from SocialNetworkHarvester.harvest.utils import monitor_stop_flag
 
 
 class TaskConsumer(BaseThread):
@@ -15,10 +15,10 @@ class TaskConsumer(BaseThread):
         super().__init__()
 
     def execute(self):
-        while tasks_queue.empty():
-            check_stop_flag_raised()
+        while global_task_queue.empty():
+            monitor_stop_flag()
 
-        self.current_task, self.current_args, self.current_kwargs = get_task()
+        self.current_task, self.current_args, self.current_kwargs = global_task_queue.get()
         if not self.current_task:
             return
         # log('Consuming task: %s' % self.current_task.__name__)
