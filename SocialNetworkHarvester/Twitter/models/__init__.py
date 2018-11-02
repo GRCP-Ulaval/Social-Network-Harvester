@@ -1,3 +1,5 @@
+from django.db import models
+
 from .Hashtag import Hashtag
 from .TWPlace import TWPlace
 from .TWUser import TWUser, TWUrl
@@ -41,3 +43,7 @@ def get_twitter_model_by_name(model_name):
     if model_name not in dict.keys():
         raise Exception('Invalid class name: {}'.format(model_name))
     return dict[model_name]
+
+
+class HashtagHarvester(models.Model):
+    pass
