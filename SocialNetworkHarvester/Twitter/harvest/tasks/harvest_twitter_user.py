@@ -31,7 +31,6 @@ def harvest_twitter_user(twitter_user_harvester):
         else:
             none_received_count = 0
 
-        log(tweet.created_at)
         created_at = tweet.created_at.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=utc)
         if created_at <= twitter_user_harvester.harvest_until:
             global_task_queue.add(update_tweet_from_response, [tweet])

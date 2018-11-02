@@ -49,10 +49,10 @@ class Logger():
             showThread = self.showThread
         try:
             self.logger.info(
-                "{date}{time}{thread}{indent}{message}".format(
-                    date=showDate * datetime.utcnow().strftime("%Y/%m/%d "),
+                "{date}{time}{thread:^30} | {indent}{message}".format(
+                    date=showDate * datetime.utcnow().strftime("%Y/%m/%d |"),
                     time=showTime * datetime.utcnow().strftime("%H:%M | "),
-                    thread=showThread * "{threading.current_thread().name:^30} | ",
+                    thread=showThread * threading.current_thread().name,
                     indent=" " * (self.indent_level),
                     message=message,
                 )
