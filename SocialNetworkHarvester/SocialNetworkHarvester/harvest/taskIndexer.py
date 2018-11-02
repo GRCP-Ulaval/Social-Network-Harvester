@@ -54,7 +54,7 @@ class TaskIndexer:
         with self._mutex:
             formated_string = 'Current tasks to execute: {\n'
             for name, q in self._tasks_queues.items():
-                formated_string += f'{name:>40}: {q.qsize()}\n'
+                formated_string += '{:>40}: {}\n'.format(name, q.qsize())
             formated_string += '}'
             return formated_string
 

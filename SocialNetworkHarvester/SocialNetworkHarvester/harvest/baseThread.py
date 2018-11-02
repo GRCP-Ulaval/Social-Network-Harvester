@@ -19,8 +19,11 @@ class BaseThread(Thread):
         requireds = ['name']
         if not all([getattr(self, required) for required in requireds]):
             raise Exception(
-                f"The following attributes or methods must "
-                f"exist in {self.__class__.__name__}: {requireds}"
+                "The following attributes or methods must exist in "
+                "{}: {}".format(
+                    self.__class__.__name__,
+                    requireds
+                )
             )
 
     def run(self):
@@ -31,8 +34,11 @@ class BaseThread(Thread):
                 self.execute()
         except NonFatalExeption:
             logError(
-                f"({self.name}) has encountered a non-fatal error. Relaunching "
-                f"in {self.relaunch_delay_in_seconds} seconds"
+                "({}) has encountered a non-fatal error. Relaunching in {} "
+                "seconds".format(
+                    self.name,
+                    self.relaunch_delay_in_seconds
+                )
             )
             safe_sleep(self.relaunch_delay_in_seconds)
             return self.run()

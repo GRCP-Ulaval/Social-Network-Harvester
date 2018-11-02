@@ -49,11 +49,13 @@ class Logger():
             showThread = self.showThread
         try:
             self.logger.info(
-                f'{showDate * datetime.utcnow().strftime("%Y/%m/%d ")}'
-                f'{showTime * datetime.utcnow().strftime("%H:%M | ")}'
-                f'{showThread * f"{threading.current_thread().name:^30} | "}'
-                f'{" " * (self.indent_level)}'
-                f'{message}'
+                "{date}{time}{thread}{indent}{message}".format(
+                    date=showDate * datetime.utcnow().strftime("%Y/%m/%d "),
+                    time=showTime * datetime.utcnow().strftime("%H:%M | "),
+                    thread=showThread * "{threading.current_thread().name:^30} | ",
+                    indent=" " * (self.indent_level),
+                    message=message,
+                )
             )
         except:
             self.logger.exception("AN ERROR OCCURED IN LOGGING ELEMENT!")

@@ -14,9 +14,11 @@ def harvest_twitter_user(twitter_user_harvester):
         count=200
     )
     log(
-        f'harvesting {twitter_user} tweets from '
-        f'{twitter_user_harvester.harvest_since.strftime("%Y-%m-%d")} to '
-        f'{twitter_user_harvester.harvest_until.strftime("%Y-%m-%d")}'
+        'harvesting {} tweets from {} to {}'.format(
+            twitter_user,
+            twitter_user_harvester.harvest_since.strftime("%Y-%m-%d"),
+            twitter_user_harvester.harvest_until.strftime("%Y-%m-%d")
+        )
     )
     none_received_count = 0
     while True:
@@ -36,6 +38,6 @@ def harvest_twitter_user(twitter_user_harvester):
 
         if created_at < twitter_user_harvester.harvest_since:
             break
-    log(f'Tweet-harvest completed for {twitter_user_harvester}')
+    log('Tweet-harvest completed for {}'.format(twitter_user_harvester))
     twitter_user_harvester.harvest_completed = True
     twitter_user_harvester.save()

@@ -56,18 +56,25 @@ def validate_harvest_dates(harvest_since, harvest_until):
         since = datetime.strptime(harvest_since, '%Y-%m-%d').replace(tzinfo=utc)
         until = datetime.strptime(harvest_until, '%Y-%m-%d').replace(tzinfo=utc)
     except ValueError:
-        raise InvalidHarvestDatesException(f"L'une des dates spécifiée {harvest_since}, "
-                                           f"{harvest_until} est invalide.")
+        raise InvalidHarvestDatesException(
+            "L'une des dates spécifiée {}, {} est invalide.".format(
+                harvest_since, harvest_until
+            )
+        )
     if since >= until:
         raise InvalidHarvestDatesException('La date de fin doit être après la date de début!')
     if since + HARVEST_MAX_PERIOD < until:
         raise InvalidHarvestDatesException(
-            f"La durée maximale d'une collecte est de {HARVEST_MAX_PERIOD.days} jours."
+            "La durée maximale d'une collecte est de {} jours.".format(
+                HARVEST_MAX_PERIOD.days
+            )
         )
     if since + HARVEST_SINCE_OLDEST_DATE < today():
         raise InvalidHarvestDatesException(
-            f"La date de début d'une collecte ne peut pas remonter à avant les 6 derniers mois. "
-            f"Limite actuelle: {(today()-HARVEST_SINCE_OLDEST_DATE).strftime('%Y-%m-%d')}."
+            "La date de début d'une collecte ne peut pas remonter à avant les 6 derniers mois. "
+            "Limite actuelle: {}.".format(
+                (today() - HARVEST_SINCE_OLDEST_DATE).strftime('%Y-%m-%d')
+            )
         )
 
 

@@ -22,12 +22,7 @@ class TwitterUserUpdater(BaseTaskProducer):
             delay=5
         )
 
-        # to_update_count = priority_updates.count() + all_users_to_update.count()
-        # if to_update_count:
-        #     log(
-        #         f'{to_update_count}/{TWUser.objects.all().count()} total '
-        #         f'twitter users to update.'
-        #     )
+
 
         for index in range(0, priority_updates.count(), self.batch_size):
             if priority_updates[index: index + self.batch_size]:

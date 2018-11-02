@@ -25,10 +25,15 @@ def removeSelectedItems(request):
             }
         })
     resetUserSelection(request)
-    return jsonMessages([f"{count} élément{'s' if count>1 else ''} "
-                         f"{'ont' if count>1 else 'a'} été retiré{'s' if count>1 else ''} "
-                         f"de votre liste de collecte."]
-                        )
+    return jsonMessages(
+        ["{} élément{} {} été retiré{} de votre liste de "
+         "collecte.".format(
+            count,
+            's' if count > 1 else '',
+            'ont' if count > 1 else 'a',
+            's' if count > 1 else ''
+        )]
+    )
 
 
 @login_required()
@@ -59,23 +64,28 @@ def addRemoveItemById(request, addRemove):
             return jsonBadRequest(str(e))
 
         if user.userProfile.item_is_in_list(item):
-            return jsonBadRequest(f"{item} Est déjà dans votre liste de collecte!")
+            return jsonBadRequest("{} Est déjà dans votre liste de collecte!"
+                                  .format(item))
 
         if limit != 0 and harvesteds.count() >= limit:
             return jsonBadRequest(
-                f"Vous avez atteint la limite pour cette liste de collecte ({limit} éléments)."
+                "Vous avez atteint la limite pour cette liste de collecte "
+                "({} éléments).".format(limit)
             )
 
         ItemHarvester.create(user, item, harvest_since, harvest_until)
         return jResponse({
-            'messages': [f"<b>{item}</b> as été ajouté à votre liste de collecte."]
+            'messages': [
+                "<b>{}</b> as été ajouté à votre liste de collecte.".format(item)
+            ]
         })
     else:
         if not user.userProfile.item_is_in_list(item):
-            return jsonBadRequest(f"{item} is not in current list")
+            return jsonBadRequest("{} is not in current list".format(item))
 
         user.userProfile.remove_item_from_harvest_list(item)
 
         return jResponse({
-            "messages": [f"<b>{item}</b> as été retiré de votre liste de collecte."]
+            "messages": ["<b>{}</b> as été retiré de votre liste de "
+                         "collecte.".format(item)]
         })

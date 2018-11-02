@@ -1,12 +1,11 @@
 import re
-from datetime import datetime
 
 import tweepy
 from django.contrib.auth.decorators import login_required
 
 from AspiraUser.models import ItemHarvester
 from SocialNetworkHarvester.jsonResponses import *
-from SocialNetworkHarvester.loggers.viewsLogger import logError, log
+from SocialNetworkHarvester.loggers.viewsLogger import logError
 from SocialNetworkHarvester.utils import validate_harvest_dates, InvalidHarvestDatesException
 from Twitter.models import *
 
@@ -56,8 +55,12 @@ def addUser(request):
     if successful_operations:
         plural = successful_operations > 1
         response['messages'] = [
-            f'{successful_operations} utilisateur{"s"*plural} {"ont" if plural else "a"} '
-            f'été ajouté{"s"*plural} à votre liste de collecte.'
+            '{count} utilisateur{plural} {avoir_plural} '
+            'été ajouté{plural} à votre liste de collecte.'.format(
+                count=successful_operations,
+                plural="s" * plural,
+                avoir_plural="ont" if plural else "a"
+            )
         ]
     return jResponse(response)
 
@@ -67,8 +70,8 @@ def add_twitter_user(user, screen_name, since, until):
 
     if user_profile.twitterUsersToHarvest().count() >= user_profile.twitterUsersToHarvestLimit:
         raise AddTwitterHarvestItemException(
-            f'Vous avez atteint la limite d\'utilisateurs Twitter pour ce compte! '
-            f'(limite: {user_profile.twitterUsersToHarvestLimit})'
+            'Vous avez atteint la limite d\'utilisateurs Twitter pour ce compte! '
+            '(limite: {})'.format(user_profile.twitterUsersToHarvestLimit)
         )
 
     twitter_user = TWUser.objects.filter(screen_name=screen_name).first()
@@ -77,7 +80,10 @@ def add_twitter_user(user, screen_name, since, until):
         twitter_user = fetch_new_twitter_user(api, screen_name)
 
     if ItemHarvester.objects.filter(twitter_user=twitter_user, user=user).exists():
-        raise AddTwitterHarvestItemException(f'L\'utilisateur "{screen_name}" est déjà dans votre liste de collecte!')
+        raise AddTwitterHarvestItemException(
+            'L\'utilisateur "{}" est déjà dans votre liste de '
+            'collecte!'.format(screen_name)
+        )
 
     try:
         validate_harvest_dates(since, until)
@@ -93,7 +99,8 @@ def fetch_new_twitter_user(api, screen_name):
     except tweepy.error.TweepError as e:
         if e.api_code == 17:
             raise AddTwitterHarvestItemException(
-                f'Aucun utilisateur Twitter ne correspond au screen_name "{screen_name}"'
+                'Aucun utilisateur Twitter ne correspond au '
+                'screen_name "{}"'.format(screen_name)
             )
         else:
             raise
@@ -174,8 +181,13 @@ def addHashtag(request):
     elif successful_operations:
         plural = successful_operations > 1
         response['messages'] = [
-            f'{successful_operations} hashtags{"s"*plural} Twitter {"ont" if plural else "a"} '
-            f'été ajouté{"s"*plural} à votre liste de collecte.'
+            '{} hashtags{} Twitter {} été ajouté{} à votre liste de '
+            'collecte.'.format(
+                successful_operations,
+                "s" * plural,
+                "ont" if plural else "a",
+                "s" * plural
+            )
         ]
     else:
         response['errors'] = ["Spécifiez au moins un Hashtag avec sa période de collecte."]
@@ -186,8 +198,10 @@ def add_twitter_hashtag(user, term, since, until):
     user_profile = user.userProfile
     if user_profile.twitterHashtagsToHarvest().count() >= user_profile.twitterHashtagsToHarvestLimit:
         raise AddTwitterHarvestItemException(
-            f'Vous avez atteint la limite de hashtag Twitter pour ce compte! '
-            f'(limite: {user_profile.twitterHashtagsToHarvestLimit})'
+            'Vous avez atteint la limite de hashtag Twitter pour ce compte! '
+            '(limite: {})'.format(
+                user_profile.twitterHashtagsToHarvestLimit
+            )
         )
 
     if not re.match('^#?[a-zA-z0-9_]+$', term):
@@ -199,8 +213,9 @@ def add_twitter_hashtag(user, term, since, until):
 
     if ItemHarvester.objects.filter(twitter_hashtag=twitter_hashtag, user=user).exists():
         raise AddTwitterHarvestItemException(
-            f'Le hashtag "{twitter_hashtag}" est déjà dans '
-            f'votre liste de collecte!'
+            'Le hashtag "{}" est déjà dans votre liste de collecte!'.format(
+                twitter_hashtag
+            )
         )
 
     try:

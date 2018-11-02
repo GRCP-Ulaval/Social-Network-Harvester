@@ -96,7 +96,7 @@ class UserProfile(models.Model):
         elif isinstance(item, YTPlaylist):
             return self.user.harvested_items.filter(youtube_playlist=item).exists()
         else:
-            raise Exception(f'Invalid item instance: "{item.__class__}"')
+            raise Exception('Invalid item instance: "{}"'.format(item.__class__))
 
     def get_item_harvester(self, item):
         if isinstance(item, TWUser):
@@ -110,7 +110,7 @@ class UserProfile(models.Model):
         elif isinstance(item, YTPlaylist):
             return self.user.harvested_items.filter(youtube_playlist=item).first()
         else:
-            raise Exception(f'Invalid item instance: "{item.__class__}"')
+            raise Exception('Invalid item instance: "{}"'.format(item.__class__))
 
     def remove_item_from_harvest_list(self, item):
         self.get_item_harvester(item).delete()

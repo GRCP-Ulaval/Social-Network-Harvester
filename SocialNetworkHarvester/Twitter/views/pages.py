@@ -27,7 +27,7 @@ def twUserView(request, TWUser_value):
         'twUser': twUser,
         'navigator': [
             ("Twitter", "/twitter"),
-            (str(twUser), f"/twitter/user/{twUser.pk}"),
+            (str(twUser), "/twitter/user/{}".format(twUser.pk)),
         ],
     }
     if 'snippet' in request.GET and request.GET['snippet'] == 'true':

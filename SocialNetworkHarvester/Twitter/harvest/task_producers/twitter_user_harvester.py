@@ -2,7 +2,6 @@ from AspiraUser.models import UserProfile, ItemHarvester
 from SocialNetworkHarvester.harvest import BaseTaskProducer
 from SocialNetworkHarvester.loggers.jobsLogger import log
 from Twitter.harvest.tasks import harvest_twitter_user
-from Twitter.models import TWUser
 
 
 class TwitterUserHarvester(BaseTaskProducer):
@@ -15,9 +14,10 @@ class TwitterUserHarvester(BaseTaskProducer):
         twitter_user_harvesters_count = twitter_user_harvesters.count()
         if twitter_user_harvesters_count:
             log(
-                f"{twitter_user_harvesters_count}/"
-                f"{ItemHarvester.objects.filter(twitter_user__isnull=False).count()} "
-                f"Twitter users to tweet-harvest"
+                "{}/{} Twitter users to tweet-harvest".format(
+                    twitter_user_harvesters_count,
+                    ItemHarvester.objects.filter(twitter_user__isnull=False).count()
+                )
             )
 
         for twitter_user in twitter_user_harvesters:

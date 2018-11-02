@@ -39,5 +39,5 @@ def get_twitter_model_by_name(model_name):
         'Tweet': Tweet,
     }
     if model_name not in dict.keys():
-        raise Exception(f'Invalid class name: {model_name}')
+        raise Exception('Invalid class name: {}'.format(model_name))
     return dict[model_name]

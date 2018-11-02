@@ -25,10 +25,8 @@ def harvest_twitter_hashtag(twitter_hashtag_harvester):
 
 def _fetch_tweets_from_html(term, since, until):
     monitor_stop_flag()
-    url = f'https://twitter.com/search' \
-          f'?q={term} ' \
-          f'since%3A{since.strftime("%Y-%m-%d")} ' \
-          f'until%3A{until.strftime("%Y-%m-%d")}'
+    url = 'https://twitter.com/search?q={} since%3A{} until%3A{}'.format(
+        term, since.strftime("%Y-%m-%d"), until.strftime("%Y-%m-%d"))
     log(url)
     request = Request(url, headers={
         'User-Agent': random.choice(BROWSER_USER_AGENTS),
@@ -49,7 +47,7 @@ def _fetch_tweets_from_html(term, since, until):
         data = urlopen(request, timeout=5, context=ssl._create_unverified_context())
         page = bs(data, "html.parser")
     except socket.timeout:
-        log(f'Socket timeout while fetching tweets from hashtag: #{term}')
+        log('Socket timeout while fetching tweets from hashtag: #{}'.format(term))
         safe_sleep(1)
         return _fetch_tweets_from_html(term, since, until)
     tweets = page.find_all('li', {"data-item-type": "tweet"})

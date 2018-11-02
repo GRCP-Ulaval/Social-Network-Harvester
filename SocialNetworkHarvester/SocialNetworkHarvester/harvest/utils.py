@@ -56,13 +56,15 @@ def get_formated_thread_list(thread_list):
 
     formated_string = 'Working threads: {\n'
     for name, count in tasks_counts.items():
-        formated_string += f'{name:>40}: {count}\n'
+        formated_string += '{:>40}: {}\n'.format(name, count)
     formated_string += '}'
     return formated_string
 
 
 def get_formated_ressource_usage():
-    return f"Current RAM usage: {global_process.memory_info()[0]//1000000} MB"
+    return "Current RAM usage: {} MB".format(
+        global_process.memory_info()[0] // 1000000
+    )
 
 
 class NonFatalExeption(Exception):

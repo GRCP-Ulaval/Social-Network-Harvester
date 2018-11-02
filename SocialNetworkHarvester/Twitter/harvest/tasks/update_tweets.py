@@ -37,7 +37,6 @@ def update_tweets(tweet_batch):
 
 
 def update_tweet_from_response(tweet_response):
-    # log(f'{tweet_response.author.screen_name}: {tweet_response.created_at}')
     tweet, new = Tweet.objects.get_or_create(_ident=tweet_response.id)
     tweet.UpdateFromResponse(tweet_response._json)
 

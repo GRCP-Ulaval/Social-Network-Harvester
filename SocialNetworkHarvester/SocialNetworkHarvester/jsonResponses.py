@@ -40,7 +40,7 @@ def jsonBadRequest(reason):
 
 
 def missingParam(paramName):
-    return jsonBadRequest(f"Le paramètre '{paramName}' est manquant.")
+    return jsonBadRequest("Le paramètre '{}' est manquant.".format(paramName))
 
 
 def invalidParam(paramName):

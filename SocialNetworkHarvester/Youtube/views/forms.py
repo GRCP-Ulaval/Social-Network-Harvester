@@ -65,8 +65,13 @@ def YTAddChannel(request):
     elif successful_operations:
         plural = successful_operations > 1
         response['messages'] = [
-            f'{successful_operations} chaîne{"s"*plural} Youtube {"ont" if plural else "a"} '
-            f'été ajouté{"s"*plural} à votre liste de collecte.'
+            '{} chaîne{} Youtube {} été ajouté{} à votre liste '
+            'de collecte.'.format(
+                successful_operations,
+                "s" * plural,
+                "ont" if plural else "a",
+                "s" * plural
+            )
         ]
     else:
         response['errors'] = ["Spécifiez au moins un URL de chaine avec sa période de collecte."]
@@ -77,8 +82,8 @@ def add_youtube_channel(user, url, since, until):
     user_profile = user.userProfile
     if user_profile.ytChannelsToHarvest().count() >= user_profile.ytChannelsToHarvestLimit:
         raise AddYoutubeItemHarvesterException(
-            f'Vous avez atteint la limite de chaînes Youtube pour ce compte! '
-            f'(limite: {user_profile.ytChannelsToHarvestLimit})'
+            'Vous avez atteint la limite de chaînes Youtube pour ce compte! '
+            '(limite: {})'.format(user_profile.ytChannelsToHarvestLimit)
         )
 
     channel_username = get_channel_username_from_url(url)
@@ -90,8 +95,8 @@ def add_youtube_channel(user, url, since, until):
 
     if ItemHarvester.objects.filter(youtube_channel=youtube_channel, user=user).exists():
         raise AddYoutubeItemHarvesterException(
-            f'La chaine Youtube "{youtube_channel}" est déjà dans '
-            f'votre liste de collecte!'
+            'La chaine Youtube "{}" est déjà dans '
+            'votre liste de collecte!'.format(youtube_channel)
         )
 
     try:
@@ -107,7 +112,8 @@ def get_channel_username_from_url(url):
     if not match:
         match = re.match(r'https?://www.youtube.com/channel/(?P<username>[\w\.-]+)/?.*', url)
     if not match:
-        raise AddYoutubeItemHarvesterException(f'"{url}" ne semble pas être une URL valide.')
+        raise AddYoutubeItemHarvesterException(
+            '"{}" ne semble pas être une URL valide.'.format(url))
     return match.group('username')
 
 
@@ -127,9 +133,8 @@ def fetch_new_youtube_channel(api, channel_username):
 
     if 'items' not in response or not response['items']:
         raise AddYoutubeItemHarvesterException(
-            f'L\'url contenant {channel_username} ne semble pas '
-            f'correspondre à une chaine Youtube. '
-            f'Veuillez re-vérifier.'
+            'L\'url contenant {} ne semble pas correspondre à une chaine '
+            'Youtube. Veuillez re-vérifier.'.format(channel_username)
         )
     item = response['items'][0]
     new_channel = YTChannel.objects.create(_ident=item['id'])
@@ -174,8 +179,13 @@ def YTAddPlaylist(request):
     elif successful_operations:
         plural = successful_operations > 1
         response['messages'] = [
-            f'{successful_operations} playlist{"s"*plural} Youtube {"ont" if plural else "a"} '
-            f'été ajouté{"s"*plural} à votre liste de collecte.'
+            '{} playlist{} Youtube {} été ajouté{} à votre liste de '
+            'collecte.'.format(
+                successful_operations,
+                "s" * plural,
+                "ont" if plural else "a",
+                "s" * plural
+            )
         ]
     else:
         response['errors'] = ["Spécifiez au moins un URL de chaine avec sa période de collecte."]
@@ -186,8 +196,8 @@ def add_youtube_playlist(user, url, since, until):
     user_profile = user.userProfile
     if user_profile.ytPlaylistsToHarvest().count() >= user_profile.ytPlaylistsToHarvestLimit:
         raise AddYoutubeItemHarvesterException(
-            f'Vous avez atteint la limite de playlists Youtube pour ce compte! '
-            f'(limite: {user_profile.ytPlaylistsToHarvestLimit})'
+            'Vous avez atteint la limite de playlists Youtube pour ce compte! '
+            '(limite: {})'.format(user_profile.ytPlaylistsToHarvestLimit)
         )
 
     playlist_ident = get_playlist_ident_from_url(url)
@@ -199,8 +209,8 @@ def add_youtube_playlist(user, url, since, until):
 
     if ItemHarvester.objects.filter(youtube_playlist=youtube_playlist, user=user).exists():
         raise AddYoutubeItemHarvesterException(
-            f'La playlist Youtube "{youtube_playlist}" est déjà dans '
-            f'votre liste de collecte!'
+            'La playlist Youtube "{}" est déjà dans votre liste de '
+            'collecte!'.format(youtube_playlist)
         )
 
     try:
@@ -214,7 +224,9 @@ def add_youtube_playlist(user, url, since, until):
 def get_playlist_ident_from_url(url):
     match = re.match(r'.*list=(?P<ident>[\w\.-]+)&?.*', url)
     if not match:
-        raise AddYoutubeItemHarvesterException(f'"{url}" ne semble pas être une URL valide.')
+        raise AddYoutubeItemHarvesterException(
+            '"{}" ne semble pas être une URL valide.'.format(url)
+        )
     return match.group('ident')
 
 
@@ -233,9 +245,8 @@ def fetch_new_youtube_playlist(api, playlist_ident):
 
     if 'items' not in response or not response['items']:
         raise AddYoutubeItemHarvesterException(
-            f'L\'url contenant {playlist_ident} ne semble pas '
-            f'correspondre à une playlist Youtube. '
-            f'Veuillez re-vérifier celle-ci.'
+            'L\'url contenant {} ne semble pas correspondre à une playlist '
+            'Youtube. Veuillez re-vérifier celle-ci.'.format(playlist_ident)
         )
     item = response['items'][0]
     new_playlist = YTPlaylist.objects.create(_ident=item['id'])
@@ -253,8 +264,9 @@ def get_youtube_api(user_profile):
         user_profile.save()
         logError('Error in Youtube forms: get_youtube_api')
         raise AddYoutubeItemHarvesterException(
-            "Un problème est survenu avec votre application Youtube! Veuillez visiter votre page de "
-            "<a href='/user/settings' class='TableToolLink'>paramètres</a> et assurez-vous que les "
+            "Un problème est survenu avec votre application Youtube! Veuillez "
+            "visiter votre page de <a href='/user/settings' "
+            "class='TableToolLink'>paramètres</a> et assurez-vous que les "
             "informations inscrites dans la section \"Youtube\" sont correctes."
         )
 
