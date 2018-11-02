@@ -27,11 +27,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='userprofile',
-            name='twitterHashtagsToHarvest',
-            field=models.ManyToManyField(blank=True, related_name='harvested_by', to='Twitter.HashtagHarvester'),
-        ),
-        migrations.AddField(
-            model_name='userprofile',
             name='twitterUsersToHarvest',
             field=models.ManyToManyField(blank=True, related_name='harvested_by', to='Twitter.TWUser'),
         ),
