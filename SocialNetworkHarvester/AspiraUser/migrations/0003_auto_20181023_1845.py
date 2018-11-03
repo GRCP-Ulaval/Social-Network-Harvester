@@ -12,6 +12,10 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RemoveField(
             model_name='userprofile',
+            name='twitterHashtagsToHarvest',
+        ),
+        migrations.RemoveField(
+            model_name='userprofile',
             name='twitterUsersToHarvest',
         ),
     ]

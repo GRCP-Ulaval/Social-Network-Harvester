@@ -46,4 +46,8 @@ def get_twitter_model_by_name(model_name):
 
 
 class HashtagHarvester(models.Model):
-    pass
+    hashtag = models.ForeignKey(
+        Hashtag,
+        null=True,
+        on_delete=models.CASCADE
+    )
