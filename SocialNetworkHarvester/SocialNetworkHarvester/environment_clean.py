@@ -1,5 +1,3 @@
-import os
-
 # IMPORTANT: copy this file into "environment.py" and then populate the values.
 
 SECRET_KEY = ''
@@ -28,3 +26,8 @@ DATABASE_PARAMS = {
     'HOST': '',
     'PORT': '',
 }
+
+# Data Harvester Settings
+TASK_CONSUMERS_COUNT = 10  # Number of threads for harvesting (recommended: Number of cpu core + 1)
+MONITORING_DELAY_IN_SECONDS = 1  # Delay between harvest job monitoring routines (decrease to improve performance)
+MAX_RAM_USAGE_LIMIT_IN_MEGABYTE = 600  # Max RAM usage in megabyte used by the harvesting service.

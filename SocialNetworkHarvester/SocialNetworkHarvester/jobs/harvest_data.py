@@ -15,13 +15,8 @@ from SocialNetworkHarvester.harvest.utils import (
     get_running_time_in_minutes,
     get_running_time_in_seconds, get_running_time_in_hours, get_formated_ressource_usage, get_formated_thread_list)
 from SocialNetworkHarvester.loggers.jobsLogger import log, logError, mail_log
-from SocialNetworkHarvester.settings import HARVEST_APPS, DEBUG, LOG_DIRECTORY
-
-TASK_CONSUMERS_COUNT = 10
-
-MONITORING_DELAY_IN_SECONDS = 1
-
-MAX_RAM_USAGE_LIMIT_IN_MEGABYTE = 600
+from SocialNetworkHarvester.settings import HARVEST_APPS, DEBUG, LOG_DIRECTORY, TASK_CONSUMERS_COUNT, \
+    MONITORING_DELAY_IN_SECONDS, MAX_RAM_USAGE_LIMIT_IN_MEGABYTE
 
 threads_list = [[]]
 
