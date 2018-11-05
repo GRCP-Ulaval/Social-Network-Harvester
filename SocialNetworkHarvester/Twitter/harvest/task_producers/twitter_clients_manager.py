@@ -42,7 +42,7 @@ def clear_twitter_client_queue():
 
 class TwitterClientsGenerator(BaseTaskProducer):
     name = 'Twitter Clients Updater'
-    in_between_routines_delay_in_seconds = 1800  # 30 minutes
+    in_between_routines_delay_in_seconds = 900  # 15 minutes
 
     def generate_tasks(self):
         """

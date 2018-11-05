@@ -5,7 +5,11 @@ from SocialNetworkHarvester.harvest.utils import monitor_stop_flag
 from SocialNetworkHarvester.loggers.jobsLogger import log
 from SocialNetworkHarvester.utils import today
 from Twitter.harvest.client import get_client, return_client
-from Twitter.models import Tweet
+from Twitter.models import Tweet, TWUser
+
+
+def _test_user_exists(tweet):
+    pass
 
 
 def update_tweets(tweet_batch):
@@ -27,13 +31,17 @@ def update_tweets(tweet_batch):
         monitor_stop_flag()
         tweet = next((tweet for tweet in tweet_batch if tweet._ident == response._json['id']), None)
         if tweet:
-            global_task_queue.add(update_tweet_from_response, args=[response])
+            global_task_queue.add(update_tweet_from_response, [response])
             tweet_batch.remove(tweet)
 
+    deleted_count = 0
     for tweet in tweet_batch:
-        log('%s has been deleted' % tweet)
+        deleted_count += 1
         tweet.deleted_at = today()
         tweet.save()
+        global_task_queue.add(_test_tweet_author_exists, [tweet])
+    if deleted_count > 0:
+        log("{} tweets have been deleted".format(deleted_count))
 
 
 def update_tweet_from_response(tweet_response):
@@ -44,3 +52,11 @@ def update_tweet_from_response(tweet_response):
         tweet._update_frequency = 1
     else:
         tweet._update_frequency = 5
+
+
+def _test_tweet_author_exists(tweet):
+    try:
+        author = tweet.user
+    except TWUser.DoesNotExist:
+        log("{} twitter user does not exists! Deleting tweet.")
+        tweet.delete()

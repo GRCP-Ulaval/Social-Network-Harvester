@@ -60,5 +60,6 @@ class TaskIndexer:
 
     def clear(self):
         with self._mutex:
-            self._tasks_queues = {}
+            for q in self._tasks_queues.values():
+                del q
         log("Cleared the tasks queues.")

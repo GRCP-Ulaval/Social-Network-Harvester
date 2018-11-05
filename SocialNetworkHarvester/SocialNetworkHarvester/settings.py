@@ -22,6 +22,11 @@ except ModuleNotFoundError:
     raise Exception(('You must create an environment file! Copy the file "environment_clean.py"'
                      ' into "environment.py" and populate it\'s values.'))
 
+import sentry_sdk
+
+if SENTRY_ID:
+    sentry_sdk.init(SENTRY_ID)
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 ALLOWED_HOSTS = ['*']
@@ -54,7 +59,7 @@ INSTALLED_APPS = [
 
 # Applications in which there is an 'harvest' module
 HARVEST_APPS = [
-    #'Facebook',
+    # 'Facebook',
     'Twitter',
     'Youtube',
 ]

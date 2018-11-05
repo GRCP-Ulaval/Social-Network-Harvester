@@ -1,4 +1,5 @@
 import importlib
+import importlib
 import inspect
 import os
 import time
@@ -126,7 +127,9 @@ class Job(BaseJob):
             ))
             end_threads()
             global_task_queue.clear()
-            return self.execute()
+            global_thread_stop_flag[0] = False
+            time.sleep(5)
+            # return self.execute()
         except Exception:
             end_threads()
             msg = "An unknown exception occured while harvesting data."

@@ -31,3 +31,4 @@ class TwitterTweetUpdater(BaseTaskProducer):
         for index in range(0, non_priority_updates.count(), self.batch_size):
             if non_priority_updates[index: index + self.batch_size]:
                 yield update_tweets, [non_priority_updates[index: index + self.batch_size - 1]]
+
