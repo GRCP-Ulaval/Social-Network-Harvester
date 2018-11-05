@@ -74,7 +74,7 @@ def display_jobs_statuses():
             '{thread_list}\n'.format(
                 last_updated=now(),
                 running_time_hour=int(get_running_time_in_hours()),
-                running_time_minute=int(get_running_time_in_minutes() % 3600),
+                running_time_minute=int(get_running_time_in_minutes() % 60),
                 running_time_second=int(get_running_time_in_seconds() % 60),
                 ressource_usage=get_formated_ressource_usage(),
                 task_queue=global_task_queue.formated_tasks_counts(),
