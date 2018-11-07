@@ -39,24 +39,20 @@ def update_tweets(tweet_batch):
         deleted_count += 1
         tweet.deleted_at = today()
         tweet.save()
-        global_task_queue.add(_test_tweet_author_exists, [tweet])
     if deleted_count > 0:
         log("{} tweets have been deleted".format(deleted_count))
 
 
 def update_tweet_from_response(tweet_response):
     tweet, new = Tweet.objects.get_or_create(_ident=tweet_response.id)
-    tweet.UpdateFromResponse(tweet_response._json)
+    try:
+        tweet.UpdateFromResponse(tweet_response._json)
+    except TWUser.DoesNotExist:
+        log("tweet #{} twitter user does not exists! Deleting.".format(tweet._ident))
+        tweet.delete()
+        return
 
     if tweet.user.harvested_by:
         tweet._update_frequency = 1
     else:
         tweet._update_frequency = 5
-
-
-def _test_tweet_author_exists(tweet):
-    try:
-        author = tweet.user
-    except TWUser.DoesNotExist:
-        log("{} twitter user does not exists! Deleting tweet.")
-        tweet.delete()
