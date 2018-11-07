@@ -11,37 +11,37 @@ class CollectionItem(models.Model):
     collection = models.ForeignKey(
         Collection,
         related_name='collection_items',
-        on_delete=models.PROTECT
+        on_delete=models.CASCADE
     )
     twitter_user = models.ForeignKey(
         TWUser,
         related_name='collections_included_in',
         **nullable,
-        on_delete=models.PROTECT
+        on_delete=models.CASCADE
     )
     twitter_hashtag = models.ForeignKey(
         Hashtag,
         related_name='collections_included_in',
         **nullable,
-        on_delete=models.PROTECT
+        on_delete=models.CASCADE
     )
     facebook_page = models.ForeignKey(
         FBPage,
         related_name='collections_included_in',
         **nullable,
-        on_delete=models.PROTECT
+        on_delete=models.CASCADE
     )
     youtube_channel = models.ForeignKey(
         YTChannel,
         related_name='collections_included_in',
         **nullable,
-        on_delete=models.PROTECT
+        on_delete=models.CASCADE
     )
     youtube_playlist = models.ForeignKey(
         YTPlaylist,
         related_name='collections_included_in',
         **nullable,
-        on_delete=models.PROTECT
+        on_delete=models.CASCADE
     )
 
     def foreign_keys(self):

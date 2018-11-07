@@ -4,7 +4,7 @@ from AspiraUser.models import getUserSelection
 from Collection.models import Collection, CollectionItem
 from Collection.models.Collection import InvalidFieldException
 from SocialNetworkHarvester.jsonResponses import jsonNotFound, jResponse, jsonBadRequest, \
-    missingParam, jsonForbiddenError
+    missingParam, jsonForbiddenError, jsonMessages
 from SocialNetworkHarvester.loggers.viewsLogger import logError
 
 
@@ -14,7 +14,7 @@ def ajax_base(request, endpoint_name):
         return {
             'search': search,
             'addItems': addItems,
-            'remove': removeItem,
+            'remove_items': removeCollectionItem,
         }[endpoint_name](request)
     except KeyError:
         logError("KeyError occured in collection ajax endpoint")
@@ -25,7 +25,7 @@ def ajax_base(request, endpoint_name):
         logError('An unknown exception as occured in Collection forms')
         return jResponse({
             'status': 'error',
-            'messages': ['Une erreur inconnue est survenue. Veuillez réessayer.']
+            'errors': ['Une erreur inconnue est survenue. Veuillez réessayer.']
         })
 
 
@@ -64,11 +64,34 @@ def addItems(request):
     for item in queryset:
         CollectionItem.create(collection, item)
 
-    return jResponse({
-        'status': 'ok',
-        'messages': ['Les éléments ont étés ajoutés à la collecte %s.' % collection.name]
-    })
+    return jsonMessages(
+        'Les éléments ont étés ajoutés à la collecte %s.' % collection.name
+    )
 
 
-def removeItem(request):
-    pass
+def removeCollectionItem(request):
+    user = request.user
+    post = request.POST
+
+    if not 'table_id' in post: return missingParam('table_id')
+    if not 'collection_id' in post: return missingParam('collection_id')
+
+    collection = Collection.objects.filter(pk=post['collection_id']).first()
+    if not collection:
+        return jsonNotFound()
+
+    if user not in collection.curators.all():
+        return jsonForbiddenError()
+
+    selection = getUserSelection(request)
+    queryset = selection.getSavedQueryset(
+        "CollectionItem",
+        "collection_table_{}".format(post['collection_id'])
+    )
+
+    for collection_item in queryset:
+        collection_item.delete()
+
+    return jsonMessages(
+        "Les éléments sélectionnés ont étés retirés de cette collecte."
+    )

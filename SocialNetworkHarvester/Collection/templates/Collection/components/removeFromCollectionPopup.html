@@ -1,0 +1,57 @@
+<span class="section_menuItem" title="Retirer la sélection de cette collecte.">
+  <a onclick=displayCenterPopup("remove_from_collection_{{collection.pk}}")>
+    Retirer de la collecte
+  </a>
+  <div class="popup" id="remove_from_collection_{{collection.pk}}">
+    <div id="title">Retirer de la collecte</div>
+    <div id="help">
+      Retrait des éléments sélectionnés de <b>{{ collection }} </b>.
+    </div>
+    <div id="content">
+      <center>
+        Voulez-vous retirer les éléments sélectionnés
+        <br>de cette collecte? <br><br>
+        <b>{{ collection.name }}</b>?<br><br>
+      </center>
+      <div style="width:300px; height:30px;">
+          <input
+              type="button"
+              class="cancelButton"
+              value="Annuler"
+              onclick="cancelOperation()"
+          >
+          <input
+              type="button"
+              class="submitButton"
+              value="Retirer"
+              onclick="submit_remove_items_from_collection(
+                '{{ table_id }}', '{{ collection.id }}'
+                )"
+          >
+      </div>
+    </div>
+    <script id="functions">
+      function cancelOperation() {
+        closeCenterPopup();
+      }
+
+      function submit_remove_items_from_collection(table_id, collection_id) {
+        $.ajax({
+          type: 'POST',
+          url: '/collection/ajax/remove_items?pageURL=/collection',
+          data: {
+            csrfmiddlewaretoken: '{{ csrf_token }}',
+            table_id: table_id,
+            collection_id: collection_id,
+          },
+          success: function (response) {
+            manage_ajax_response(response);
+            closeCenterPopup();
+            reloadTable(table_id);
+          },
+          dataType: 'json',
+        });
+      }
+    </script>
+  </div>
+</span>
