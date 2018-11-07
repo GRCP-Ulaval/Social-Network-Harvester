@@ -42,21 +42,17 @@ def get_running_time_in_hours():
 
 
 def get_formated_thread_list(thread_list):
-    tasks_counts = {
-        'idle': 0,
-    }
+    threads = {}
     for thread in thread_list:
         if hasattr(thread, 'current_task'):
             if hasattr(thread.current_task, '__name__'):
-                if thread.current_task.__name__ not in tasks_counts:
-                    tasks_counts[thread.current_task.__name__] = 0
-                tasks_counts[thread.current_task.__name__] += 1
+                threads[thread.name] = thread.current_task.__name__
             else:
-                tasks_counts['idle'] += 1
+                threads[thread.name] = 'idle'
 
     formated_string = 'Working threads: {\n'
-    for name, count in tasks_counts.items():
-        formated_string += '{:>40}: {}\n'.format(name, count)
+    for thread_name, task_name in threads.items():
+        formated_string += '{:>10}: {}\n'.format(thread_name, task_name )
     formated_string += '}'
     return formated_string
 

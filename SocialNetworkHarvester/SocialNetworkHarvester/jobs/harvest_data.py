@@ -37,7 +37,7 @@ def parse_harvest_modules():
 
 def generate_consumers():
     for i in range(1, TASK_CONSUMERS_COUNT + 1):
-        t = TaskConsumer(name="Task Consumer #%i" % i)
+        t = TaskConsumer(name="TC#%i" % i)
         threads_list[0].append(t)
         t.start()
 

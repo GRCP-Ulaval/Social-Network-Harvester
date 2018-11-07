@@ -4,8 +4,7 @@ from .utils import safe_sleep, monitor_stop_flag
 
 
 class BaseTaskProducer(BaseThread):
-    relaunch_delay_in_seconds = 60
-    task_injection_delay_in_seconds = 0
+    task_injection_delay_in_seconds = 1
     in_between_routines_delay_in_seconds = 10
     task_queue_target_size = 1
 
@@ -22,9 +21,11 @@ class BaseTaskProducer(BaseThread):
     def execute(self):
         for task_group in self.generate_tasks():
             monitor_stop_flag()
-            if task_group and global_task_queue.count(task_group[0]) < self.task_queue_target_size:
+            if task_group:
                 global_task_queue.add(*task_group)
-            safe_sleep(self.task_injection_delay_in_seconds)
+                safe_sleep(self.task_injection_delay_in_seconds)
+                while global_task_queue.count(task_group[0]) >= self.task_queue_target_size:
+                    safe_sleep(self.task_injection_delay_in_seconds)
         safe_sleep(self.in_between_routines_delay_in_seconds)
 
     def generate_tasks(self):
