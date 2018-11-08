@@ -48,9 +48,9 @@ def update_tweet_from_response(tweet_response):
     try:
         tweet.UpdateFromResponse(tweet_response._json)
     except TWUser.DoesNotExist:
-        log("tweet #{} twitter user does not exists! Deleting.".format(tweet._ident))
-        tweet.delete()
-        return
+        log("tweet #{}'s user does not exists!".format(tweet._ident))
+        tweet.user = None
+        tweet.save()
 
     if tweet.user.harvested_by:
         tweet._update_frequency = 1

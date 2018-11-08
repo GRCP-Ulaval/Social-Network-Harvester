@@ -80,7 +80,7 @@ def editUserSettings(request):
 def userRegister(request):
     data = request.POST
     errors = []
-    masterAddrs = [user.email for user in User.objects.filter(is_superuser=True, email__isnull=False) if
+    masterAddrs = [user.email for user in User.objects.filter(is_staff=True, email__isnull=False) if
                    user.email != '']
     required_fields = {'username': 'Username',
                        'email': 'Email address',
