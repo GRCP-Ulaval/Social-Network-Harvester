@@ -6,3 +6,4 @@ R&D/
 SocialNetworkHarvester.iml
 db
 environment.py
+scripts/env.sh
