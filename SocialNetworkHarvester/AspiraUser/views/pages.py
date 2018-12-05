@@ -3,6 +3,7 @@ from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
 from django.shortcuts import render, HttpResponseRedirect, Http404
+from django.utils.timezone import utc
 
 from AspiraUser.models import UserProfile, resetUserSelection
 from Facebook.models import FBPost, FBPage
