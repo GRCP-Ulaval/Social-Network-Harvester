@@ -17,6 +17,8 @@
   <link rel="stylesheet" href='{% static "css/design.css" %}?v={{ STATICFILES_VERSION }}' name="style">
   <script src='{% static "js/jquery-2.1.4.js" %}'></script>
   <script src='{% static "js/script.js" %}?v={{ STATICFILES_VERSION }}'></script>
+  <script src='{% static "js/popup_script.js" %}?v={{ STATICFILES_VERSION }}'></script>
+  <script src='{% static "js/messages_script.js" %}?v={{ STATICFILES_VERSION }}'></script>
   {% block Title %}<title>SNH | {{ navigator|last|first|truncatechars:40 }}</title>{% endblock %}
   {%if DISPLAY_YET_TO_COMES %}
   <script>var DEBUG = true;</script>
