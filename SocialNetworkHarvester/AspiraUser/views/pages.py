@@ -8,7 +8,6 @@ from django.utils.timezone import utc
 from AspiraUser.models import UserProfile, resetUserSelection
 from Facebook.models import FBPost, FBPage
 from SocialNetworkHarvester.jsonResponses import *
-from Twitter.models import *
 from Youtube.models import *
 from tool.views.ajaxTables import digestQuery, cleanQuery
 
@@ -38,14 +37,14 @@ def userDashboard(request):
 def getTwitterStats(user_profile):
     twuser_limit = user_profile.twitterUsersToHarvestLimit
     hashtag_limit = user_profile.twitterHashtagsToHarvestLimit
-    collected_tweets = (Tweet.objects.filter(user__harvested_by__user__userProfile=user_profile) |
-                        Tweet.objects.filter(hashtags__harvested_by__user__userProfile=user_profile)).count()
+    # collected_tweets = (Tweet.objects.filter(user__harvested_by__user__userProfile=user_profile) |
+    #                     Tweet.objects.filter(hashtags__harvested_by__user__userProfile=user_profile)).count()
 
     twitter_user_usage = user_profile.twitterUsersToHarvest().count()
-    most_active_twitter_user = user_profile.twitterUsersToHarvest() \
-        .annotate(harvested_count=Count('tweets')) \
-        .order_by("-harvested_count") \
-        .first()
+    # most_active_twitter_user = user_profile.twitterUsersToHarvest() \
+    #     .annotate(harvested_count=Count('tweets')) \
+    #     .order_by("-harvested_count") \
+    #     .first()
 
     twitter_user_percent = 0
     if twuser_limit > 0:
@@ -60,10 +59,9 @@ def getTwitterStats(user_profile):
     else:
         hashtag_limit = 'inf'
 
-    most_active_hashtag = user_profile.twitterHashtagsToHarvest() \
-        .annotate(harvested_count=Count('tweets')) \
-        .order_by("-harvested_count").first()
-
+    # most_active_hashtag = user_profile.twitterHashtagsToHarvest() \
+    #     .annotate(harvested_count=Count('tweets')) \
+    #     .order_by("-harvested_count").first()
     return {
         'twitterUserUsage': twitter_user_usage,
         'twitterUserLimit': twuser_limit,
@@ -71,9 +69,9 @@ def getTwitterStats(user_profile):
         'twitterHashtagUsage': twitter_hashtag_usage,
         'twitterHashtagLimit': hashtag_limit,
         'twitterHashtagPercent': twitter_hashtag_percent,
-        'collectedTweets': collected_tweets,
-        'mostActiveTwitterUser': most_active_twitter_user,
-        'mostActiveHashtag': most_active_hashtag,
+        # 'collectedTweets': collected_tweets,
+        # 'mostActiveTwitterUser': most_active_twitter_user,
+        # 'mostActiveHashtag': most_active_hashtag,
     }
 
 
