@@ -130,11 +130,11 @@ def getFacebookStats(user_profile):
     else:
         fb_page_limit = 'inf'
 
-    collected_f_b_statuses = FBPost.objects \
+    collected_fb_statuses = FBPost.objects \
         .filter(from_profile__fbPage__isnull=False) \
         .filter(from_profile__fbPage__harvested_by__user=user_profile.user).count()
 
-    collected_f_bcomments = FBPage.objects \
+    collected_fb_comments = FBPage.objects \
         .filter(harvested_by__user=user_profile.user) \
         .aggregate(count=Count('fbProfile__posted_comments'))['count']
 
@@ -153,8 +153,8 @@ def getFacebookStats(user_profile):
         'fbPageUsage': fb_page_usage,
         'fbPageLimit': fb_page_limit,
         'fbPageUsagePercent': fb_page_usage_percent,
-        'collectedFBStatuses': collected_f_b_statuses,
-        'collectedFBcomments': collected_f_bcomments,
+        'collectedFBStatuses': collected_fb_statuses,
+        'collectedFBcomments': collected_fb_comments,
         'mostActivePage': most_active_page,
         'mostActiveStatus': most_active_status,
     }

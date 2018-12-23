@@ -33,7 +33,8 @@ ALLOWED_HOSTS = ['*']
 
 LOGIN_URL = '/login_page'
 
-# css class yetToCome produces an html layer on top of features that are not implemented yet. This hides them instead.
+# css class yetToCome produces an html layer on top of features that are not implemented yet.
+# This controls whether or not the element is hidden instead (feature flag)
 DISPLAY_YET_TO_COMES = False
 
 # Change this value in production (can be wathever number) to force clients to clear their cached content
